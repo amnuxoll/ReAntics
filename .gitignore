@@ -1,0 +1,11 @@
+# pyCharm IDE folders
+.idea/
+
+# compiled python files
+*.pyc
+
+# mac folder info file
+*.DS_Store
+
+# pytest coverage
+.coverage
