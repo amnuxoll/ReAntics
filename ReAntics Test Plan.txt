@@ -1,0 +1,9 @@
+﻿Test Plan Document
+
+
+System Test 1:
+        Test 1 will check to make sure system execution is viable via the command line. A tester will simply execute the command “python Game.py” on the OS command line, i.e. terminal for Mac and CMD for Windows. A passing result will show a user interface. A failing result will end in no user interface or a console command error.
+
+
+System Test 2:
+        Test 2 will check to make sure the system can properly close without crashing or emitting an exit code other than 0. A tester will simply execute the command “python Game.py” on the OS command line to open the game system. Then a tester will click the red close “x” in the top right or left corner depending on the computer's OS. This can also be done on the command line by using the hotkey Ctrl-c. If the system is operating correctly on close the command line will show nothing or a keyboardInterrupt
