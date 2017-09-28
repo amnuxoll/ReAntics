@@ -32,7 +32,7 @@ def legalCoord(coord):
         if (len(coord) != 2):
             return False
     except TypeError:
-        print "ERROR:  parameter to legalCoord was not a tuple or list"
+        print("ERROR:  parameter to legalCoord was not a tuple or list")
         raise
 
     x = coord[0]
@@ -301,7 +301,7 @@ def stepsToReach(currentState, src, dst):
             dist = visited[cell] + cost
 
             #if the new distance is best so far, update the visited dict
-            if (visited.has_key(newCell)):
+            if (newCell in visited):
                 if (dist < visited[newCell]):
                     visited[newCell] = dist
             #if we've never seen this cell before also update dict and
@@ -744,14 +744,14 @@ def charRepLoc(loc):
 def asciiPrintState(state):
     #select coordinate ranges such that board orientation will match the GUI
     #for either player
-    coordRange = range(0,10)
+    coordRange = list(range(0,10))
     colIndexes = " 0123456789"
     if (state.whoseTurn == PLAYER_TWO):
-        coordRange = range(9,-1,-1)
+        coordRange = list(range(9,-1,-1))
         colIndexes = " 9876543210"
 
     #print the board with a border of column/row indexes
-    print colIndexes
+    print(colIndexes)
     index = 0              #row index
     for x in coordRange:
         row = str(x)
@@ -765,11 +765,11 @@ def asciiPrintState(state):
                     row += charRepConstr(constr)
                 else:
                     row += "."
-        print row + str(x)
+        print(row + str(x))
         index += 1
-    print colIndexes
+    print(colIndexes)
 
     #print food totals
     p1Food = state.inventories[0].foodCount
     p2Food = state.inventories[1].foodCount
-    print " food: " + str(p1Food) + "/" + str(p2Food)
+    print(" food: " + str(p1Food) + "/" + str(p2Food))

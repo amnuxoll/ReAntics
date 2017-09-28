@@ -104,9 +104,9 @@ class GameState(object):
         cons3 = []
         food1 = self.inventories[PLAYER_ONE].foodCount
         food2 = self.inventories[PLAYER_TWO].foodCount
-        for col in xrange(0,len(self.board)):
+        for col in range(0,len(self.board)):
             newBoard.append([])
-            for row in xrange(0,len(self.board)):
+            for row in range(0,len(self.board)):
                 newLoc = self.board[col][row].clone()
                 newBoard[col].append(newLoc)
                 #Organize constructions into inventories
