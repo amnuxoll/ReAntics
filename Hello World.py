@@ -1,5 +1,5 @@
 # ReAntics Hello World program
-# Author: Brendan THomas
+# Author: Brendan Thomas
 # Date: 16 September 2017
 #
 # This program is just to start out the ReAntics repository and show off a demo of Tkinter code.

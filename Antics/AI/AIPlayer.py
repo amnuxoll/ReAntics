@@ -9,6 +9,7 @@ from Move import Move
 from GameState import *
 from AIPlayerUtils import *
 
+
 ##
 #AIPlayer
 #Description: The responsbility of this class is to interact with the game by
