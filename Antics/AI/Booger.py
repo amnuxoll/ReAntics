@@ -77,6 +77,7 @@ class AIPlayer(Player):
     #
     ##
     def getMove(self, currentState):
+        #asciiPrintState(currentState)
         #Useful pointers
         myInv = getCurrPlayerInventory(currentState)
         me = currentState.whoseTurn
