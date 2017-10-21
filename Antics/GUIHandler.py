@@ -1,4 +1,5 @@
 import tkinter
+from GamePane import *
 
 #########################################################
 # Class GUIHandler
@@ -27,13 +28,17 @@ class GUIHandler:
         # TODO implement and attach these handlers
         self.settingsHandler = None
         self.statsHandler = None
-        self.gameHandler = None # GamePane(self, self.gameFrame)
+        self.gameHandler = GamePane(self, self.gameFrame)
 
         # we want the game to start on the settings screen, so show it first
         self.settingsFrame.pack()
 
         # pack main GUI
         self.baseFrame.pack()
+
+
+        # set default screen for testing
+        self.showFrame(2)
 
         # this starts the event handling loop if we want to
         # execute code afterwords, this handler needs to be
