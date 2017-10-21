@@ -20,7 +20,7 @@ class GamePane:
         self.boardIcons = []
 
         # game board is based on a 10*10 grid of tiles
-        self.terrain = tkinter.PhotoImage(file = "terrain.gif")
+        self.terrain = tkinter.PhotoImage(file = "Textures/terrain.gif")
         for i in range(10):
             tmp = []
             for j in range(10):
