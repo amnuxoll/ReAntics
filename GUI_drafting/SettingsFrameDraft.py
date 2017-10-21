@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter.font import Font
 from functools import partial
+from tkinter import ttk
 
 PLAYERS = []
 for i in range(10):
@@ -10,7 +11,7 @@ PLAYER_COLS = 1 #2
 GAME_TYPES = [ "QuickStart", "Two Player", "Single Player", "Round Robin", "Play All" ]
 ANT_NAMES = [ "Workers", "Drones", "Soldiers", "Ranged Soldiers" ]
 
-PLAYER_COLORS = [ "#ba8a97", "#5993c0" ] #red", "blue" ]
+PLAYER_COLORS = [ "red", "blue" ] #"#ba8a97", "#5993c0" ] #
 
 FRAME_BDR = 5
 
@@ -203,29 +204,60 @@ class AddPauseOptionsFrame ( ScrollableFrame ) :
         ScrollableFrame.__init__(self, parent)
         self.parent = parent
 
-        self.track_options = [ "Food", "Queen Health", "Anthill Health", "Num Ants" ]
+        ## !! change to constants later
+        self.tracking = { 
+            "Food" : 12,
+            "Queen Health" : 5,
+            "Anthill Health" : 5,
+            "Num Ants" : 100
+            }
         for a in ANT_NAMES :
-            self.track_options.append ( "Num " + a )
+            self.tracking ["Num " + a] = 100
+            
         self.selected = {}
+        self.values = {}
 
+        self.track_options = list ( self.tracking.keys() )
         num_trackables = len(self.track_options)
-        
 
         for i in range ( 2 ) :
-            offset = i*(num_trackables+1)
-            pLabel = tk.Label ( self.interior, text = "Player " + str(i) + ": " )
-            pLabel.grid ( row = offset, sticky=tk.W)
             c = PLAYER_COLORS[i]
+            offset = i*(num_trackables+1)
+            pLabel = tk.Label ( self.interior, text = "Player " + str(i) + ": ", fg=c )
+            pLabel.grid ( row = offset, sticky=tk.W)
+            
 
             for j in range ( num_trackables ) :
-                item_name = "P" + str(i) + " " + self.track_options[j] # P<1/2> item
+                o = self.track_options[j]
+                item_name = "P" + str(i) + " " + o # P<1/2> item
                 self.selected[item_name] = tk.BooleanVar()
                 loc = j + offset + i + 1
                 b = tk.Checkbutton ( self.interior, text = item_name, variable = self.selected[item_name] )
                 b.grid ( row = loc, sticky=tk.W )
-                
-                bText = tk.Entry ( self.interior, bg = c, fg = "white" )
-                bText.grid ( row = loc, column = 1, sticky=tk.W )       
+
+                var = tk.StringVar ( self.interior )
+                self.values[item_name] = ttk.Combobox ( self.interior, values = list(range(self.tracking[o])), textvariable = var, state = "readonly" ) #, bg = c, fg = "white" )
+                bText = self.values[item_name]
+                #bText = tk.Entry ( self.interior, bg = c, fg = "white" )
+                bText.grid ( row = loc, column = 1, sticky=tk.W )
+                bText.bind("<<ComboboxSelected>>", partial ( self.newSelection, idx = item_name ) )
+
+                bText.current(0)
+
+    def newSelection ( self, value, idx ) :
+        print ( idx, self.values[idx].get(), self.selected[idx].get() )
+
+##        o_max = self.tracking[idx]
+##        try :
+##            v = int ( self.values[idx].get() )
+##            if v >= 0 and v < o_max:
+##                return True
+##            else:
+##                return False
+##        except : 
+##            return False
+
+
 
 ######################################################################################
 # FRAMES USED TO ADD A GAME
@@ -267,7 +299,7 @@ class QuickStartFrame ( tk.Frame ) :
         self.numGamesEntry.delete(0,tk.END)
         self.numGamesEntry.insert(0,"1")
         
-        self.startButton = tk.Button ( self, text = "QuickStart" )
+        self.startButton = tk.Button ( self, text = "QuickStart", activeforeground="green", activebackground="green" )
         self.startButton.pack ( fill=tk.X, side=tk.BOTTOM )
 
         self.numGamesFrame.pack(fill=tk.X,side=tk.BOTTOM)
