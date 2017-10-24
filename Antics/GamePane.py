@@ -8,14 +8,14 @@ import tkinter
 #
 #
 
+
 class GamePane:
 
     def __init__(self, handler, parent):
         self.parent = parent
         self.handler = handler
 
-
-        ## make game board
+        # make game board
         self.boardFrame = tkinter.Frame(self.parent)
         self.boardIcons = []
 
@@ -24,16 +24,12 @@ class GamePane:
         for i in range(10):
             tmp = []
             for j in range(10):
-                # currently displaying as a label, likely needs to be changed
-                # borderwidth has to be 0 to make seamless grid
-                label = tkinter.Label(self.boardFrame, image = self.terrain, bd = 0)
-                tmp.append(label)
-                label.grid(column = j, row = i)
+                button = BoardButton(self.boardFrame, self, j, i, self.terrain)
+                tmp.append(button)
             self.boardIcons.append(tmp)
         self.boardFrame.grid(column = 1, row = 0)
 
-
-        ## make player displays
+        # make player displays
         self.playerInfoFrame = tkinter.Frame(self.parent, relief = tkinter.GROOVE, borderwidth = 2)
 
         # make tkinter variables with default values (should be overwritten before display)
@@ -64,8 +60,8 @@ class GamePane:
         self.playerInfoFrame.grid(column = 0, row = 0, sticky = tkinter.N + tkinter.S)
         self.parent.rowconfigure(0, weight = 1)
 
-        ## Make message pane
-        self.messageFrame = tkinter.Frame(self.parent,bg = "white", relief = tkinter.RIDGE, bd = 2)
+        # Make message pane
+        self.messageFrame = tkinter.Frame(self.parent, bg = "white", relief = tkinter.RIDGE, bd = 2)
         self.messageText = tkinter.StringVar()
         self.messageText.set("Please Win")
         self.messageLabel = tkinter.Label(self.messageFrame, textvar = self.messageText, bg = "white")
@@ -73,8 +69,114 @@ class GamePane:
         self.messageFrame.grid(column = 1, row = 1, sticky = tkinter.E + tkinter.W)
         self.messageFrame.columnconfigure(0, weight = 1)
 
-        ## Make control buttons
+        # Make control buttons
+        # TODO: make them look fancy
+        self.blue = "#8bbcda"
+        font = ("Times New Roman", 24)
+        
         self.buttonFrame = tkinter.Frame(self.parent)
+        self.buttonFrame.grid(column = 2, row = 0, rowspan = 2, sticky = tkinter.N + tkinter.S)
+
+        self.UIbutton = tkinter.Button(self.buttonFrame, text = "Close UI", command = self.UIbuttonPressed)
+        self.UIbutton.config(bg = 'red', fg = 'white', font = font, width = 12, pady = 3)
+        self.UIbutton.grid()
+
+        self.endTurnButton = tkinter.Button(self.buttonFrame, text = "End Turn", command = self.endTurnPressed)
+        self.endTurnButton.config(bg = self.blue, fg = 'white', font = font, width = 12, pady = 3)
+        self.endTurnButton.grid(row = 1)
+
+        self.pauseVar = tkinter.StringVar()
+        self.pauseVar.set("Play")
+        self.pauseButton = tkinter.Button(self.buttonFrame, textvar = self.pauseVar, command = self.pausePressed)
+        self.pauseButton.config(bg = 'green', fg = 'white', font = font, width = 12, pady = 3)
+        self.pauseButton.grid(row = 2)
+        self.paused = True
+
+        self.stepButton = tkinter.Button(self.buttonFrame, text = "Step", command = self.stepPressed)
+        self.stepButton.config(bg = self.blue, fg = 'white', font = font, width = 12, pady = 3)
+        self.stepButton.grid(row = 3)
+
+        self.statsText = tkinter.StringVar()
+        self.statsText.set("Print Stats On")
+        self.statsButton = tkinter.Button(self.buttonFrame, textvar = self.statsText, command = self.statsPressed)
+        self.statsButton.config(bg = self.blue, fg = 'white', font = font, width = 12, pady = 3)
+        self.statsButton.grid(row = 4)
+        self.stats = False
+
+        self.killButton = tkinter.Button(self.buttonFrame, text = "Kill Game", command = self.killPressed)
+        self.killButton.config(bg = 'red', fg = 'white', font = font, width = 12, pady = 3)
+        self.killButton.grid(row = 5)
+
+        self.restartButton = tkinter.Button(self.buttonFrame, text = "Restart All", command = self.restartPressed)
+        self.restartButton.config(bg = 'red', fg = 'white', font = font, width = 12, pady = 3)
+        self.restartButton.grid(row = 6)
+
+        self.settingsButton = tkinter.Button(self.buttonFrame, text = "Settings", command = self.settingsPressed)
+        self.settingsButton.config(bg = 'red', fg = 'white', font = font, width = 12, pady = 3)
+        self.settingsButton.grid(row =7)
+
+        # make buttons space out a bit
+        for i in range(8):
+            self.buttonFrame.rowconfigure(i, weight = 1)
+
+    #
+    # button handling functions
+    # some of these should be replaced by references to the GUI handler
+    #
+    def UIbuttonPressed(self):
+        self.handler.showFrame(1)
+
+    def endTurnPressed(self):
+        print("End Turn")
+
+    def pausePressed(self):
+        if self.paused:
+            self.paused = False
+            self.pauseVar.set("Pause")
+            self.pauseButton.config(bg = self.blue)
+        else:
+            self.paused = True
+            self.pauseVar.set("Play")
+            self.pauseButton.config(bg = 'green')
+
+    def stepPressed(self):
+        print("Step")
+
+    def statsPressed(self):
+        if self.stats:
+            self.stats = False
+            self.statsText.set("Print Stats On")
+        else:
+            self.stats = True
+            self.statsText.set("Print Stats Off")
+
+    def killPressed(self):
+        print("Kill")
+
+    def restartPressed(self):
+        print("Restart")
+
+    def settingsPressed(self):
+        print("Settings")
+
+    def boardButtonPressed(self, x, y):
+        print("Board Clicked x: %d, y: %d" % (x, y))
+
+class BoardButton:
+
+    def __init__(self, parent, handler, x, y, image):
+        self.x = x
+        self.y = y
+        self.handler = handler
+        self.parent = parent
+
+        # borderwidth has to be 0 to make seamless grid
+        # TODO not seamless with buttons, fix
+        self.button = tkinter.Button(self.parent, image = image, bd = 0, command = self.pressed)
+        self.button.grid(column = self.x, row = self.y)
+
+    def pressed(self):
+        self.handler.boardButtonPressed(self.x, self.y)
 
 
 
