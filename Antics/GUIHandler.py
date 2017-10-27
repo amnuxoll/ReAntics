@@ -1,5 +1,6 @@
 import tkinter
 from GamePane import *
+from SettingsPane import *
 
 #########################################################
 # Class GUIHandler
@@ -27,7 +28,7 @@ class GUIHandler:
         self.gameFrame = tkinter.Frame(self.baseFrame)
 
         # TODO implement and attach these handlers
-        self.settingsHandler = None
+        self.settingsHandler = GameSettingsFrame ( self, self.gameFrame )
         self.statsHandler = None
         self.gameHandler = GamePane(self, self.gameFrame)
 
