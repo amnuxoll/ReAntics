@@ -222,10 +222,12 @@ class GamePane:
         print("Kill")
 
     def restartPressed(self):
+        self.killPressed()
         print("Restart")
 
     def settingsPressed(self):
-        print("Settings")
+        self.killPressed()
+        self.handler.showFrame(0)
 
     def boardButtonPressed(self, x, y):
         print("Board Clicked x: %d, y: %d" % (x, y))
