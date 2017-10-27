@@ -20,6 +20,7 @@ class GUIHandler:
 
         # set up tkinter things
         self.root = tkinter.Tk()
+        self.root.title("ReAntics")
         self.baseFrame = tkinter.Frame(self.root)
         self.settingsFrame = tkinter.Frame(self.baseFrame)
         self.statsFrame = tkinter.Frame(self.baseFrame)

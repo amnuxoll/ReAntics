@@ -1,5 +1,8 @@
 import tkinter
 import RedoneWidgets as wgt
+from Constants import *
+import random
+import os
 
 #
 # class GamePane
@@ -20,15 +23,25 @@ class GamePane:
         self.boardFrame = tkinter.Frame(self.parent)
         self.boardIcons = []
 
+        # create image assets
+        self.textures = {}
+        for f in os.listdir("Textures/"):
+            s1, s2 = f.split('.')
+            if s2 == "gif":
+                self.textures[s1] = tkinter.PhotoImage(file = "Textures/" + f)
+
+
         # game board is based on a 10*10 grid of tiles
-        self.terrain = tkinter.PhotoImage(file = "Textures/terrain.gif")
         for i in range(10):
             tmp = []
             for j in range(10):
-                button = BoardButton(self.boardFrame, self, j, i, self.terrain)
+                button = BoardButton(self.boardFrame, self, j, i)
                 tmp.append(button)
             self.boardIcons.append(tmp)
         self.boardFrame.grid(column = 1, row = 0)
+
+        # test board drawing
+        self.randomBoard()
 
         # make player displays
         self.playerInfoFrame = tkinter.Frame(self.parent, relief = tkinter.GROOVE, borderwidth = 2)
@@ -89,7 +102,7 @@ class GamePane:
         self.pauseVar = tkinter.StringVar()
         self.pauseVar.set("Play")
         self.pauseButton = wgt.ColoredButton(self.buttonFrame, command = self.pausePressed)
-        self.pauseButton.config ( textvar = self.pauseVar )
+        self.pauseButton.config(textvar = self.pauseVar)
         self.pauseButton.config(bg = 'green', fg = 'white', font = font, width = 12, pady = 3)
         self.pauseButton.grid(row = 2)
         self.paused = True
@@ -101,7 +114,7 @@ class GamePane:
         self.statsText = tkinter.StringVar()
         self.statsText.set("Print Stats On")
         self.statsButton = wgt.ColoredButton(self.buttonFrame, command = self.statsPressed)
-        self.statsButton.config ( textvar = self.statsText )
+        self.statsButton.config(textvar = self.statsText)
         self.statsButton.config(bg = self.blue, fg = 'white', font = font, width = 12, pady = 3)
         self.statsButton.grid(row = 4)
         self.stats = False
@@ -121,6 +134,58 @@ class GamePane:
         # make buttons space out a bit
         for i in range(8):
             self.buttonFrame.rowconfigure(i, weight = 1)
+
+    ##
+    # randomBoard
+    #
+    # makes the board a completely random layout for testing purposes
+    #
+    # hey look its a unit test
+    #
+    def randomBoard(self):
+        for y in range(10):
+            for x in range(10):
+                r = random.randint(1, 10)
+                if r <= 4:
+                    cons = -r
+                else:
+                    cons = -9
+
+                r = random.randint(0, 19)
+                if r <= 4:
+                    ant = r
+                else:
+                    ant = -9
+
+                r = random.randint(0, 1)
+                if r == 0:
+                    team = PLAYER_ONE
+                else:
+                    team = PLAYER_TWO
+
+                r = random.randint(1, 10)
+                if r == 1:
+                    moved = True
+                    highlight = False
+                elif r == 2:
+                    moved = False
+                    highlight = True
+                else:
+                    moved = False
+                    highlight = False
+
+                r = random.randint(1,5)
+                if r == 1:
+                    carrying = True
+                else:
+                    carrying = False
+
+                r = random.randint(1, 8)
+                r2 = random.randint(1, r)
+                health = (r, r2)
+
+                self.boardIcons[y][x].setImage(construct = cons, ant = ant, team = team, moved = moved,
+                                               highlight = highlight, carrying = carrying, health = health)
 
     #
     # button handling functions
@@ -165,21 +230,133 @@ class GamePane:
     def boardButtonPressed(self, x, y):
         print("Board Clicked x: %d, y: %d" % (x, y))
 
+
 class BoardButton:
 
-    def __init__(self, parent, handler, x, y, image):
+    def __init__(self, parent, handler, x, y):
         self.x = x
         self.y = y
-        self.handler = handler
-        self.parent = parent
+        self.handler: GamePane = handler
+        self.parent: tkinter.Frame = parent
 
         # borderwidth has to be 0 to make seamless grid
-        # TODO not seamless with buttons, fix
-        self.button = tkinter.Button(self.parent, image = image, bd = 0, command = self.pressed)
-        self.button.grid(column = self.x, row = self.y)
+        self.label = tkinter.Canvas(self.parent)
+        self.label.config(bd = 1, bg = "black", width = 66, height = 66, highlightthickness = 0)
+        self.label.grid(column = self.x, row = self.y)
 
-    def pressed(self):
+        # bind click listener
+        self.label.bind("<Button-1>", self.pressed)
+
+        # set internal variables
+        self.construct = None
+        self.ant = None
+        self.team = PLAYER_ONE
+        self.moved = False
+        self.health = None
+        self.highlight = False
+        self.carrying = False
+
+        # draw initial tile
+        self.reDraw()
+
+
+    def pressed(self, event):
         self.handler.boardButtonPressed(self.x, self.y)
+
+    ##
+    # setImage
+    #
+    # sets any number of display values to new values and redraws the tile
+    #
+    # construct: one of ANTHILL, TUNNEL, GRASS, or FOOD from constants.py
+    # ant: one of QUEEN, WORKER, DRONE, SOLDIER, or R_SOLDIER from constants.py
+    # team: one of PLAYER_ONE or PLAYER_TWO from constants.py
+    # moved: either True or False
+    # health: a tuple of integers in the form (max_hp, current_hp)
+    # highlight: True or False
+    # carrying: True or False
+    #
+    def setImage(self, construct = -9, ant = -9, team = -9, moved = -9, health = -9, highlight = -9, carrying = -9):
+        if construct != -9:
+            self.construct = construct
+        if ant != -9:
+            self.ant = ant
+        if team != -9:
+            self.team = team
+        if moved != -9:
+            self.moved = moved
+        if health != -9:
+            self.health = health
+        if highlight != -9:
+            self.highlight = highlight
+        if carrying != -9:
+            self.carrying = carrying
+
+        self.reDraw()
+
+    ##
+    # reDraw
+    #
+    # re draws this tile based on its internal values
+    #
+    def reDraw(self):
+        loc = (1, 1)
+        
+        # draw base
+        self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["terrain"])
+
+        # team color
+        if self.team == PLAYER_ONE:
+            team = "Blue"
+        else:
+            team = "Red"
+
+        # draw construct
+        if self.construct == GRASS:
+            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["grass"])
+        elif self.construct == FOOD:
+            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["food"])
+        elif self.construct == ANTHILL:
+            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["anthill" + team])
+        elif self.construct == TUNNEL:
+            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["tunnel" + team])
+
+        # draw ant
+        if self.ant == WORKER:
+            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["worker" + team])
+        elif self.ant == SOLDIER:
+            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["soldier" + team])
+        elif self.ant == QUEEN:
+            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["queen" + team])
+        elif self.ant == R_SOLDIER:
+            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["rsoldier" + team])
+        elif self.ant == DRONE:
+            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["drone" + team])
+
+        # carrying mark
+        if self.carrying:
+            self.label.create_image((loc[0] + 48, loc[1] + 48), anchor=tkinter.N + tkinter.W,
+                                    image=self.handler.textures["carrying"])
+
+        # hasMoved marker
+        if self.moved:
+            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["moved"])
+
+        # highlighted marker
+        elif self.highlight:
+            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["highlighted"])
+
+        # draw health
+        if self.health:
+            for i in range(self.health[0]):
+                if i <= self.health[1]:
+                    self.label.create_image((loc[0] + 3, loc[1] + i * 8), anchor=tkinter.N + tkinter.W,
+                                            image=self.handler.textures["healthFull"])
+                else:
+                    self.label.create_image((loc[0] + 3, loc[1] + i * 8), anchor=tkinter.N + tkinter.W,
+                                            image=self.handler.textures["healthEmpty"])
+
+
 
 
 
