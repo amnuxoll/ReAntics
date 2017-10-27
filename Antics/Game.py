@@ -36,8 +36,10 @@ class Game(object):
         # debug mode allows initial setup in human vs. AI to be automated
         self.debugMode = False
         self.randomSetup = False
+        self.verbose = False
 
     def startHumanVsAI(self, args, playerPos):
+        self.numGames = 1
         self.debugMode = True
         self.humanPathCallback()
         aiName = args.players[playerPos]
@@ -59,7 +61,7 @@ class Game(object):
 
     def startAIvsAI(self, numGames, player1, player2):
         self.tourneyPathCallback()
-        numGames = 10
+        self.numGames = numGames
 
         # AI names should be specified as next command line args
         # need exactly two AI names
@@ -73,7 +75,7 @@ class Game(object):
         if (len(aiNameIndices) < 2):
             print("ERROR:  AI '" + player1 + "' OR AI '" + player2 + "' not found.")
             print("Please specify one of the following:")
-            for player in self.players[1:]:
+            for player in self.players:
                 print('    "' + player[0].author + '"')
             return
 
@@ -87,6 +89,53 @@ class Game(object):
         self.startGameCallback()
         pass
 
+    def startRR(self, numGames, givenPlayers):
+        self.tourneyPathCallback()
+        self.numGames = numGames
+
+        # AI names should be specified as next command line args
+        # need exactly two AI names
+        aiNameIndices = []
+
+        for givenPlayer in givenPlayers:
+            index = -1
+            for player in self.players:
+                if givenPlayer == player[0].author:
+                    # append the name of the indices for the tournament
+                    aiNameIndices.append(self.players.index(player))
+                    index = 1
+            if index == -1:
+                print("ERROR:  AI '" + givenPlayer + "' not found.")
+                print("Please specify one of the following:")
+                for thisPlayer in self.players[1:]:
+                    print('    "' + thisPlayer[0].author + '"')
+                return
+
+        # now that we have the AI's check the check boxes
+        for index in aiNameIndices:
+            self.checkBoxClickedCallback(index)
+
+        self.submitClickedCallback()
+        self.startGameCallback()
+        pass
+
+    def startRRall(self, numGames):
+        self.tourneyPathCallback()
+        self.numGames = numGames
+
+        # AI names should be specified as next command line args
+        # need exactly two AI names
+        aiNameIndices = []
+        for player in self.players:
+            aiNameIndices.append(self.players.index(player))
+
+        # now that we have the AI's check the check boxes
+        for index in aiNameIndices:
+            self.checkBoxClickedCallback(index)
+
+        self.submitClickedCallback()
+        self.startGameCallback()
+        pass
     ##
     # processCommandLine
     #
@@ -101,19 +150,19 @@ class Game(object):
     def processCommandLine(self):
         parser = argparse.ArgumentParser(description='Lets play Antics!', add_help=True)
         group = parser.add_mutually_exclusive_group(required=False)
-        group.add_argument('--RR', action='store_true', dest='RR',
+        group.add_argument('--RR', action='store_true', dest='RR', default=False,
                            help='Round robin of given AI’s(minimum of 3 AI’s required)')
-        group.add_argument('--RRall', action='store_true', dest='RRall',
+        group.add_argument('--RRall', action='store_true', dest='RRall', default=False,
                            help='Round robin between all AI’s')
-        group.add_argument('--self', action='store_true', dest='self',
+        group.add_argument('--self', action='store_true', dest='self', default=False,
                            help='Allow the AI to play itself')
-        group.add_argument('--all', action='store_true', dest='all',
+        group.add_argument('--all', action='store_true', dest='all', default=False,
                            help='Play all other AI’s total games = NUMGAMES * (total number of AI’s)')
-        group.add_argument('--2p', action='store_true', dest='twoP',
+        group.add_argument('--2p', action='store_true', dest='twoP', default=False,
                            help='Two player game')
         parser.add_argument('-randomLayout', action='store_true', dest='randomLayout', default=False,
                             help='Override layout calls to human/agent with a random layout')
-        parser.add_argument('-v', action='store_true', default=False,
+        parser.add_argument('-v', action='store_true', default=False, dest='verbose',
                             help='Verbose - print out game records to console'
                                  '(Prints the current game record at the end of each game to the console)')
         parser.add_argument('-n', '--NumGames', metavar='NUMGAMES', type=int, nargs=1, dest='numgames', default=1,
@@ -125,22 +174,24 @@ class Game(object):
 
         args = parser.parse_args()
 
-        if (args.RR is not None or args.RRall is not None or args.self is not None or args.all is not None or args.twoP is not None) and args.numgames is None:
+        if args.verbose:
+            self.verbose = True
+        if (args.RR or args.RRall or args.self or args.all or args.twoP) and args.numgames is None:
             parser.error('Flags not valid without number of games (-n)')
-        if args.twoP is not None:
+        if args.twoP:
             if len(args.players) != 2:
                 parser.error('Only two agents allowed')
             # TODO: This is to change with stretch goals
             if "human" == args.players[0].lower() and "human" == args.players[1].lower():
                 parser.error('Only one player may be human')
             if "human" == args.players[0].lower():
-                if args.numgames != 1:
+                if args.numgames[0] != 1:
                     parser.error('Human Vs Player can only have 1 game. (-n 1)')
                 self.startHumanVsAI(args, 1)
                 if args.randomLayout:
                     self.randomSetup = True
             elif "human" == args.players[1].lower():
-                if args.numgames != 1:
+                if args.numgames[0] != 1:
                     parser.error('Human Vs Player can only have 1 game. (-n 1)')
                 self.startHumanVsAI(args, 0)
                 if args.randomLayout:
@@ -151,87 +202,17 @@ class Game(object):
                     otherBit = 1
                 else:
                     otherBit = 0
-                self.startAIvsAI(args.numgames, args.players[randBit], args.players[otherBit])
-
-
-        # # process command line arguments
-        # if (len(sys.argv) > 1):
-        #     # player wants to go straight to AI vs. Human for a
-        #     # specific AI
-        #     if sys.argv[1] == "debug":
-        #         self.debugMode = True
-        #         self.humanPathCallback()  # press the "Human vs. AI" button
-        #         # AI name should be specified as second command line arg
-        #         index = -1
-        #         if (len(sys.argv) > 2):
-        #             ainame = sys.argv[2]
-        #             for player in self.players:
-        #                 if ainame == player[0].author:
-        #                     index = self.players.index(player)
-        #                     break
-        #             if (index < 0):
-        #                 print("ERROR:  AI '" + ainame + "' not found.")
-        #                 print("Please specify one of the following:")
-        #                 for player in self.players[1:]:
-        #                     print('    "' + player[0].author + '"')
-        #                 return
-        #             # select the specified AI and click "Submit"
-        #             self.checkBoxClickedCallback(index)
-        #             self.submitClickedCallback()
-        #             self.startGameCallback()
-        #         # User may specify "random" as third argument to get a
-        #         # random layout.
-        #         if (len(sys.argv) > 3) and (sys.argv[3] == "random"):
-        #             self.randomSetup = True
-        #
-        #     # Check Tournament
-        #     if sys.argv[1].lower() == "-t":
-        #         # press the "Tournament Mode" button
-        #         self.tourneyPathCallback()
-        #
-        #         numGames = 10
-        #
-        #         # AI names should be specified as next command line args
-        #         # need exactly two AI names
-        #         aiNameIndices = []
-        #         index = -1
-        #         if (len(sys.argv) > 3):
-        #             ainame1 = sys.argv[2]
-        #             ainame2 = sys.argv[3]
-        #             for player in self.players:
-        #                 if ainame1 == player[0].author or ainame2 == player[0].author:
-        #                     # append the name of the indices for the tournament
-        #                     aiNameIndices.append(self.players.index(player))
-        #
-        #             if (len(aiNameIndices) < 2):
-        #                 print("ERROR:  AI '" + ainame1 + "' OR AI '" + ainame2 + "' not found.")
-        #                 print("Please specify one of the following:")
-        #                 for player in self.players[1:]:
-        #                     print('    "' + player[0].author + '"')
-        #                 return
-        #
-        #         # get the number of games for the tournament if specified
-        #         if (len(sys.argv) > 5):
-        #             if sys.argv[4].lower() == "-n":
-        #                 try:
-        #                     numGames = int(sys.argv[5])
-        #                 except ValueError:
-        #                     print("ERROR: Please enter a number after -n ")
-        #                     return
-        #             else:
-        #                 print("ERROR: Please specify -n to give a specific number of games to run.")
-        #                 print("     FORMAT: -n 1000")
-        #                 return
-        #
-        #         # now that we have the AI's check the check boxes
-        #         for index in aiNameIndices:
-        #             self.checkBoxClickedCallback(index)
-        #
-        #         # self.ui.textBoxContent = str(numGames)
-        #
-        #         self.submitClickedCallback()
-        #         self.startGameCallback()
-        #         pass
+                self.startAIvsAI(args.numgames[0], args.players[randBit], args.players[otherBit])
+        elif args.RR:
+            if 'human' in args.players:
+                parser.error('Human not allowed in round robin')
+            if len(args.players) <= 2:
+                parser.error('3 or more players needed for round robin')
+            self.startRR(args.numgames[0], args.players)
+        elif args.RRall:
+            if args.players is not None:
+                parser.error('Do not specify players with (-p), (--RRall) is for all players')
+            self.startRRall(args.numgames[0])
 
     ##
     # start
@@ -596,7 +577,8 @@ class Game(object):
                 self.playerScores[self.loser][2] += 1
 
                 # if CommandLine Mode print the values to the console
-                self.printTournament()
+                if self.verbose:
+                    self.printTournament()
 
                 # reset the game
                 self.initGame()
@@ -614,6 +596,7 @@ class Game(object):
 
                 if len(self.gamesToPlay) == 0:
                     # if no more games to play, reset tournament stuff
+                    self.printTournament()
                     self.numGames = 0
                     self.playerScores = []
                     self.mode = TOURNAMENT_MODE
@@ -1326,11 +1309,15 @@ class Game(object):
     #
     ##
     def printTournament(self):
-        columns = ['AI', 'Wins', 'Losses']
-        row_format = "{:>15}" * (len(columns))
-        print(row_format.format(*columns))
-        for row in self.playerScores:
-            print(row_format.format(*row))
+        transposedList = list(map(list, zip(*self.playerScores)))
+        strTransList = [[str(n) for n in i] for i in transposedList]
+        longest_len = len(max(strTransList[0], key=len))
+        scoreAndTitle = [['Player', 'Wins', 'Losses']] + [['-------', '-------', '-------']] + self.playerScores
+        scoreAndTitles = [[str(n) for n in i] for i in scoreAndTitle]
+
+        for row in scoreAndTitles:
+            print("".join(str(word).rjust(longest_len) for word in row))
+        print('')
 
     ##
     # error
@@ -1421,7 +1408,8 @@ class Game(object):
                 # reset tournament variables
                 self.playerScores = []  # [[author,wins,losses], ...]
                 self.gamesToPlay = []  # ((p1.id, p2.id), numGames)
-                self.numGames = None
+                # TODO: Im not sure what this did but it was messing up round robin
+                # self.numGames = None
                 # notify UI tournament has started
                 # self.ui.tournamentStartTime = time.clock()
                 # self.ui.tournamentInProgress = True
@@ -1432,7 +1420,8 @@ class Game(object):
                 #     self.ui.textBoxContent = '0'
                 #     self.numGames = 0
 
-                self.numGames = 10
+                # TODO: Im not sure what this did but it was messing up round robin
+                # self.numGames = 10
 
                 # if numGames is non-positive, dont set up game
                 if self.numGames <= 0:
