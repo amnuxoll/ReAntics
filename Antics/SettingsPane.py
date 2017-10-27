@@ -24,24 +24,28 @@ FL_COLOR = "black"
 FL_TEXT_COLOR = "white"
 FL_BD = 5
 FL_STYLE = "ridge"
-FL_FONT = ( "Herculanum", 15, "bold")
+FL_FONT = ( "Wingdings", 15, "bold")
 # Papyrus, Harrington, Herculanum, Desdemona, Wingdings
 
-class GameSettingsFrame ( tk.Frame ) :
+class GameSettingsFrame ( ) :
     
-    def __init__(self, parent = None):
+    def __init__(self, handler, parent = None):
         # initialize UI object
-        tk.Frame.__init__(self, parent)
+##        tk.Frame.__init__(self, parent)
 
         # store event handler to close later
         self.parent = parent
+        self.handler = handler
 
         # configure rows and columns of the main frame
         for r in range(23):
             self.parent.rowconfigure(r, weight=1)
 
         for c in range(23):
-            self.parent.columnconfigure(c, weight=1)
+            if c > 11 :
+                self.parent.columnconfigure(c, weight=1)
+            else :
+                self.parent.columnconfigure(c, weight=0)
 
         ##########################
         # left side -- queues and start
@@ -89,7 +93,7 @@ class GameSettingsFrame ( tk.Frame ) :
         self.startButtonFrame = tk.Frame ( self.parent, bg="white" )
         self.startButtonFrame.grid ( row = 21, column = 1, rowspan = 1, columnspan = 10, sticky = tk.E+tk.W )
 
-        self.startButton = wgt.ColoredButton ( self.startButtonFrame, "START", "green", "black"  )
+        self.startButton = wgt.ColoredButton ( self.startButtonFrame, "START", "green", "black", self.changeFrame  )
         self.startButton.pack ( fill = tk.X )
 
         ##########################
@@ -129,8 +133,6 @@ class GameSettingsFrame ( tk.Frame ) :
         self.addPauseConditionPlus = tk.Button ( self.addPauseConditionsFrame, text = "+" )
         self.addPauseConditionPlus.pack ( side=tk.LEFT)
 
-        # editing the parent's attributes edits the base level window
-        self.parent.title("Settings Frame")
 
     #####
     # addGameChanged
@@ -152,6 +154,10 @@ class GameSettingsFrame ( tk.Frame ) :
         elif option == "Play All" :
             self.addGameOptionsWindow = SinglePlayerFrame ( self.addGameFrame, "All Others" )
         self.addGameOptionsWindow.pack ( fill="both", side=tk.BOTTOM )
+
+    def changeFrame ( self ) :
+        print("hey there")
+        self.handler.showFrame(2)
 
 
 class BlueBox ( tk.Frame ) :
@@ -530,11 +536,6 @@ class RoundRobinFrame ( tk.Frame ) :
         print ( idx )
 
 
-# main code
-
-# setup GUI object and initialize GUI library
-app = GameSettingsFrame(tk.Tk())
-app.mainloop()
        
 
 

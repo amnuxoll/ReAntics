@@ -23,24 +23,20 @@ class GUIHandler:
         self.root = tkinter.Tk()
         self.root.title("ReAntics")
         self.baseFrame = tkinter.Frame(self.root)
-        self.settingsFrame = tkinter.Frame(self.baseFrame)
+        self.settingsFrame = tkinter.Frame(self.baseFrame )
         self.statsFrame = tkinter.Frame(self.baseFrame)
         self.gameFrame = tkinter.Frame(self.baseFrame)
 
         # TODO implement and attach these handlers
-        self.settingsHandler = GameSettingsFrame ( self, self.gameFrame )
+        self.settingsHandler = GameSettingsFrame(self, self.settingsFrame)
         self.statsHandler = None
         self.gameHandler = GamePane(self, self.gameFrame)
 
         # we want the game to start on the settings screen, so show it first
-        self.settingsFrame.pack()
+        self.settingsFrame.pack(fill="both")
 
         # pack main GUI
-        self.baseFrame.pack()
-
-
-        # set default screen for testing
-        self.showFrame(2)
+        self.baseFrame.pack(fill="both")
 
         # this starts the event handling loop if we want to
         # execute code afterwords, this handler needs to be
@@ -65,11 +61,11 @@ class GUIHandler:
         self.gameFrame.pack_forget()
 
         if frameNum == 0:
-            self.settingsFrame.pack()
+            self.settingsFrame.pack(fill="both")
         elif frameNum == 1:
-            self.statsFrame.pack()
+            self.statsFrame.pack(fill="both")
         else:
-            self.gameFrame.pack()
+            self.gameFrame.pack(fill="both")
 
 # test code to check GUI without running the game itself
 
