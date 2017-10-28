@@ -59,7 +59,8 @@ class GameSettingsFrame ( ) :
         self.gameQFrame = tk.Frame ( self.parent, highlightthickness = FRAME_BDR, highlightbackground="black" ) #, bg = "#adadad" )
         self.gameQFrame.grid ( row = 1, column = 0, rowspan = 10, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S )
 
-        self.gameQLabel = tk.Label ( self.gameQFrame, text = "Game Queue", fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT )
+        self.gameQLabel = tk.Label ( self.gameQFrame, text = "Game Queue", \
+                                     fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT )
         self.gameQLabel.pack ( side=tk.TOP, fill=tk.X )
         self.gameQClearButton = wgt.ColoredButton ( self.gameQFrame, "Clear All Games", wgt.RED, "black" )
         self.gameQClearButton.config ( font = BUTTON2_FONT )
@@ -74,13 +75,8 @@ class GameSettingsFrame ( ) :
         self.gamesScrollFrame.pack ( fill="both" )
 
         #### important ####
-        self.my_games = []
+        self.my_games = [] # store all of the GameGUIData objects here
         ###################
-
-##        self.temp = BlueBox ( self.gamesScrollFrame.interior )
-##        self.temp.grid ( )#row = 0 )
-##        self.temp2 = BlueBox ( self.gamesScrollFrame.interior )
-##        self.temp2.grid ( )#row = 1 )
 
         # pause condition log
         self.pauseConditionsFrame = tk.Frame ( self.parent, highlightthickness = FRAME_BDR, highlightbackground="black" ) 
@@ -212,10 +208,11 @@ class GameSettingsFrame ( ) :
         b = None
         if box_needed :
             b = BlueBox ( self.gamesScrollFrame.interior )
-            b.grid (row = len(self.my_games),sticky=tk.W)
+            b.grid (sticky=tk.W)
             self.gamesScrollFrame.set_scrollregion() # update the scroll bar
         new_game = GameGUIData ( t, n, p, b )
         self.my_games.append ( new_game )
+        self.parent.update()
 
         return
 
@@ -240,13 +237,14 @@ class BlueBox ( tk.Frame ) :
         self.parent = parent
 
         bc = wgt.LIGHT_BLUE
+        fnt = ( "Courier", 12 )
 
         self.config ( bg = bc, padx = 2, pady = 2, width = 500 )
         self.config ( highlightbackground="white", highlightcolor="white", highlightthickness=2, bd= 0 )
 
         self.myTopText = tk.StringVar()
         self.setTopText ( "game type num games",  )
-        self.topLabel = tk.Label ( self, textvar = self.myTopText, anchor=tk.W, justify=tk.LEFT, bg = bc )
+        self.topLabel = tk.Label ( self, textvar = self.myTopText, anchor=tk.W, justify=tk.LEFT, bg = bc, font = fnt )
         self.topLabel.grid ( row = 0, column = 0, columnspan = 8, sticky = tk.W )
         
         self.delButton = wgt.ColoredButton ( self, "x", "white", wgt.RED )
@@ -258,13 +256,13 @@ class BlueBox ( tk.Frame ) :
         self.setTextLines ( [ "player,"*50 ] )
         
         self.myTextFrame = tk.Frame ( self, bg = bc, padx = 2, pady = 2 )
-        self.myTextLabel = tk.Label ( self.myTextFrame, textvar = self.myText, anchor=tk.W, justify=tk.LEFT, bg = bc )
+        self.myTextLabel = tk.Label ( self.myTextFrame, textvar = self.myText, anchor=tk.W, justify=tk.LEFT, bg = bc, font = fnt )
         self.myTextLabel.pack()
         self.myTextFrame.grid ( row = 1, column = 0, columnspan = 8 )
         
 
     def setTextLines ( self, textArray ) :
-        maxl = 53
+        maxl = 34
         padded = []
         for l in textArray :
             for i in range ( 0, len(l), maxl ) :
@@ -618,8 +616,7 @@ class RoundRobinFrame ( tk.Frame ) :
         for i in range ( len(self.players) ) :
             p = self.players[i]
             self.selected[p] = tk.BooleanVar()
-            b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p], \
-                                 command = partial ( self.playerChecked, i ) )
+            b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p] )
             playerCheckButtons.append ( b )
             b.grid ( row = int (i/cols), column = i%cols, sticky=tk.W )
         
@@ -639,12 +636,14 @@ class RoundRobinFrame ( tk.Frame ) :
         self.numGamesFrame.pack ( fill=tk.X,side=tk.BOTTOM )
 
         self.playersFrame.pack ( fill="both" )
-
-    def playerChecked ( self, idx ) :
-        print ( idx )
         
     def get_players ( self ) :
-        return []
+        p = []
+        for x in self.players :
+            if x != "Select All" and self.selected[x].get() :
+                p.append ( x )
+            
+        return p
 
     def get_num_games ( self ) :
         return self.numGamesEntry.get()
