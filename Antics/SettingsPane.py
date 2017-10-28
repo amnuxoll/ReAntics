@@ -199,14 +199,6 @@ class GameSettingsFrame ( ) :
 
         # convert n to integer
 
-        
-##        try:
-##            n = int(n)
-##            return True
-##        except ValueError:
-##            print ( "invalid game option A", n, p )
-##            return
-
         rgx_int = re.compile ( "^[0-9]+$" )
         if not rgx_int.match :
             print ( "invalid game option A", n, p )
@@ -219,9 +211,11 @@ class GameSettingsFrame ( ) :
 
         b = None
         if box_needed :
-            b = BlueBox ( self.gamesScrollFrame )
-            b.grid ()
+            b = BlueBox ( self.gamesScrollFrame.interior )
+            b.grid (row = len(self.my_games),sticky=tk.W)
+            self.gamesScrollFrame.set_scrollregion() # update the scroll bar
         new_game = GameGUIData ( t, n, p, b )
+        self.my_games.append ( new_game )
 
         return
 
@@ -234,7 +228,7 @@ class GameGUIData () :
         self.players = players
 
         if box is not None :
-            box.setTopText ( "Game Type : " + str(game_type) +", Num Games : " + str(num_games) )
+            box.setTopText ( " ".join( [ str(game_type) +",", "Games :", str(num_games)] ) )
             box.setTextLines ( [ ", ".join ( players ) ] )
         self.gui_box = box
 
@@ -270,7 +264,7 @@ class BlueBox ( tk.Frame ) :
         
 
     def setTextLines ( self, textArray ) :
-        maxl = 40
+        maxl = 53
         padded = []
         for l in textArray :
             for i in range ( 0, len(l), maxl ) :
