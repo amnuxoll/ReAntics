@@ -5,7 +5,18 @@ from tkinter import ttk
 import time
 
 
-FLASH_COLOR = "blue"
+####
+# COLORS - dimmed to be lighter on the eyes
+GREEN = "#398e2e"
+LIGHT_GREEN = "#80c577"
+RED = "#c3473c"
+LIGHT_RED = "#b8746e"
+LIGHT_BLUE = "#a8d5ff"
+
+
+
+#############################################################################
+FLASH_COLOR = "#425261"
 FLASH_TIME = 0.05
 
 #### button creation ####
