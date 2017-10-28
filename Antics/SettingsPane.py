@@ -217,11 +217,13 @@ class GameSettingsFrame ( ) :
             print ( "invalid game option B", n, p )
             return
 
-##        b = None
-##        if box_needed :
-##            b = BlueBox ( self.gamesScrollFrame )
-##            b.grid ()
-##        new_game = GameGUIData ( t, n, p, b )
+        b = None
+        if box_needed :
+            b = BlueBox ( self.gamesScrollFrame )
+            b.grid ()
+        new_game = GameGUIData ( t, n, p, b )
+
+        return
 
 
 
@@ -232,7 +234,7 @@ class GameGUIData () :
         self.players = players
 
         if box is not None :
-            box.setTopText ( " ".join ( [ game_type, num_games ] ) )
+            box.setTopText ( "Game Type : " + str(game_type) +", Num Games : " + str(num_games) )
             box.setTextLines ( [ ", ".join ( players ) ] )
         self.gui_box = box
 
@@ -591,7 +593,7 @@ class SinglePlayerFrame ( tk.Frame ) :
         self.playersFrame.pack ( fill="both" )
         
     def get_players ( self ) :
-        return []
+        return [ self.playerType.get() ]
 
     def get_num_games ( self ) :
         return self.numGamesEntry.get()
