@@ -5,6 +5,7 @@ from tkinter import ttk
 import time
 import RedoneWidgets as wgt
 import re
+from tkinter import messagebox
 
 PLAYERS = []
 for i in range(10):
@@ -150,6 +151,10 @@ class GameSettingsFrame ( ) :
         self.addPauseConditionPlus.config ( font = BUTTON1_FONT )
         self.addPauseConditionPlus.pack ( side=tk.LEFT )
         self.addPauseConditionPlus.command = self.pauseConditionAdded
+
+        
+##        wgt.ShowInfo( "title", "message", root = self.handler.root )
+        
 
     #####
     # addGameChanged

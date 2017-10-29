@@ -86,12 +86,22 @@ class ScrollableFrame ( tk.Frame ) :
 ###########################################################################
 # standard message dialogs... showinfo, showwarning, showerror
 # http://tk-happy.sourceforge.net/tk_dialogs.html
-def ShowInfo(title='Title', message='your message here.'):
-    messagebox.showinfo( title, message )
+#
+# added param "root" - this is handler.root
+
+def ShowInfo(title='Title', message='your message here.', root = None):
+    if root is not None:
+        root.update()
+        messagebox.showinfo( title, message )
+    
     return
-def ShowWarning(title='Title', message='your message here.'):
-    messagebox.showwarning( title, message )
+def ShowWarning(title='Title', message='your message here.', root = None):
+    if root is not None:
+        root.update()
+        messagebox.showwarning( title, message )
     return
-def ShowError(title='Title', message='your message here.'):
-    messagebox.showerror( title, message )
+def ShowError(title='Title', message='your message here.', root = None):
+    if root is not None:
+        root.update()
+        messagebox.showerror( title, message )
     return
