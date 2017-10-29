@@ -62,7 +62,7 @@ class GameSettingsFrame ( ) :
         self.gameQLabel = tk.Label ( self.gameQFrame, text = "Game Queue", \
                                      fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT )
         self.gameQLabel.pack ( side=tk.TOP, fill=tk.X )
-        self.gameQClearButton = wgt.ColoredButton ( self.gameQFrame, "Clear All Games", wgt.RED, "black" )
+        self.gameQClearButton = wgt.ColoredButton ( self.gameQFrame, "Clear All Games", wgt.RED, "black", self.clearGameList )
         self.gameQClearButton.config ( font = BUTTON2_FONT )
         self.gameQClearButton.pack ( side=tk.BOTTOM, fill=tk.X, padx=2,pady=2 )
         
@@ -76,6 +76,7 @@ class GameSettingsFrame ( ) :
 
         #### important ####
         self.my_games = [] # store all of the GameGUIData objects here
+        self.my_pause_conditions = []
         ###################
 
         # pause condition log
@@ -85,9 +86,9 @@ class GameSettingsFrame ( ) :
         self.pauseConditionsLabel = tk.Label ( self.pauseConditionsFrame, text = "Pause Conditions", \
                                                fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT )
         self.pauseConditionsLabel.pack ( side=tk.TOP, fill=tk.X )
-        self.pauseConditionsButton = wgt.ColoredButton ( self.pauseConditionsFrame, "Clear All Pause Conditions", wgt.RED, "black" )
-        self.pauseConditionsButton.config ( font = BUTTON2_FONT )
-        self.pauseConditionsButton.pack ( side=tk.BOTTOM, fill=tk.X, padx=2,pady=2 )
+        self.pauseConditionsClearButton = wgt.ColoredButton ( self.pauseConditionsFrame, "Clear All Pause Conditions", wgt.RED, "black", self.clearPCList )
+        self.pauseConditionsClearButton.config ( font = BUTTON2_FONT )
+        self.pauseConditionsClearButton.pack ( side=tk.BOTTOM, fill=tk.X, padx=2,pady=2 )
 
         self.myPCFrame = tk.Frame ( self.pauseConditionsFrame, bg="white",bd=5 )
         self.pcScrollFrame = ScrollableFrame ( self.myPCFrame )
@@ -148,6 +149,7 @@ class GameSettingsFrame ( ) :
         self.addPauseConditionPlus = wgt.ColoredButton ( self.addPauseConditionsFrame, " "*2 + "+" + " "*2, "black", "white" )
         self.addPauseConditionPlus.config ( font = BUTTON1_FONT )
         self.addPauseConditionPlus.pack ( side=tk.LEFT )
+        self.addPauseConditionPlus.command = self.pauseConditionAdded
 
     #####
     # addGameChanged
@@ -211,13 +213,77 @@ class GameSettingsFrame ( ) :
             b.grid (sticky=tk.W)
             self.gamesScrollFrame.set_scrollregion() # update the scroll bar
         new_game = GameGUIData ( t, n, p, b )
+        new_game.gui_box.delButton.command = partial ( self.deleteSingleGame, new_game )
         self.my_games.append ( new_game )
         self.parent.update()
 
         return
 
+    def clearGameList ( self ) :
+        for g in self.my_games :
+            g.gui_box.destroy()
 
+        self.my_games = []
 
+    def deleteSingleGame ( self, gameGUIDataObj ) :
+        gameGUIDataObj.gui_box.destroy()
+        print ( "first",len(self.my_games))
+        self.my_games.remove ( gameGUIDataObj )
+        print ( len(self.my_games) )
+
+    def clearPCList ( self ) :
+        for g in self.my_pause_conditions :
+            g.gui_box.destroy()
+
+        self.my_games = []
+
+    def deletePC ( self, pauseConditionGUIDataObj ) :
+        pauseConditionGUIDataObj.gui_box.destroy()
+        print ( "first",len(self.my_pause_conditions))
+        self.my_pause_conditions.remove ( pauseConditionGUIDataObj )
+        print ( len(self.my_pause_conditions) )
+
+    def pauseConditionAdded ( self,  ) :
+        # selected, values
+        print ( "pause condition has been added" )
+
+        c = {}
+        p = []
+
+        keys = sorted ( list (self.addPauseOptionsFrame.public_selected.keys()) )
+        
+        for k in keys :
+            if self.addPauseOptionsFrame.public_selected[k] :
+                if "Player" not in k :
+                    c[k] = int (self.addPauseOptionsFrame.public_values[k])
+                else :
+                    p.append ( self.addPauseOptionsFrame.public_values[k] )
+            else:
+                continue
+
+        pcError = False
+        c_keys = list(c.keys()) 
+        if len( c_keys ) < 1 :
+            pcError = True
+
+        for k in c_keys :
+            if c[k] == "-1" :
+                pcError = True
+                break
+
+        if pcError :
+            print ( "invalid pause conditions" )
+            print(c)
+            return
+        
+        b = BlueBox ( self.pcScrollFrame.interior )
+        b.grid (sticky=tk.W)
+        new_pc = PauseConditionGUIData ( c, p, b )
+        new_pc.gui_box.delButton.command = partial ( self.deletePC, new_pc )
+        self.my_pause_conditions.append (new_pc)
+        self.parent.update()
+        
+    
 class GameGUIData () :
     def __init__ ( self, game_type = "", num_games = 0, players = [], box = None ) :
         self.game_type = game_type
@@ -229,6 +295,21 @@ class GameGUIData () :
             box.setTextLines ( [ ", ".join ( players ) ] )
         self.gui_box = box
 
+
+class PauseConditionGUIData () :
+    def __init__ ( self, conditions = {}, players = [], box = None ) :
+        self.conditions = conditions
+        self.players = players
+        if box is not None :
+            box.setTopText ( "P0: " + self.players[0] + ", P1: " + self.players[1])
+            box.setTextLines ( [ self.getPCStr() ] )
+        self.gui_box = box
+
+    def getPCStr ( self ) :
+        s = []
+        for k in list ( self.conditions.keys() ) :
+            s.append ( k + ": " + str(self.conditions[k]) )
+        return "\n".join(s)
         
 
 class BlueBox ( tk.Frame ) :
@@ -378,6 +459,8 @@ class AddPauseOptionsFrame ( ScrollableFrame ) :
             
         self.selected = {}
         self.values = {}
+        self.public_selected = {}
+        self.public_values = {}
 
         self.track_options = list ( self.tracking.keys() )
         num_trackables = len(self.track_options)
@@ -386,20 +469,24 @@ class AddPauseOptionsFrame ( ScrollableFrame ) :
             c = PLAYER_COLORS[i]
             c_light = PLAYER_COLORS_LIGHT[i]
             offset = i*(num_trackables+1)
+            item_name = "Player " + str(i) 
             f = tk.Frame ( self.interior, bg = c_light, padx = 2, pady = 2 )
-            pLabel = tk.Label ( f, text = "Player " + str(i) + ":" + " "*12, fg=c )
+            pLabel = tk.Label ( f, text = item_name + ":" + " "*12, fg=c )
             pLabel.config ( font = BUTTON1_FONT )
             pLabel.grid ( row = offset, sticky=tk.W)
             
             # PLAYERS
             var = tk.StringVar ( self.interior )
-##            self.values[item_name]
-            bText= ttk.Combobox ( f, values = PLAYERS, textvariable = var, state = "readonly" )
-##            bText = self.values[item_name]
+            self.values[item_name] = ttk.Combobox ( f, values = ["Any Player"] + PLAYERS, textvariable = var, state = "readonly" )
+            self.selected[item_name] = tk.BooleanVar().set ( True )
+            bText = self.values[item_name]
             bText.grid ( row = offset, column = 1, sticky=tk.W )
             f.grid ( row = offset, column = 0, columnspan = 2, sticky=tk.W+tk.E )
-##            bText.bind("<<ComboboxSelected>>", partial ( self.newSelection, idx = item_name ) )
+            bText.bind("<<ComboboxSelected>>", partial ( self.newSelection, idx = item_name ) )
             bText.current(0)
+            
+            self.public_selected[item_name] = True
+            self.public_values[item_name] = "Any AI"
             
 
             for j in range ( num_trackables ) :
@@ -407,7 +494,8 @@ class AddPauseOptionsFrame ( ScrollableFrame ) :
                 item_name = "P" + str(i) + " " + o # P<1/2> item
                 self.selected[item_name] = tk.BooleanVar()
                 loc = j + offset + i + 1
-                b = tk.Checkbutton ( self.interior, text = item_name, variable = self.selected[item_name] )
+                b = tk.Checkbutton ( self.interior, text = item_name, variable = self.selected[item_name], \
+                                     command = partial ( self.newSelection, value = "dummy", idx = item_name ) )
                 b.grid ( row = loc, sticky=tk.W )
 
                 var = tk.StringVar ( self.interior )
@@ -419,9 +507,23 @@ class AddPauseOptionsFrame ( ScrollableFrame ) :
 
                 bText.current(0)
 
+                self.public_selected[item_name] = False
+                self.public_values[item_name] = "-1"
+
 
     def newSelection ( self, value, idx ) :
-        print ( idx, self.values[idx].get(), self.selected[idx].get() )
+##        if "Player" not in idx:
+##            print ( idx, self.values[idx].get(), self.selected[idx].get() )
+##        else :
+##            print ( idx, self.values[idx].get(), self.public_selected[idx] )
+        
+        self.public_selected[idx] = self.selected[idx].get() if "Player" not in idx else True
+        
+        v = self.values[idx].get()
+        self.public_values[idx] = v
+        if v == "" or v is None :
+            self.public_values[idx] = -1 if "Player" not in idx else "Any AI"
+                
 
 ######################################################################################
 # FRAMES USED TO ADD A GAME
