@@ -74,7 +74,7 @@ class GameSettingsFrame ( ) :
         self.gameQClearButton.pack ( side=tk.BOTTOM, fill=tk.X, padx=2,pady=2 )
         
         self.myGamesFrame = tk.Frame ( self.gameQFrame, bg="white",bd=5 )
-        self.gamesScrollFrame = ScrollableFrame ( self.myGamesFrame )
+        self.gamesScrollFrame = wgt.ScrollableFrame ( self.myGamesFrame )
         self.gamesScrollFrame.config( padx = 2, pady=2 )
         self.gamesScrollFrame.canvas.config(height=300)
 
@@ -93,7 +93,7 @@ class GameSettingsFrame ( ) :
         self.pauseConditionsClearButton.pack ( side=tk.BOTTOM, fill=tk.X, padx=2,pady=2 )
 
         self.myPCFrame = tk.Frame ( self.pauseConditionsFrame, bg="white",bd=5 )
-        self.pcScrollFrame = ScrollableFrame ( self.myPCFrame )
+        self.pcScrollFrame = wgt.ScrollableFrame ( self.myPCFrame )
         self.pcScrollFrame.config( padx = 2, pady=2 )
         self.pcScrollFrame.canvas.config(height=200)
 
@@ -270,6 +270,7 @@ class GameSettingsFrame ( ) :
         
         b = BlueBox ( self.pcScrollFrame.interior )
         b.grid (sticky=tk.W)
+        self.pcScrollFrame.set_scrollregion()
         new_pc = PauseConditionGUIData ( c, p, b )
         new_pc.gui_box.delButton.command = partial ( self.deletePC, new_pc )
         self.my_pause_conditions.append (new_pc)
@@ -308,7 +309,7 @@ class PauseConditionGUIData () :
         
 ######################################################################################
 # SPECIAL SETTINGS WIDGETS
-# scrollable frames and delete-able boxes
+# delete-able boxes
 ######################################################################################
 #####
 # BlueBox
@@ -365,51 +366,15 @@ class BlueBox ( tk.Frame ) :
     #####
     def setTopText ( self, txt ) :
         self.myTopText.set ( txt + " " * ( self.maxl - len (txt) ) )
-            
-
-#####
-# ScrollableFrame
-#
-# creates a nested frame and canvas to be used as a scroll area
-# add widgets to the frame <ScrollableFrame>.interior
-#
-# source: https://stackoverflow.com/questions/23483629/dynamically-adding-checkboxes-into-scrollable-frame
-#####
-class ScrollableFrame ( tk.Frame ) :
-    def __init__ ( self, master, **kwargs ) :
-        tk.Frame.__init__(self, master, **kwargs )
-
-        # create a canvas object and a vertical scrollbar for scrolling it
-        self.vscrollbar = tk.Scrollbar ( self, orient=tk.VERTICAL )
-        self.vscrollbar.pack ( side='right', fill="y",  expand="false" )
-        self.canvas = tk.Canvas ( self,
-                                bg='white', bd=0,
-                                highlightthickness=0,
-                                yscrollcommand=self.vscrollbar.set )
-        self.canvas.pack ( side="left", fill="both", expand="true" )
-        self.vscrollbar.config ( command=self.canvas.yview )
-
-        # reset the view
-        self.canvas.xview_moveto(0)
-        self.canvas.yview_moveto(0)
-
-        # create a frame inside the canvas which will be scrolled with it
-        self.interior = tk.Frame ( self.canvas, **kwargs, bg="white", padx = 2, pady = 2 )
-        self.canvas.create_window ( 0, 0, window=self.interior, anchor="nw")
-
-        self.bind('<Configure>', self.set_scrollregion)
-
-    def set_scrollregion(self, event=None):
-        """ Set the scroll region on the canvas"""
-        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+ 
 
 ######################################################################################
 # INTERIOR FRAMES USED FOR QUEUES, ADDITIONAL SETTINGS, PAUSE CONDITIONS
 # generally use a scrollable frame in some form
 ######################################################################################
-class AdditionalSettingsOptionsFrame ( ScrollableFrame ) :
+class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
     def __init__ ( self, parent = None) :
-        ScrollableFrame.__init__(self, parent)
+        wgt.ScrollableFrame.__init__(self, parent)
         self.parent = parent
 
         self.canvas.config(height=100)
@@ -452,9 +417,9 @@ class AdditionalSettingsOptionsFrame ( ScrollableFrame ) :
     def layoutChanged ( self, option ) :
         print ( option )
 
-class AddPauseOptionsFrame ( ScrollableFrame ) :
+class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
     def __init__ ( self, parent = None) :
-        ScrollableFrame.__init__(self, parent)
+        wgt.ScrollableFrame.__init__(self, parent)
         self.parent = parent
 
         ## !! change to constants later
@@ -552,7 +517,7 @@ class QuickStartFrame ( tk.Frame ) :
         self.config ( padx = 2, pady=2 )
         self.pack ( fill="both", side=tk.BOTTOM )
 
-        self.playersFrame = ScrollableFrame(self)
+        self.playersFrame = wgt.ScrollableFrame(self)
         self.playersFrame.config( padx = 2, pady=2 )
         self.playersFrame.canvas.config(height=200)
 
@@ -569,6 +534,8 @@ class QuickStartFrame ( tk.Frame ) :
             b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p] )
             playerCheckButtons.append ( b )
             b.grid ( row = int (i/cols), column = i%cols, sticky=tk.W )
+            if p == "Select All" :
+                b.config ( command = self.selectAllPlayers )
 
         self.gameStartFrame = tk.Frame ( self )
         
@@ -590,11 +557,25 @@ class QuickStartFrame ( tk.Frame ) :
         self.gameStartFrame.pack ( fill=tk.X,side=tk.BOTTOM )
         self.playersFrame.pack ( fill="both" )
 
+    def selectAllPlayers ( self ) :
+        v = 0
+        if self.selected["Select All"].get() :
+            v = 1
+        for x in self.players :
+            if x != "Select All"  :
+                self.selected[x].set(v)
+                self.update()
+
     #####
     # !!!! TO DO !!!!!
     #####
     def get_players ( self ) :
-        return [ "Still need to parse QS" ]
+        p = []
+        for x in self.players :
+            if x != "Select All" and self.selected[x].get() :
+                p.append ( x )
+            
+        return p
 
     def get_num_games ( self ) :
         return self.numGamesEntry.get()
@@ -718,7 +699,7 @@ class RoundRobinFrame ( tk.Frame ) :
         self.config ( padx = 2, pady=2 )
         self.pack ( fill="both", side=tk.BOTTOM )
 
-        self.playersFrame = ScrollableFrame(self)
+        self.playersFrame = wgt.ScrollableFrame(self)
         self.playersFrame.canvas.config(height=225)
         self.playersFrame.config( padx = 2, pady=2 )
 
@@ -735,6 +716,8 @@ class RoundRobinFrame ( tk.Frame ) :
             b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p] )
             playerCheckButtons.append ( b )
             b.grid ( row = int (i/cols), column = i%cols, sticky=tk.W )
+            if p == "Select All" :
+                b.config ( command = self.selectAllPlayers )
         
         self.numGamesFrame = tk.Frame ( self ) 
         self.numGamesLabel = tk.Label ( self.numGamesFrame, text = "Games:    " )
@@ -752,7 +735,16 @@ class RoundRobinFrame ( tk.Frame ) :
         self.numGamesFrame.pack ( fill=tk.X,side=tk.BOTTOM )
 
         self.playersFrame.pack ( fill="both" )
-        
+
+    def selectAllPlayers ( self ) :
+        v = 0
+        if self.selected["Select All"].get() :
+            v = 1
+        for x in self.players :
+            if x != "Select All"  :
+                self.selected[x].set(v)
+                self.update()
+                
     def get_players ( self ) :
         p = []
         for x in self.players :
