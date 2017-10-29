@@ -42,6 +42,13 @@ class GameSettingsFrame ( ) :
         self.parent = parent
         self.handler = handler
 
+        #### IMPORTANT - DATA STORAGE ####
+        self.my_games = [] # store all of the GameGUIData objects here
+        self.my_pause_conditions = []
+        ##################################
+        
+        ####
+        # GUI
         # configure rows and columns of the main frame
         for r in range(23):
             self.parent.rowconfigure(r, weight=1)
@@ -74,11 +81,6 @@ class GameSettingsFrame ( ) :
         self.myGamesFrame.pack ( fill="both" )
         self.gamesScrollFrame.pack ( fill="both" )
 
-        #### important ####
-        self.my_games = [] # store all of the GameGUIData objects here
-        self.my_pause_conditions = []
-        ###################
-
         # pause condition log
         self.pauseConditionsFrame = tk.Frame ( self.parent, highlightthickness = FRAME_BDR, highlightbackground="black" ) 
         self.pauseConditionsFrame.grid ( row = 12, column = 0, rowspan = 9, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S )
@@ -102,7 +104,6 @@ class GameSettingsFrame ( ) :
         self.startButtonFrame = tk.Frame ( self.parent, bg="white" )
         self.startButtonFrame.grid ( row = 21, column = 0, rowspan = 1, columnspan = 1, sticky = tk.E+tk.W )
 
-
         self.startButton = wgt.ColoredButton ( self.startButtonFrame, "START", wgt.GREEN, "black", self.changeFrameStart  )
         self.startButton.config ( font = BUTTON1_FONT )
         self.startButton.pack ( fill = tk.X )
@@ -113,7 +114,6 @@ class GameSettingsFrame ( ) :
         # add a game
         self.addGameFrame = tk.Frame(self.parent, bg = "black", padx = FRAME_BDR, pady=FRAME_BDR )
         self.addGameFrame.grid(row = 1, column = 1, rowspan = 7, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S)
-
 
         self.addGameType = tk.StringVar ( self.addGameFrame )
         self.addGameType.set(GAME_TYPES[0])
@@ -185,16 +185,12 @@ class GameSettingsFrame ( ) :
         self.handler.showFrame(2)
         
     def gameAdded ( self ) :
-        print ( "a game has been added" )
-
         t = self.addGameType.get() #addGameOptionsWindow.get_game_type ()
 
         n = self.addGameOptionsWindow.get_num_games ()
         p = self.addGameOptionsWindow.get_players ()
         box_needed = self.addGameOptionsWindow.is_box_needed ()
         
-        print ( t, n, p, box_needed )
-
         # convert n to integer
 
         rgx_int = re.compile ( "^[0-9]+$" )
@@ -244,14 +240,10 @@ class GameSettingsFrame ( ) :
         print ( len(self.my_pause_conditions) )
 
     def pauseConditionAdded ( self,  ) :
-        # selected, values
-        print ( "pause condition has been added" )
-
         c = {}
         p = []
-
-        keys = sorted ( list (self.addPauseOptionsFrame.public_selected.keys()) )
         
+        keys = sorted ( list (self.addPauseOptionsFrame.public_selected.keys()) )
         for k in keys :
             if self.addPauseOptionsFrame.public_selected[k] :
                 if "Player" not in k :
@@ -282,8 +274,12 @@ class GameSettingsFrame ( ) :
         new_pc.gui_box.delButton.command = partial ( self.deletePC, new_pc )
         self.my_pause_conditions.append (new_pc)
         self.parent.update()
-        
-    
+
+######################################################################################
+# DATA/SETTINGS COLLECTION OBJECTS
+# game and pause conditions objects
+# contain blue box widget and data on the pause condition or game
+######################################################################################
 class GameGUIData () :
     def __init__ ( self, game_type = "", num_games = 0, players = [], box = None ) :
         self.game_type = game_type
@@ -295,23 +291,30 @@ class GameGUIData () :
             box.setTextLines ( [ ", ".join ( players ) ] )
         self.gui_box = box
 
-
 class PauseConditionGUIData () :
     def __init__ ( self, conditions = {}, players = [], box = None ) :
         self.conditions = conditions
         self.players = players
         if box is not None :
             box.setTopText ( "P0: " + self.players[0] + ", P1: " + self.players[1])
-            box.setTextLines ( [ self.getPCStr() ] )
+            box.setTextLines ( self.getPCStr() )
         self.gui_box = box
 
     def getPCStr ( self ) :
         s = []
         for k in list ( self.conditions.keys() ) :
             s.append ( k + ": " + str(self.conditions[k]) )
-        return "\n".join(s)
+        return s
         
-
+######################################################################################
+# SPECIAL SETTINGS WIDGETS
+# scrollable frames and delete-able boxes
+######################################################################################
+#####
+# BlueBox
+#
+# used for the game queue and pause conditions log
+#####
 class BlueBox ( tk.Frame ) :
     def __init__ ( self, parent = None) :
         tk.Frame.__init__(self, parent)
@@ -319,6 +322,7 @@ class BlueBox ( tk.Frame ) :
 
         bc = wgt.LIGHT_BLUE
         fnt = ( "Courier", 12 )
+        self.maxl = 34
 
         self.config ( bg = bc, padx = 2, pady = 2, width = 500 )
         self.config ( highlightbackground="white", highlightcolor="white", highlightthickness=2, bd= 0 )
@@ -340,21 +344,27 @@ class BlueBox ( tk.Frame ) :
         self.myTextLabel = tk.Label ( self.myTextFrame, textvar = self.myText, anchor=tk.W, justify=tk.LEFT, bg = bc, font = fnt )
         self.myTextLabel.pack()
         self.myTextFrame.grid ( row = 1, column = 0, columnspan = 8 )
-        
 
+    #####
+    # setTextLines
+    # set the lower text level
+    #####
     def setTextLines ( self, textArray ) :
-        maxl = 34
         padded = []
         for l in textArray :
-            for i in range ( 0, len(l), maxl ) :
-                cur = l [i: i+maxl ]
-                cur = cur + " " * ( maxl - len (cur) )
+            for i in range ( 0, len(l), self.maxl ) :
+                cur = l [i: i+self.maxl ]
+                cur = cur + " " * ( self.maxl - len (cur) )
                 padded.append ( cur )
 
         self.myText.set ( "\n".join ( padded ) )
 
+    #####
+    # setTopText
+    # set the top text level ( same line as the delete button )
+    #####
     def setTopText ( self, txt ) :
-        self.myTopText.set ( txt )
+        self.myTopText.set ( txt + " " * ( self.maxl - len (txt) ) )
             
 
 #####
@@ -511,6 +521,11 @@ class AddPauseOptionsFrame ( ScrollableFrame ) :
                 self.public_values[item_name] = "-1"
 
 
+    #####
+    # newSelection
+    # adapt the public variables when a change has been made
+    # other frames can't access the others
+    #####
     def newSelection ( self, value, idx ) :
 ##        if "Player" not in idx:
 ##            print ( idx, self.values[idx].get(), self.selected[idx].get() )
@@ -551,8 +566,7 @@ class QuickStartFrame ( tk.Frame ) :
         for i in range ( len(self.players) ) :
             p = self.players[i]
             self.selected[p] = tk.BooleanVar()
-            b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p], \
-                                 command = partial ( self.playerChecked, i ) )
+            b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p] )
             playerCheckButtons.append ( b )
             b.grid ( row = int (i/cols), column = i%cols, sticky=tk.W )
 
@@ -576,9 +590,9 @@ class QuickStartFrame ( tk.Frame ) :
         self.gameStartFrame.pack ( fill=tk.X,side=tk.BOTTOM )
         self.playersFrame.pack ( fill="both" )
 
-    def playerChecked ( self, idx ) :
-        print ( idx )
-
+    #####
+    # !!!! TO DO !!!!!
+    #####
     def get_players ( self ) :
         return [ "Still need to parse QS" ]
 
