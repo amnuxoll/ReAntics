@@ -34,7 +34,7 @@ FL_FONT = ( "Harrington", 18, "bold")
 BUTTON1_FONT = ( "Copperplate", 20, "bold")
 BUTTON2_FONT = ( "Copperplate", 15, "bold")
 
-PC_ERROR = -1
+ERROR_CODE = -1
 
 class GameSettingsFrame ( ) :
     
@@ -155,7 +155,7 @@ class GameSettingsFrame ( ) :
         self.addPauseConditionPlus.command = self.pauseConditionAdded
 
         
-##        wgt.ShowInfo( "title", "message", self.handler.root )
+        #o_swap,o_gameBoard,o_verbose,o_timeout,o_timeoutText,o_layout
         
 
     #####
@@ -272,7 +272,7 @@ class GameSettingsFrame ( ) :
             return
 
         for k in c_keys :
-            if c[k] == PC_ERROR :
+            if c[k] == ERROR_CODE :
                 title = "Error: Pause Condition Addtion"
                 message = "No pause condition added.\nError: Pause Condition missing value for: {}".format(k)
                 wgt.ShowError( title, message, self.handler.root )
@@ -391,28 +391,44 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
 
         self.selected = {}
 
-        self.o_swap = tk.Checkbutton ( self.interior, text = "alternate player start", command = partial(self.clicked) )
-        self.o_swap.grid ( row = 0, sticky=tk.W )
-        self.selected["swap"] = tk.BooleanVar()
-        self.o_swap.config ( variable = self.selected["swap"] )
-        
-        self.o_gameBoard = tk.Checkbutton ( self.interior, text = "display game board" )
-        self.o_gameBoard.grid ( row = 1, sticky=tk.W )
-        self.selected["game_board"] = tk.BooleanVar()
-        self.o_gameBoard.config ( variable = self.selected["game_board"] )
-        
-        self.o_verbose = tk.Checkbutton ( self.interior, text = "verbose (print W/L)" )
-        self.o_verbose.grid ( row = 2, sticky=tk.W )
-        self.selected["verbose"] = tk.BooleanVar()
-        self.o_verbose.config ( variable = self.selected["verbose"] )
-        
-        self.o_timeout = tk.Checkbutton ( self.interior, text = "move timeout" )
-        self.o_timeout.grid ( row = 3, sticky=tk.W )
-        self.selected["timeout"] = tk.BooleanVar()
-        self.o_timeout.config ( variable = self.selected["timeout"] )
+        # accessible by other classes
+        self.public_selected = {}
+        self.public_layout = LAYOUT_OPTIONS[0]
+        self.public_timeout = ERROR_CODE
 
-        self.o_timeoutText = tk.Entry ( self.interior )
+        k = "swap"
+        self.o_swap = tk.Checkbutton ( self.interior, text = "alternate player start", command = partial(self.clicked, opt = k) )
+        self.o_swap.grid ( row = 0, sticky=tk.W )
+        self.selected[k] = tk.BooleanVar()
+        self.o_swap.config ( variable = self.selected[k] )
+        self.public_selected[k] = False
+
+        k = "game_board"
+        self.o_gameBoard = tk.Checkbutton ( self.interior, text = "display game board", command = partial(self.clicked, opt = k) )
+        self.o_gameBoard.grid ( row = 1, sticky=tk.W )
+        self.selected[k] = tk.BooleanVar()
+        self.o_gameBoard.config ( variable = self.selected[k] )
+        self.public_selected[k] = False
+
+        k = "verbose"
+        self.o_verbose = tk.Checkbutton ( self.interior, text = "verbose (print W/L)", command = partial(self.clicked, opt = k) )
+        self.o_verbose.grid ( row = 2, sticky=tk.W )
+        self.selected[k] = tk.BooleanVar()
+        self.o_verbose.config ( variable = self.selected[k] )
+        self.public_selected[k] = False
+
+        k = "timeout"
+        self.o_timeout = tk.Checkbutton ( self.interior, text = "move timeout", command = partial(self.clicked, opt = k) )
+        self.o_timeout.grid ( row = 3, sticky=tk.W )
+        self.selected[k] = tk.BooleanVar()
+        self.o_timeout.config ( variable = self.selected[k] )
+        self.public_selected[k] = False
+
+        sv = tk.StringVar()
+        sv.trace("w", lambda name, index, mode, sv=sv: self.timeChanged(sv))
+        self.o_timeoutText = tk.Entry ( self.interior, textvar = sv )
         self.o_timeoutText.grid ( row = 3, column = 1, sticky=tk.W )
+        
 
         self.layoutText = tk.Label ( self.interior, text = "Layout Option: " )
         self.layoutText.grid ( row = 4, sticky=tk.W )
@@ -420,12 +436,17 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         self.layoutType.set(LAYOUT_OPTIONS[0])
         self.o_layout = tk.OptionMenu(self.interior, self.layoutType, *LAYOUT_OPTIONS, command = self.layoutChanged )
         self.o_layout.grid ( row = 4, column = 1, sticky=tk.W )
+            
+    def clicked ( self, opt ) :
+        print(opt)
+        self.public_selected[opt] = not self.public_selected[opt]
 
-    def clicked ( self ) :
-        print("swap")
+    def timeChanged ( self, sv  ) :
+        self.public_timeout = sv.get()
+        print ( "timeout: ", sv.get() )
 
     def layoutChanged ( self, option ) :
-        print ( option )
+        self.public_layout = option
 
 class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
     def __init__ ( self, parent = None) :
@@ -493,7 +514,7 @@ class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
                 bText.current(0)
 
                 self.public_selected[item_name] = False
-                self.public_values[item_name] = PC_ERROR
+                self.public_values[item_name] = ERROR_CODE
 
 
     #####
@@ -512,7 +533,7 @@ class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
         v = self.values[idx].get()
         self.public_values[idx] = v
         if v == "" or v is None :
-            self.public_values[idx] = PC_ERROR if "Player" not in idx else "Any AI"
+            self.public_values[idx] = ERROR_CODE if "Player" not in idx else "Any AI"
                 
 
 ######################################################################################
