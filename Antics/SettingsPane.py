@@ -34,6 +34,8 @@ FL_FONT = ( "Harrington", 18, "bold")
 BUTTON1_FONT = ( "Copperplate", 20, "bold")
 BUTTON2_FONT = ( "Copperplate", 15, "bold")
 
+PC_ERROR = -1
+
 class GameSettingsFrame ( ) :
     
     def __init__(self, handler, parent = None):
@@ -153,7 +155,7 @@ class GameSettingsFrame ( ) :
         self.addPauseConditionPlus.command = self.pauseConditionAdded
 
         
-##        wgt.ShowInfo( "title", "message", root = self.handler.root )
+##        wgt.ShowInfo( "title", "message", self.handler.root )
         
 
     #####
@@ -199,13 +201,17 @@ class GameSettingsFrame ( ) :
         # convert n to integer
 
         rgx_int = re.compile ( "^[0-9]+$" )
-        if not rgx_int.match :
-            print ( "invalid game option A", n, p )
+        if not rgx_int.match(n) :
+            title = "Error: Game Addtion"
+            message = "No game added.\nError: Invalid number of games: {}".format(n)
+            wgt.ShowError( title, message, self.handler.root )
             return
 
         n = int ( n )
         if n < 1 or p is None or p == [] :
-            print ( "invalid game option B", n, p )
+            title = "Error: Game Addtion"
+            message = "No game added.\nError: Invalid number of games: {}".format(n)
+            wgt.ShowError( title, message, self.handler.root )
             return
 
         b = None
@@ -258,20 +264,19 @@ class GameSettingsFrame ( ) :
             else:
                 continue
 
-        pcError = False
         c_keys = list(c.keys()) 
         if len( c_keys ) < 1 :
-            pcError = True
+            title = "Error: Pause Condition Addtion"
+            message = "No pause condition added.\nError: No conditions have been selected (checked)".format(k)
+            wgt.ShowError( title, message, self.handler.root )
+            return
 
         for k in c_keys :
-            if c[k] == "-1" :
-                pcError = True
-                break
-
-        if pcError :
-            print ( "invalid pause conditions" )
-            print(c)
-            return
+            if c[k] == PC_ERROR :
+                title = "Error: Pause Condition Addtion"
+                message = "No pause condition added.\nError: Pause Condition missing value for: {}".format(k)
+                wgt.ShowError( title, message, self.handler.root )
+                return
         
         b = BlueBox ( self.pcScrollFrame.interior )
         b.grid (sticky=tk.W)
@@ -488,7 +493,7 @@ class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
                 bText.current(0)
 
                 self.public_selected[item_name] = False
-                self.public_values[item_name] = "-1"
+                self.public_values[item_name] = PC_ERROR
 
 
     #####
@@ -507,7 +512,7 @@ class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
         v = self.values[idx].get()
         self.public_values[idx] = v
         if v == "" or v is None :
-            self.public_values[idx] = -1 if "Player" not in idx else "Any AI"
+            self.public_values[idx] = PC_ERROR if "Player" not in idx else "Any AI"
                 
 
 ######################################################################################
