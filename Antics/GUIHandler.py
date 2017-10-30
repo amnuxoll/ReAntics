@@ -1,6 +1,7 @@
 import tkinter
 from GamePane import *
 from SettingsPane import *
+from StatsPane import *
 
 #########################################################
 # Class GUIHandler
@@ -29,7 +30,7 @@ class GUIHandler:
 
         # TODO implement and attach these handlers
         self.settingsHandler = GameSettingsFrame(self, self.settingsFrame)
-        self.statsHandler = None
+        self.statsHandler = StatsPane(self, self.statsFrame)
         self.gameHandler = GamePane(self, self.gameFrame)
 
         # we want the game to start on the settings screen, so show it first
