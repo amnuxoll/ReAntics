@@ -713,8 +713,8 @@ class Game(object):
 
                     # seems out of place, did I add this?
                     # TODO: implement this nicely
-                    self.closeGUI()
-                    sys.exit(0)
+                    # self.closeGUI()
+                    # sys.exit(0)
                 else:
                     # setup game to run again
                     self.mode = TOURNAMENT_MODE

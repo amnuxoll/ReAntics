@@ -127,7 +127,7 @@ class StatsPane:
 
 
     def UIbuttonPressed(self):
-        self.handler.showFrame(1)
+        self.handler.showFrame(2)
 
     def endTurnPressed(self):
         print("End Turn")
