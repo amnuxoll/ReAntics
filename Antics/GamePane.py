@@ -1,6 +1,9 @@
 import tkinter
 import RedoneWidgets as wgt
 from Constants import *
+from GameState import *
+from Building import  *
+from Ant import *
 import random
 import os
 
@@ -21,6 +24,7 @@ class GamePane:
 
         # make game board
         self.boardFrame = tkinter.Frame(self.parent)
+        self.boardFrame.config(bd = 1, bg = 'black')
         self.boardIcons = []
 
         # create image assets
@@ -41,7 +45,7 @@ class GamePane:
         self.boardFrame.grid(column = 1, row = 0)
 
         # test board drawing
-        self.randomBoard()
+        # self.randomBoard()
 
         # make player displays
         self.playerInfoFrame = tkinter.Frame(self.parent, relief = tkinter.GROOVE, borderwidth = 2)
@@ -184,8 +188,47 @@ class GamePane:
                 r2 = random.randint(1, r)
                 health = (r, r2)
 
-                self.boardIcons[y][x].setImage(construct = cons, ant = ant, team = team, moved = moved,
+                self.boardIcons[y][x].setImage(construct = cons, ant = ant, antTeam = team, moved = moved,
                                                highlight = highlight, carrying = carrying, health = health)
+
+    ##
+    # setToGameState
+    #
+    # sets the board elements to reflect a given game state
+    #
+    def setToGameState(self, state: GameState):
+        for col in range(BOARD_LENGTH):
+            for row in range(BOARD_LENGTH):
+                loc: Location = state.board[col][row]
+                ant = loc.ant
+                construction = loc.constr
+                antTeam = PLAYER_ONE
+                constTeam = PLAYER_ONE
+
+                if construction is not None:
+                    cType = construction.type
+                    if isinstance(construction, Building):
+                        constTeam = construction.player
+                else:
+                    cType = None
+
+                if ant is not None:
+                    curHP = ant.health
+                    maxHP = UNIT_STATS[ant.type][1]
+                    health = (maxHP, curHP)
+                    moved = ant.hasMoved
+                    carrying = ant.carrying
+                    aType = ant.type
+                    antTeam = ant.player
+                else:
+                    health = None
+                    moved = False
+                    carrying = False
+                    aType = None
+
+                self.boardIcons[row][col].setImage(cType, aType, antTeam, constTeam, moved, health, False, carrying)
+
+
 
     #
     # button handling functions
@@ -252,7 +295,8 @@ class BoardButton:
         # set internal variables
         self.construct = None
         self.ant = None
-        self.team = PLAYER_ONE
+        self.antTeam = PLAYER_ONE
+        self.constTeam = PLAYER_ONE
         self.moved = False
         self.health = None
         self.highlight = False
@@ -272,29 +316,45 @@ class BoardButton:
     #
     # construct: one of ANTHILL, TUNNEL, GRASS, or FOOD from constants.py
     # ant: one of QUEEN, WORKER, DRONE, SOLDIER, or R_SOLDIER from constants.py
-    # team: one of PLAYER_ONE or PLAYER_TWO from constants.py
+    # antTeam: one of PLAYER_ONE or PLAYER_TWO from constants.py
+    # constTeam: as antTeam
     # moved: either True or False
     # health: a tuple of integers in the form (max_hp, current_hp)
     # highlight: True or False
     # carrying: True or False
     #
-    def setImage(self, construct = -9, ant = -9, team = -9, moved = -9, health = -9, highlight = -9, carrying = -9):
-        if construct != -9:
-            self.construct = construct
-        if ant != -9:
-            self.ant = ant
-        if team != -9:
-            self.team = team
-        if moved != -9:
-            self.moved = moved
-        if health != -9:
-            self.health = health
-        if highlight != -9:
-            self.highlight = highlight
-        if carrying != -9:
-            self.carrying = carrying
+    # all parameters may be set to None to remove that element from the draw list or replace it with a default
+    #
+    def setImage(self, construct = -9, ant = -9, antTeam = -9, constTeam = -9, moved = -9, health = -9, highlight = -9, carrying = -9):
+        changed = False
 
-        self.reDraw()
+        if construct != -9 and construct != self.construct:
+            self.construct = construct
+            changed = True
+        if ant != -9 and ant != self.ant:
+            self.ant = ant
+            changed = True
+        if antTeam != -9 and antTeam != self.antTeam:
+            self.antTeam = antTeam
+            changed = True
+        if constTeam != -9 and constTeam != self.constTeam:
+            self.constTeam = constTeam
+            changed = True
+        if moved != -9 and moved != self.moved:
+            self.moved = moved
+            changed = True
+        if health != -9 and health != self.health:
+            self.health = health
+            changed = True
+        if highlight != -9 and highlight != self.highlight:
+            self.highlight = highlight
+            changed = True
+        if carrying != -9 and carrying != self.carrying:
+            self.carrying = carrying
+            changed = True
+
+        if changed:
+            self.reDraw()
 
     ##
     # reDraw
@@ -302,13 +362,14 @@ class BoardButton:
     # re draws this tile based on its internal values
     #
     def reDraw(self):
+        # general offset
         loc = (1, 1)
         
         # draw base
         self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["terrain"])
 
         # team color
-        if self.team == PLAYER_ONE:
+        if self.constTeam == PLAYER_ONE:
             team = "Blue"
         else:
             team = "Red"
@@ -322,6 +383,12 @@ class BoardButton:
             self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["anthill" + team])
         elif self.construct == TUNNEL:
             self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["tunnel" + team])
+
+        # team color
+        if self.antTeam == PLAYER_ONE:
+            team = "Blue"
+        else:
+            team = "Red"
 
         # draw ant
         if self.ant == WORKER:

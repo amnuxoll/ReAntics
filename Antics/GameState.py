@@ -22,7 +22,7 @@ def subtractCoords(tuple1, tuple2):
 #Description: The current state of the game.
 #
 #Variables:
-#   board - The game Board being used.
+#   board - The game Board being used. A 2d array of Location.
 #   inventories - A tuple containing the Inventory for each player.
 #   phase - The current phase of the game.
 #    whoseTurn - The ID of the Player who's turn it currently is.
@@ -104,9 +104,9 @@ class GameState(object):
         cons3 = []
         food1 = self.inventories[PLAYER_ONE].foodCount
         food2 = self.inventories[PLAYER_TWO].foodCount
-        for col in range(0,len(self.board)):
+        for col in range(0, len(self.board)):
             newBoard.append([])
-            for row in range(0,len(self.board)):
+            for row in range(0, len(self.board)):
                 newLoc = self.board[col][row].clone()
                 newBoard[col].append(newLoc)
                 #Organize constructions into inventories
@@ -123,7 +123,7 @@ class GameState(object):
             cons3.append(constr.clone())
         newInventories = [Inventory(PLAYER_ONE, ants1, cons1, food1),
                           Inventory(PLAYER_TWO, ants2, cons2, food2),
-                          Inventory(NEUTRAL, [], cons3, 0) ]
+                          Inventory(NEUTRAL, [], cons3, 0)]
         return GameState(newBoard, newInventories, self.phase, self.whoseTurn)
 
 

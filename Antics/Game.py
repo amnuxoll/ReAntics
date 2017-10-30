@@ -8,6 +8,9 @@ from Building import *
 from Location import *
 from Ant import *
 from Move import *
+from GUIHandler import *
+import threading
+import time
 import importlib
 import argparse
 
@@ -26,9 +29,6 @@ class Game(object):
         # Initialize the game variables
         self.players = []
         self.initGame()
-        # Initializes the UI variables
-        # self.ui = UserInterface((865,695))
-        # self.initUI()
         # Initializes tournament mode variables
         self.playerScores = []  # [[author,wins,losses], ...]
         self.gamesToPlay = []  # ((p1.id, p2.id), numGames)
@@ -37,6 +37,54 @@ class Game(object):
         self.debugMode = False
         self.randomSetup = False
         self.verbose = False
+
+        # Initializes the UI variables
+        self.UI = None
+        self.GUIthread = None
+
+    def setupUI(self):
+        # daemon=True says this tread will auto-close if main thread dies
+        self.GUIthread = threading.Thread(target=self.makeGUI, daemon=True)
+        self.GUIthread.start()
+
+        # TODO: figure out how to make this work properly
+        # everything under here is done for testing, and should be removed eventually
+        # wait for GUI to set up
+        done = False
+        while not done:
+            time.sleep(.1)
+            if self.UI is not None:
+                done = self.UI.setup
+        self.UI.showFrame(2)
+
+    def closeGUI(self):
+        # Tried to make it close nicely, failed
+        # instead we brute force
+        # TODO: make this work better
+
+        # if self.UI is not None:
+        #     self.UI.closed = True
+        #     self.UI.root.after(50, self.UI.root.destroy())
+        #
+        # if self.GUIthread is not None:
+        #     self.GUIthread.join()
+
+        # theoretically sys.exit() should work here. I'm not sure why it doesn't.
+        os._exit(0)
+
+
+    ##
+    # makeGUI
+    #
+    # method to create GUI for the game
+    # used as a target for threading
+    #
+    def makeGUI(self):
+        self.UI = GUIHandler(self)
+        self.UI.root.mainloop()
+        print("GUI Thread end")
+
+
 
     def startHumanVsAI(self, args, playerPos):
         self.numGames = 1
@@ -210,8 +258,10 @@ class Game(object):
         parser.add_argument('-v', action='store_true', default=False, dest='verbose',
                             help='Verbose - print out game records to console'
                                  '(Prints the current game record at the end of each game to the console)')
+        # choices needs to not be a 10 quintillion length range, it breaks help
+        # limiting to 1000 for now
         parser.add_argument('-n', '--NumGames', metavar='NUMGAMES', type=int, nargs=1, dest='numgames', default=1,
-                            choices=range(1, 1000000000000000),
+                            choices=range(1, 1000),
                             help='number of games ( per agent pair for round robin )')
         parser.add_argument('-p', '--Players', metavar='PLAYER', type=str, nargs='*', dest='players',
                             help='player, can either be the name of an agent or “human” '
@@ -271,6 +321,10 @@ class Game(object):
                 parser.error('Only specify the Player you want to play its self')
             self.startSelf(args.numgames[0], args.players[0])
 
+        # TODO: make this not go if the help option was selected
+        print("Test")
+        self.setupUI()
+
     ##
     # start
     # Description: Runs the main game loop, requesting turns for each player.
@@ -283,13 +337,6 @@ class Game(object):
         while True:
             # Determine current chosen game mode. Enter different execution paths
             # based on the mode, which must be chosen by clicking a button.
-            # self.ui.drawBoard(self.state, self.mode)
-
-            # if not self.errorNotify:
-            #     if self.mode == None:
-            #         self.ui.notify("Please select a game mode.")
-            #     elif not self.ui.choosingAIs and self.state.phase == MENU_PHASE:
-            #         self.ui.notify("Please start the game.")
 
             # player has clicked start game so enter game loop
             if self.state.phase != MENU_PHASE:
@@ -322,6 +369,11 @@ class Game(object):
             else:
                 # create a copy of the state to share with the player
                 theState = self.state.clone()
+
+                # I think this is where it should go
+                if self.UI is not None:
+                    self.UI.showState(theState)
+
                 # if the player is player two, flip the board
                 if theState.whoseTurn == PLAYER_TWO:
                     theState.flipBoard()
@@ -658,7 +710,10 @@ class Game(object):
                     self.numGames = 0
                     self.playerScores = []
                     self.mode = TOURNAMENT_MODE
-                    # self.ui.tournamentInProgress = False
+
+                    # seems out of place, did I add this?
+                    # TODO: implement this nicely
+                    self.closeGUI()
                     sys.exit(0)
                 else:
                     # setup game to run again

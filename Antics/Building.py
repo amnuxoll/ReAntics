@@ -23,7 +23,7 @@ class Building(Construction):
     #   inputPlayer - The playerId of the Player that owns the Building (int)
     ##
     def __init__(self,inputCoords, inputType, inputPlayer):
-        super(Building,self).__init__(inputCoords, inputType)
+        super(Building, self).__init__(inputCoords, inputType)
         self.player = inputPlayer
         self.captureHealth = CONSTR_STATS[inputType][CAP_HEALTH]
     
