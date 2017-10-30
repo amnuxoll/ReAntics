@@ -136,6 +136,51 @@ class Game(object):
         self.submitClickedCallback()
         self.startGameCallback()
         pass
+
+    # TODO: This is a temporary workaround until threading
+    def startAllOther(self, numGames, playerOne):
+        # Attempt to load the AI files
+        self.loadAIs(False)
+
+        for player in self.players:
+            if player[0].author != playerOne:
+                # self.startAIvsAI(numGames, playerOne, player[0].author)
+                code = os.system("python Game.py --2p -n " + str(numGames) + " -p \"" + str(playerOne) + "\" \"" + str(player[0].author)+ "\"")
+                if code != 0:
+                    sys.exit(1)
+        sys.exit(0)
+        pass
+
+    def startSelf(self, numGames, playerOne):
+        self.tourneyPathCallback()
+        self.createAICopy(playerOne)
+        self.numGames = numGames
+        playerTwo = playerOne + "Copy"
+
+        # AI names should be specified as next command line args
+        # need exactly two AI names
+        aiNameIndices = []
+        for player in self.players:
+            if playerOne == player[0].author or playerTwo == player[0].author:
+                # append the name of the indices for the tournament
+                aiNameIndices.append(self.players.index(player))
+
+        if (len(aiNameIndices) < 2):
+            print("ERROR:  AI '" + playerOne + "' not found.")
+            print("Please specify one of the following:")
+            for player in self.players:
+                print('    "' + player[0].author + '"')
+            return
+
+        # now that we have the AI's check the check boxes
+        for index in aiNameIndices:
+            self.checkBoxClickedCallback(index)
+
+        self.submitClickedCallback()
+        self.startGameCallback()
+        pass
+
+
     ##
     # processCommandLine
     #
@@ -213,6 +258,18 @@ class Game(object):
             if args.players is not None:
                 parser.error('Do not specify players with (-p), (--RRall) is for all players')
             self.startRRall(args.numgames[0])
+        elif args.all:
+            if 'human' in args.players:
+                parser.error('Human not allowed in play all others')
+            if len(args.players) != 1:
+                parser.error('Only specify the Player you want to play all others')
+            self.startAllOther(args.numgames[0], args.players[0])
+        elif args.self:
+            if 'human' in args.players:
+                parser.error('Human not allowed in play all others')
+            if len(args.players) != 1:
+                parser.error('Only specify the Player you want to play its self')
+            self.startSelf(args.numgames[0], args.players[0])
 
     ##
     # start
@@ -596,7 +653,8 @@ class Game(object):
 
                 if len(self.gamesToPlay) == 0:
                     # if no more games to play, reset tournament stuff
-                    self.printTournament()
+                    if not self.verbose:
+                        self.printTournament()
                     self.numGames = 0
                     self.playerScores = []
                     self.mode = TOURNAMENT_MODE
@@ -793,6 +851,22 @@ class Game(object):
         # Remove current directory from python's import search order.
         sys.path.pop(0)
         # Revert working directory to parent.
+        os.chdir('..')
+
+    def createAICopy(self, player):
+        filesInAIFolder = os.listdir("AI")
+        os.chdir('AI')
+        sys.path.insert(0, os.getcwd())
+        for file in filesInAIFolder:
+            if re.match(".*\.py$", file):
+                moduleName = file[:-3]
+                temp = importlib.import_module(moduleName)
+                if temp.AIPlayer(-1).author == player:
+                    lst = [temp.AIPlayer(-1)]
+                    lst[0].author += "Copy"
+                    self.players.append([lst[0], INACTIVE])
+                    break
+        sys.path.pop(0)
         os.chdir('..')
 
     #########################################
@@ -1312,11 +1386,12 @@ class Game(object):
         transposedList = list(map(list, zip(*self.playerScores)))
         strTransList = [[str(n) for n in i] for i in transposedList]
         longest_len = len(max(strTransList[0], key=len))
+
         scoreAndTitle = [['Player', 'Wins', 'Losses']] + [['-------', '-------', '-------']] + self.playerScores
         scoreAndTitles = [[str(n) for n in i] for i in scoreAndTitle]
 
         for row in scoreAndTitles:
-            print("".join(str(word).rjust(longest_len) for word in row))
+            print("".join(str(word).rjust(longest_len+2) for word in row))
         print('')
 
     ##
