@@ -1,21 +1,10 @@
 import tkinter
-<<<<<<< HEAD
 import os
-import time
-from GamePane import GamePane
-from SettingsPane import GameSettingsFrame
 from Game import Game
 from GameState import GameState
-from Location import Location
-from Ant import Ant
-from Building import Building
-from Construction import Construction
-
-=======
-from GamePane import *
-from SettingsPane import *
-from StatsPane import *
->>>>>>> origin/master
+from GamePane import GamePane
+from SettingsPane import GameSettingsFrame
+from StatsPane import StatsPane
 
 #########################################################
 # Class GUIHandler
