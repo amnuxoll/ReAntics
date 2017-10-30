@@ -66,7 +66,7 @@ class GameSettingsFrame ( ) :
         # left side -- queues and start
 
         # game queue
-        self.gameQFrame = tk.Frame ( self.parent, highlightthickness = FRAME_BDR, highlightbackground="black" ) #, bg = "#adadad" )
+        self.gameQFrame = tk.Frame ( self.parent, highlightthickness = FRAME_BDR, highlightbackground="black" )
         self.gameQFrame.grid ( row = 1, column = 0, rowspan = 10, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S )
 
         self.gameQLabel = tk.Label ( self.gameQFrame, text = "Game Queue", \
@@ -91,7 +91,8 @@ class GameSettingsFrame ( ) :
         self.pauseConditionsLabel = tk.Label ( self.pauseConditionsFrame, text = "Pause Conditions", \
                                                fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT )
         self.pauseConditionsLabel.pack ( side=tk.TOP, fill=tk.X )
-        self.pauseConditionsClearButton = wgt.ColoredButton ( self.pauseConditionsFrame, "Clear All Pause Conditions", wgt.RED, "black", self.clearPCList )
+        self.pauseConditionsClearButton = wgt.ColoredButton ( self.pauseConditionsFrame, "Clear All Pause Conditions",\
+                                                              wgt.RED, "black", self.clearPCList )
         self.pauseConditionsClearButton.config ( font = BUTTON2_FONT )
         self.pauseConditionsClearButton.pack ( side=tk.BOTTOM, fill=tk.X, padx=2,pady=2 )
 
@@ -121,7 +122,7 @@ class GameSettingsFrame ( ) :
         self.addGameType = tk.StringVar ( self.addGameFrame )
         self.addGameType.set(GAME_TYPES[0])
         self.addGameOptionMenu = tk.OptionMenu(self.addGameFrame, self.addGameType, *GAME_TYPES, command = self.addGameChanged )
-        self.addGameOptionMenu.config ( font=FL_FONT, bg = "black" )
+        self.addGameOptionMenu.config ( font=FL_FONT )
         self.addGameOptionMenu.pack ( fill=tk.X, side=tk.TOP )
 
         self.addGameOptionsWindow = QuickStartFrame ( self.addGameFrame )
@@ -208,9 +209,14 @@ class GameSettingsFrame ( ) :
             return
 
         n = int ( n )
-        if n < 1 or p is None or p == [] :
+        if n < 1 :
             title = "Error: Game Addtion"
             message = "No game added.\nError: Invalid number of games: {}".format(n)
+            wgt.ShowError( title, message, self.handler.root )
+            return
+        if p is None or p == [] :
+            title = "Error: Game Addtion"
+            message = "No game added.\nError: Not enough players.".format(n)
             wgt.ShowError( title, message, self.handler.root )
             return
 
@@ -234,9 +240,7 @@ class GameSettingsFrame ( ) :
 
     def deleteSingleGame ( self, gameGUIDataObj ) :
         gameGUIDataObj.gui_box.destroy()
-        print ( "first",len(self.my_games))
         self.my_games.remove ( gameGUIDataObj )
-        print ( len(self.my_games) )
 
     def clearPCList ( self ) :
         for g in self.my_pause_conditions :
@@ -246,9 +250,7 @@ class GameSettingsFrame ( ) :
 
     def deletePC ( self, pauseConditionGUIDataObj ) :
         pauseConditionGUIDataObj.gui_box.destroy()
-        print ( "first",len(self.my_pause_conditions))
         self.my_pause_conditions.remove ( pauseConditionGUIDataObj )
-        print ( len(self.my_pause_conditions) )
 
     def pauseConditionAdded ( self,  ) :
         c = {}
@@ -429,7 +431,6 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         self.o_timeoutText = tk.Entry ( self.interior, textvar = sv )
         self.o_timeoutText.grid ( row = 3, column = 1, sticky=tk.W )
         
-
         self.layoutText = tk.Label ( self.interior, text = "Layout Option: " )
         self.layoutText.grid ( row = 4, sticky=tk.W )
         self.layoutType = tk.StringVar ( self.interior )

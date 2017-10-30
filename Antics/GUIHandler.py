@@ -1,4 +1,5 @@
 import tkinter
+<<<<<<< HEAD
 import os
 import time
 from GamePane import GamePane
@@ -10,6 +11,11 @@ from Ant import Ant
 from Building import Building
 from Construction import Construction
 
+=======
+from GamePane import *
+from SettingsPane import *
+from StatsPane import *
+>>>>>>> origin/master
 
 #########################################################
 # Class GUIHandler
@@ -44,7 +50,7 @@ class GUIHandler:
 
         # TODO implement and attach these handlers
         self.settingsHandler = GameSettingsFrame(self, self.settingsFrame)
-        self.statsHandler = None
+        self.statsHandler = StatsPane(self, self.statsFrame)
         self.gameHandler = GamePane(self, self.gameFrame)
 
         # we want the game to start on the settings screen, so show it first
