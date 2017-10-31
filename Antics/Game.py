@@ -38,17 +38,14 @@ class Game(object):
         self.randomSetup = False
         self.verbose = False
 
-        # Initializes the UI variables
-        self.UI = None
-        self.GUIthread = None
+        # setup GUI
+        # this has to be done in the main thread because Tkinter is dumb
 
-    def setupUI(self):
-        # daemon=True says this tread will auto-close if main thread dies
-        self.GUIthread = threading.Thread(target=self.makeGUI, daemon=True)
-        self.GUIthread.start()
+        # Initializes the UI variables
+        self.UI = GUIHandler(self)
+        self.gameThread = None
 
         # TODO: figure out how to make this work properly
-        # everything under here is done for testing, and should be removed eventually
         # wait for GUI to set up
         done = False
         while not done:
@@ -56,6 +53,13 @@ class Game(object):
             if self.UI is not None:
                 done = self.UI.setup
         self.UI.showFrame(2)
+
+        print("Starting")
+        self.gameThread = threading.Thread(target=self.start, daemon=True)
+        self.gameThread.start()
+        print("game thread started")
+
+        self.UI.root.mainloop()
 
     def closeGUI(self):
         # Tried to make it close nicely, failed
@@ -71,18 +75,6 @@ class Game(object):
 
         # theoretically sys.exit() should work here. I'm not sure why it doesn't.
         os._exit(0)
-
-
-    ##
-    # makeGUI
-    #
-    # method to create GUI for the game
-    # used as a target for threading
-    #
-    def makeGUI(self):
-        self.UI = GUIHandler(self)
-        self.UI.root.mainloop()
-        print("GUI Thread end")
 
 
 
@@ -244,13 +236,13 @@ class Game(object):
         parser = argparse.ArgumentParser(description='Lets play Antics!', add_help=True)
         group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument('--RR', action='store_true', dest='RR', default=False,
-                           help='Round robin of given AI’s(minimum of 3 AI’s required)')
+                           help='Round robin of given AI\'s(minimum of 3 AI’s required)')
         group.add_argument('--RRall', action='store_true', dest='RRall', default=False,
-                           help='Round robin between all AI’s')
+                           help='Round robin between all AI\'s')
         group.add_argument('--self', action='store_true', dest='self', default=False,
                            help='Allow the AI to play itself')
         group.add_argument('--all', action='store_true', dest='all', default=False,
-                           help='Play all other AI’s total games = NUMGAMES * (total number of AI’s)')
+                           help='Play all other AI\'s total games = NUMGAMES * (total number of AI\'s)')
         group.add_argument('--2p', action='store_true', dest='twoP', default=False,
                            help='Two player game')
         parser.add_argument('-randomLayout', action='store_true', dest='randomLayout', default=False,
@@ -258,12 +250,10 @@ class Game(object):
         parser.add_argument('-v', action='store_true', default=False, dest='verbose',
                             help='Verbose - print out game records to console'
                                  '(Prints the current game record at the end of each game to the console)')
-        # choices needs to not be a 10 quintillion length range, it breaks help
-        # limiting to 1000 for now
         parser.add_argument('-n', '--NumGames', metavar='NUMGAMES', type=int, dest='numgames', default=1,
                             help='number of games ( per agent pair for round robin )')
         parser.add_argument('-p', '--Players', metavar='PLAYER', type=str, nargs='*', dest='players',
-                            help='player, can either be the name of an agent or “human” '
+                            help='player, can either be the name of an agent or "human"'
                                  'which will be reserved for human')
 
         args = parser.parse_args()
@@ -322,9 +312,6 @@ class Game(object):
             if len(args.players) != 1:
                 parser.error('Only specify the Player you want to play its self')
             self.startSelf(args.numgames, args.players[0])
-
-        # TODO: make this not go if the help option was selected
-        self.setupUI()
 
     ##
     # start
@@ -1647,6 +1634,6 @@ del mod
 if __name__ == '__main__':
     # Create the game
     a = Game()
-    a.start()
+    # a.start()
 
 
