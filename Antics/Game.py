@@ -260,15 +260,17 @@ class Game(object):
                                  '(Prints the current game record at the end of each game to the console)')
         # choices needs to not be a 10 quintillion length range, it breaks help
         # limiting to 1000 for now
-        parser.add_argument('-n', '--NumGames', metavar='NUMGAMES', type=int, nargs=1, dest='numgames', default=1,
-                            choices=range(1, 1000000),
+        parser.add_argument('-n', '--NumGames', metavar='NUMGAMES', type=int, dest='numgames', default=1,
                             help='number of games ( per agent pair for round robin )')
         parser.add_argument('-p', '--Players', metavar='PLAYER', type=str, nargs='*', dest='players',
                             help='player, can either be the name of an agent or “human” '
                                  'which will be reserved for human')
 
         args = parser.parse_args()
+        numCheck = re.compile("[0-9]*[1-9][0-9]*")
 
+        if not numCheck.match(str(args.numgames)):
+            parser.error('NumGames must be a positive number')
         if args.verbose:
             self.verbose = True
         if (args.RR or args.RRall or args.self or args.all or args.twoP) and args.numgames is None:
@@ -280,13 +282,13 @@ class Game(object):
             if "human" == args.players[0].lower() and "human" == args.players[1].lower():
                 parser.error('Only one player may be human')
             if "human" == args.players[0].lower():
-                if args.numgames[0] != 1:
+                if args.numgames != 1:
                     parser.error('Human Vs Player can only have 1 game. (-n 1)')
                 self.startHumanVsAI(args, 1)
                 if args.randomLayout:
                     self.randomSetup = True
             elif "human" == args.players[1].lower():
-                if args.numgames[0] != 1:
+                if args.numgames != 1:
                     parser.error('Human Vs Player can only have 1 game. (-n 1)')
                 self.startHumanVsAI(args, 0)
                 if args.randomLayout:
@@ -297,29 +299,29 @@ class Game(object):
                     otherBit = 1
                 else:
                     otherBit = 0
-                self.startAIvsAI(args.numgames[0], args.players[randBit], args.players[otherBit])
+                self.startAIvsAI(args.numgames, args.players[randBit], args.players[otherBit])
         elif args.RR:
             if 'human' in args.players:
                 parser.error('Human not allowed in round robin')
             if len(args.players) <= 2:
                 parser.error('3 or more players needed for round robin')
-            self.startRR(args.numgames[0], args.players)
+            self.startRR(args.numgames, args.players)
         elif args.RRall:
             if args.players is not None:
                 parser.error('Do not specify players with (-p), (--RRall) is for all players')
-            self.startRRall(args.numgames[0])
+            self.startRRall(args.numgames)
         elif args.all:
             if 'human' in args.players:
                 parser.error('Human not allowed in play all others')
             if len(args.players) != 1:
                 parser.error('Only specify the Player you want to play all others')
-            self.startAllOther(args.numgames[0], args.players[0])
+            self.startAllOther(args.numgames, args.players[0])
         elif args.self:
             if 'human' in args.players:
                 parser.error('Human not allowed in play all others')
             if len(args.players) != 1:
                 parser.error('Only specify the Player you want to play its self')
-            self.startSelf(args.numgames[0], args.players[0])
+            self.startSelf(args.numgames, args.players[0])
 
         # TODO: make this not go if the help option was selected
         self.setupUI()
