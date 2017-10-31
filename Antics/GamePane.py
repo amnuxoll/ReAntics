@@ -62,13 +62,17 @@ class GamePane:
 
         # make labels Wraplength = 1 causes text to be displayed vertically
         textFont = ("Times New Roman", 16)
-        self.p1Label = tkinter.Label(self.playerInfoFrame, textvar = self.p1Name, wraplength = 1, font = textFont)
+        self.p1Label = tkinter.Label(self.playerInfoFrame)
+        self.p1Label.config(textvar = self.p1Name, wraplength = 1, font = textFont, fg = 'BLUE')
         self.p1Label.grid(column = 0, row = 0)
-        self.p1FoodLabel = tkinter.Label(self.playerInfoFrame, textvar = self.p1Food)
+        self.p1FoodLabel = tkinter.Label(self.playerInfoFrame)
+        self.p1FoodLabel.config(textvar = self.p1Food, font = textFont, fg = 'BLUE', width = 2)
         self.p1FoodLabel.grid(column = 0, row = 1)
-        self.p2FoodLabel = tkinter.Label(self.playerInfoFrame, textvar = self.p2Food)
+        self.p2FoodLabel = tkinter.Label(self.playerInfoFrame)
+        self.p2FoodLabel.config(textvar = self.p2Food, font = textFont, fg = 'RED', width = 2)
         self.p2FoodLabel.grid(column = 0, row = 2)
-        self.p2Label = tkinter.Label(self.playerInfoFrame, textvar = self.p2Name, wraplength = 1, font = textFont)
+        self.p2Label = tkinter.Label(self.playerInfoFrame)
+        self.p2Label.config(textvar = self.p2Name, wraplength = 1, font = textFont, fg = 'RED')
         self.p2Label.grid(column = 0, row = 3)
 
         # set weights so player labels are centered properly
@@ -197,6 +201,8 @@ class GamePane:
     # sets the board elements to reflect a given game state
     #
     def setToGameState(self, state: GameState):
+        self.p1Food.set(state.inventories[PLAYER_ONE].foodCount)
+        self.p2Food.set(state.inventories[PLAYER_TWO].foodCount)
         for col in range(BOARD_LENGTH):
             for row in range(BOARD_LENGTH):
                 loc: Location = state.board[col][row]
@@ -364,6 +370,9 @@ class BoardButton:
     def reDraw(self):
         # general offset
         loc = (1, 1)
+
+        # clear canvas
+        self.label.delete("all")
         
         # draw base
         self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["terrain"])

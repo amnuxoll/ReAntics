@@ -261,7 +261,7 @@ class Game(object):
         # choices needs to not be a 10 quintillion length range, it breaks help
         # limiting to 1000 for now
         parser.add_argument('-n', '--NumGames', metavar='NUMGAMES', type=int, nargs=1, dest='numgames', default=1,
-                            choices=range(1, 1000),
+                            choices=range(1, 1000000),
                             help='number of games ( per agent pair for round robin )')
         parser.add_argument('-p', '--Players', metavar='PLAYER', type=str, nargs='*', dest='players',
                             help='player, can either be the name of an agent or “human” '
@@ -322,7 +322,6 @@ class Game(object):
             self.startSelf(args.numgames[0], args.players[0])
 
         # TODO: make this not go if the help option was selected
-        print("Test")
         self.setupUI()
 
     ##
@@ -851,32 +850,6 @@ class Game(object):
         # Don't reset Tournament Mode's variables, might need to run more games
 
     ##
-    # initUI
-    # Description: resets the game's UI attributes to their starting state
-    #
-    ##
-    # def initUI(self):
-    #     self.ui.initAssets()
-    #     #UI Callback functions
-    #     self.ui.buttons['Start'][-1] = self.startGameCallback
-    #     self.ui.buttons['Tournament'][-1] = self.tourneyPathCallback
-    #     self.ui.buttons['Human vs AI'][-1] = self.humanPathCallback
-    #     self.ui.buttons['AI vs AI'][-1] = self.aiPathCallback
-    #     self.ui.humanButtons['Build'][-1] = self.buildClickedCallback
-    #     self.ui.humanButtons['End'][-1] = self.endClickedCallback
-    #     self.ui.aiButtons['Next'][-1] = self.nextClickedCallback
-    #     self.ui.aiButtons['Continue'][-1] = self.continueClickedCallback
-    #     self.ui.antButtons['Worker'][-1] = self.buildWorkerCallback
-    #     self.ui.antButtons['Drone'][-1] = self.buildDroneCallback
-    #     self.ui.antButtons['Soldier'][-1] = self.buildDSoldierCallback
-    #     self.ui.antButtons['Ranged Soldier'][-1] = self.buildISoldierCallback
-    #     self.ui.antButtons['None'][-1] = self.buildNothingCallback
-    #     self.ui.submitSelected['Submit AIs'][-1] = self.submitClickedCallback
-    #     self.ui.locationClicked = self.locationClickedCallback
-    #     self.ui.checkBoxClicked = self.checkBoxClickedCallback
-    #     self.ui.allAIs = self.players
-
-    ##
     # loadAIs
     # Description: Loads the AIPlayers from the AI subdirectory into the game.
     #
@@ -1356,46 +1329,6 @@ class Game(object):
         return False
 
     ##
-    # highlightValidMoves
-    # Description: Highlights valid possible moves for the player when an ant is selected
-    #
-    # Parameters:
-    #   coord - The coordinate of the starting ant ((int, int))
-    ##
-    def highlightValidMoves(self, antCoord):
-        # create a list of 2 element tuples: (coord, path cost)
-        adjacentCoords = {antCoord: 0}
-        ant = self.state.board[antCoord[0]][antCoord[1]].ant
-        movement = UNIT_STATS[ant.type][MOVEMENT]
-        for i in range(0, movement):
-            tempCoords = {}
-            for coord in adjacentCoords:
-                for inc in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
-                    newCoord = addCoords(coord, inc)
-                    if not self.isValidCoord(newCoord):
-                        continue
-                    construction = self.state.board[newCoord[0]][newCoord[1]].constr
-                    pathCost = adjacentCoords[coord] + (2 if construction and construction.type == GRASS else 1)
-                    if newCoord in adjacentCoords and adjacentCoords[newCoord] > pathCost:
-                        continue
-                    elif newCoord in tempCoords and tempCoords[newCoord] > pathCost:
-                        continue
-                    elif pathCost > movement:
-                        continue
-                    else:
-                        # If this is either previously unseen, or cheaper than previously seen, add it to adjacentCoords/
-                        tempCoords[newCoord] = pathCost
-            # Finally, add new coords to adjacentCoords, or update costs of perviously examined coords.
-            for coord in tempCoords:
-                if coord not in adjacentCoords:
-                    adjacentCoords[coord] = tempCoords[coord]
-                elif coord in adjacentCoords and adjacentCoords[coord] > tempCoords[coord]:
-                    adjacentCoords[coord] = tempCoords[coord]
-                    # for key in adjacentCoords:
-                    #     self.ui.validCoordList.append(key)
-                    # self.ui.validCoordList.remove(antCoord)
-
-    ##
     # hasWon(int)
     # Description: Determines whether the game has ended in victory for the given player.
     #
@@ -1664,199 +1597,6 @@ class Game(object):
             self.errorNotify = True
 
     ##
-    # locationClickedCallback
-    # Description: Responds to a user clicking on a board location
-    #
-    # Parameters:
-    #   coord - The coordinate clicked ((int, int))
-    #
-    ##
-    def locationClickedCallback(self, coord):
-        # Check if its human player's turn during play phase
-        if self.state.phase == PLAY_PHASE and type(
-                self.currentPlayers[self.state.whoseTurn]) is HumanPlayer.HumanPlayer:
-            currentPlayer = self.currentPlayers[self.state.whoseTurn]
-
-            # determine if the coord is on the list
-            onList = True if coord in currentPlayer.coordList else False
-            index = currentPlayer.coordList.index(coord) if onList else None
-
-            if len(currentPlayer.coordList) == 0:
-                # clicked when nothing selected yet (select ant or building)
-
-                # add location to human player's movelist if appropriate
-                if self.checkMoveStart(coord):
-                    currentPlayer.coordList.append(coord)
-                    self.highlightValidMoves(coord)
-                elif self.checkBuildStart(coord) or self.expectingAttack:
-                    currentPlayer.coordList.append(coord)
-                self.errorNotify = False
-            # clicked most recently added location (unselect building or submit ant move)
-            elif coord == currentPlayer.coordList[-1]:
-                if not self.ui.buildAntMenu:
-                    startCoord = currentPlayer.coordList[0]
-                    if self.state.board[startCoord[0]][startCoord[1]].ant == None:
-                        currentPlayer.coordList.pop()
-                    else:
-                        currentPlayer.moveType = MOVE_ANT
-                        self.ui.validCoordList = []
-                    # clear notifications
-                    self.errorNotify = False
-            # player clicked off the path
-            else:
-                if not onList:
-                    startCoord = currentPlayer.coordList[0]
-                    antToMove = self.state.board[startCoord[0]][startCoord[1]].ant
-                    if self.ui.validCoordList.count(coord) != 0:
-                        # coord is a valid move coord
-                        if self.checkMovePath(currentPlayer.coordList[-1], coord):
-                            # add the coord to the move list so we can check if it makes a valid move
-                            currentPlayer.coordList.append(coord)
-
-                            # enact the theoretical move
-                            move = Move(MOVE_ANT, currentPlayer.coordList, antToMove.type)
-
-                            # if the move wasn't valid, remove added coord from move list
-                            if not self.isValidMove(move):
-                                currentPlayer.coordList.pop()
-                            else:
-                                self.ui.validCoordList.remove(coord)
-                                self.errorNotify = False
-                    elif not self.ui.buildAntMenu:
-                        # coord outside of valid radius
-                        self.ui.validCoordList = []
-                        currentPlayer.coordList = []
-                else:
-                    # player clicked a previous location, change move to it
-                    numToRemove = len(currentPlayer.coordList) - (index + 1)
-                    for i in range(0, numToRemove):
-                        self.ui.validCoordList.append(currentPlayer.coordList.pop())
-
-            # give coordList to UI so it can hightlight the player's path
-            if not self.expectingAttack:
-                self.ui.coordList = currentPlayer.coordList
-
-        # Check if its human player's turn during set up phase
-        elif ((self.state.phase == SETUP_PHASE_1 or self.state.phase == SETUP_PHASE_2)
-              and type(self.currentPlayers[self.state.whoseTurn]) is HumanPlayer.HumanPlayer):
-            self.currentPlayers[self.state.whoseTurn].coordList.append(coord)
-
-    ##
-    # buildClickedCallback
-    # Description: Responds to a user clicking on the build button
-    #
-    ##
-    def buildClickedCallback(self):
-        # Check if its human player's turn during play phase
-        if (self.state.phase == PLAY_PHASE and type(self.currentPlayers[self.state.whoseTurn]) is
-            HumanPlayer.HumanPlayer and len(self.currentPlayers[self.state.whoseTurn].coordList) == 1):
-            whoseTurn = self.state.whoseTurn
-            currentPlayer = self.currentPlayers[whoseTurn]
-
-            loc = self.state.board[currentPlayer.coordList[0][0]][currentPlayer.coordList[0][1]]
-            # we know loc has to have an ant or constr at this point, so make sure it doesnt have both
-            if loc.constr == None or loc.ant == None:
-                if loc.constr == None:
-                    # a tunnel is to be built
-                    currentPlayer.buildType = TUNNEL
-                elif loc.ant == None:
-                    self.ui.buildAntMenu = True
-
-                currentPlayer.moveType = BUILD
-                self.ui.validCoordList = []
-
-    ##
-    # endClickedCallback
-    # Description: Responds to a user clicking on the end button
-    #
-    ##
-    def endClickedCallback(self):
-        # Check if its human player's turn during play phase
-        if (self.state.phase == PLAY_PHASE and self.expectingAttack == False
-            and type(self.currentPlayers[self.state.whoseTurn]) is HumanPlayer.HumanPlayer):
-            self.currentPlayers[self.state.whoseTurn].moveType = END
-            self.ui.validCoordList = []
-
-    ##
-    # buildWorkerClickedCallback
-    # Description: Responds to a user clicking on the Build Worker button
-    #
-    ##
-    def buildWorkerCallback(self):
-        whoseTurn = self.state.whoseTurn
-        currentPlayer = self.currentPlayers[whoseTurn]
-
-        self.ui.buildAntMenu = False
-        currentPlayer.buildType = WORKER
-
-    ##
-    # buildDroneClickedCallback
-    # Description: Responds to a user clicking on the Drone button
-    #
-    ##
-    def buildDroneCallback(self):
-        whoseTurn = self.state.whoseTurn
-        currentPlayer = self.currentPlayers[whoseTurn]
-
-        self.ui.buildAntMenu = False
-        currentPlayer.buildType = DRONE
-
-    ##
-    # buildSoldierClickedCallback
-    # Description: Responds to a user clicking on the Soldier button
-    #
-    ##
-    def buildDSoldierCallback(self):
-        whoseTurn = self.state.whoseTurn
-        currentPlayer = self.currentPlayers[whoseTurn]
-
-        self.ui.buildAntMenu = False
-        currentPlayer.buildType = SOLDIER
-
-    ##
-    # buildISoldierClickedCallback
-    # Description: Responds to a user clicking on the R. Soldier button
-    #
-    ##
-    def buildISoldierCallback(self):
-        whoseTurn = self.state.whoseTurn
-        currentPlayer = self.currentPlayers[whoseTurn]
-
-        self.ui.buildAntMenu = False
-        currentPlayer.buildType = R_SOLDIER
-
-    ##
-    # buildNothinClickedCallback
-    # Description: Responds to a user clicking on the None button
-    #
-    ##
-    def buildNothingCallback(self):
-        whoseTurn = self.state.whoseTurn
-        currentPlayer = self.currentPlayers[whoseTurn]
-        self.ui.buildAntMenu = False
-        currentPlayer.moveType = None
-        self.ui.coordList = []
-        currentPlayer.coordList = []
-
-    ##
-    # nextClickedCallback
-    # Description: Responds to a user clicking on the next button in AI vs AI mode
-    #
-    ##
-    def nextClickedCallback(self):
-        if self.state.phase != MENU_PHASE:
-            self.nextClicked = True
-
-    ##
-    # continueClickedCallback
-    # Description: Responds to a user clicking on the continue button in AI vs AI mode
-    #
-    ##
-    def continueClickedCallback(self):
-        if self.state.phase != MENU_PHASE:
-            self.continueClicked = True
-
-    ##
     # checkBoxClickedCallback
     # Description: Responds to a user clicking on a checkbox to select AIs
     #
@@ -1892,14 +1632,6 @@ class Game(object):
         # remove all inactive players
         for player in inactivePlayers:
             self.players.remove(player)
-
-            # if self.mode == HUMAN_MODE and len(self.players) > 2:
-            #     self.ui.notify("Too many AIs selected. Using first from list.")
-            # elif self.mode == AI_MODE and len(self.players) > 2:
-            #     self.ui.notify("Too many AIs selected. Using first two from list.")
-            # else:
-            #     self.ui.notify("")
-            # self.ui.choosingAIs = False
 
 
 # Import all the python files in the AI folder so they can be serialized

@@ -1,10 +1,11 @@
 import tkinter
 import os
-from Game import Game
-from GameState import GameState
-from GamePane import GamePane
-from SettingsPane import GameSettingsFrame
-from StatsPane import StatsPane
+from Game import *
+from GameState import *
+from GamePane import *
+from SettingsPane import *
+from StatsPane import *
+from Constants import *
 
 #########################################################
 # Class GUIHandler
@@ -20,13 +21,15 @@ from StatsPane import StatsPane
 #########################################################
 class GUIHandler:
 
-    def __init__(self, game: [Game, None]):
+    def __init__(self, game):
         self.game: Game = game
 
         # bookKeeping
         self.currentFrame = 0
         self.currentState: GameState = None
         self.setup = False
+        self.waitingForHuman = False
+        self.phase = None
 
         # set up tkinter things
         self.root = tkinter.Tk()
@@ -58,6 +61,7 @@ class GUIHandler:
     # to clean up
     #
     def onClose(self):
+        # TODO: This is brute forced, should probably find a different way
         os._exit(0)
 
 
@@ -107,6 +111,28 @@ class GUIHandler:
 
         if self.currentFrame == 2 and self.currentState is not None:
             self.gameHandler.setToGameState(state)
+
+    ##
+    # setPlayers
+    #
+    # sets the name of the current players
+    #
+    def setPlayers(self, p1, p2):
+        # TODO: Find where to call this from
+        self.gameHandler.p1Name.set(p1)
+        self.gameHandler.p2Name.set(p2)
+
+    ##
+    # getHumanMove
+    #
+    # sets up UI to receive a game move from a human player
+    #
+    def getHumanMove(self, phase):
+        if phase not in [SETUP_PHASE_1, SETUP_PHASE_2, PLAY_PHASE]:
+            print("Game in wrong phase for human move")
+            return
+        self.waitingForHuman = True
+        self.phase = phase
 
 # test code to check GUI without running the game itself
 
