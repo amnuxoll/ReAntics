@@ -14,6 +14,8 @@ import time
 import importlib
 import argparse
 
+from functools import partial
+
 
 ##
 # Game
@@ -26,6 +28,10 @@ class Game(object):
     #
     ##
     def __init__(self):
+        ### testing sara
+        self.game_in_progress = False
+        self.game_calls  = []
+        
         # Initialize the game variables
         self.players = []
         self.initGame()
@@ -182,14 +188,24 @@ class Game(object):
         # Attempt to load the AI files
         self.loadAIs(False)
 
+        self.game_calls  = []
         for player in self.players:
             if player[0].author != playerOne:
-                # self.startAIvsAI(numGames, playerOne, player[0].author)
-                code = os.system("python Game.py --2p -n " + str(numGames) + " -p \"" + str(playerOne) + "\" \"" + str(player[0].author)+ "\"")
-                if code != 0:
-                    sys.exit(1)
-        sys.exit(0)
+                self.game_in_progress = True
+                self.game_calls.append ( partial ( self.startAIvsAI, numGames, playerOne, player[0].author ) )
+        if len (self.game_calls) > 0 :
+            fx_start = self.game_calls.pop(0)
+            fx_start()
         pass
+
+    ### testing - sara
+    def temp ( self, numGames, playerOne ) :
+        for player in self.players:
+            if player[0].author != playerOne:
+                while ( self.game_in_progress ) :
+                    continue
+                self.game_in_progress = True
+                self.startAIvsAI(numGames, playerOne, player[0].author)
 
     def startSelf(self, numGames, playerOne):
         self.tourneyPathCallback()
@@ -698,6 +714,12 @@ class Game(object):
                     self.numGames = 0
                     self.playerScores = []
                     self.mode = TOURNAMENT_MODE
+
+                    ### testing - sara
+                    self.game_in_progress = False
+                    if len (self.game_calls) > 0 :
+                        fx_start = self.game_calls.pop(0)
+                        fx_start()
 
                     # seems out of place, did I add this?
                     # TODO: implement this nicely
