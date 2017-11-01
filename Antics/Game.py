@@ -83,12 +83,24 @@ class Game(object):
         os._exit(0)
 
 
-
-    def startHumanVsAI(self, args, playerPos):
+    ##
+    # startHumanVsAI
+    #
+    # Description: Set up the Game object instance variables so that a game can
+    #              be started with the specific information for a human player and an AI
+    #
+    # Parameters: givenPlayer - A string that specifies the non-human Agent name
+    #
+    ##
+    def startHumanVsAI(self, givenPlayer):
+        # set the number of games to be played
         self.numGames = 1
+        # TODO: set debugMode to True -- I don't think this does anything
         self.debugMode = True
+        # setup instance variable necessary for human gameplay, e.g. pre-setup
         self.humanPathCallback()
-        aiName = args.players[playerPos]
+        # find the given, non-human, agent in the player list and get its index
+        aiName = givenPlayer
         index = -1
         for player in self.players:
             if aiName == player[0].author:
@@ -100,13 +112,27 @@ class Game(object):
             for player in self.players[1:]:
                 print('    "' + player[0].author + '"')
             return
+
         # select the specified AI and click "Submit"
         self.checkBoxClickedCallback(index)
         self.submitClickedCallback()
         self.startGameCallback()
 
+    ##
+    # startAIvsAI
+    #
+    # Description: Set up the Game object instance variables so that a game can
+    #              be started with the specific information for an AI vs an AI
+    #
+    # Parameters: numGames - An int which specifies the number of games for the two given players to play
+    #             player1 - A string that specifies a non-human Agent name
+    #             player2 - Another string that specifies a non-human Agent name
+    #
+    ##
     def startAIvsAI(self, numGames, player1, player2):
+        # initiate variables as to a tournament setup -- pre-setup
         self.tourneyPathCallback()
+        # set the number of games to be played as an instance variable
         self.numGames = numGames
 
         # AI names should be specified as next command line args
@@ -129,14 +155,25 @@ class Game(object):
         for index in aiNameIndices:
             self.checkBoxClickedCallback(index)
 
-        # self.ui.textBoxContent = str(numGames)
-
+        # post-setup AI choice instance variables that need to be set
         self.submitClickedCallback()
         self.startGameCallback()
         pass
 
+    ##
+    # startRR
+    #
+    # Description: Set up the Game object instance variables so that a game can
+    #              be started with the specific information for Round Robin
+    #
+    # Parameters: numGames - An int which specifies the number of games for the each player pair to play
+    #             givenPlayers - A list of strings defining the Agents that should be in round robin game play
+    #
+    ##
     def startRR(self, numGames, givenPlayers):
+        # initiate variables as to a tournament setup -- pre-setup
         self.tourneyPathCallback()
+        # set the number of games to be played as an instance variable
         self.numGames = numGames
 
         # AI names should be specified as next command line args
@@ -161,12 +198,24 @@ class Game(object):
         for index in aiNameIndices:
             self.checkBoxClickedCallback(index)
 
+        # post-setup AI choice instance variables that need to be set
         self.submitClickedCallback()
         self.startGameCallback()
         pass
 
+    ##
+    # startRRall
+    #
+    # Description: Set up the Game object instance variables so that a game can
+    #              be started with the specific information for Round Robin with all possible Agents
+    #
+    # Parameters: numGames - An int which specifies the number of games for the each player pair to play
+    #
+    ##
     def startRRall(self, numGames):
+        # initiate variables as to a tournament setup -- pre-setup
         self.tourneyPathCallback()
+        # set the number of games to be played as an instance variable
         self.numGames = numGames
 
         # AI names should be specified as next command line args
@@ -179,15 +228,26 @@ class Game(object):
         for index in aiNameIndices:
             self.checkBoxClickedCallback(index)
 
+        # post-setup AI choice instance variables that need to be set
         self.submitClickedCallback()
         self.startGameCallback()
         pass
 
-    # TODO: This is a temporary workaround until threading
+    ##
+    # startAllOther
+    #
+    # Description: Set up the Game object instance variables so that a game can
+    #              be started with the specific information for a Specific Agent to play all other Agents
+    #
+    # Parameters: numGames - An int which specifies the number of games for the each player pair to play
+    #             playerOne - A string that specifies the non-human Agent name
+    #
+    ##
     def startAllOther(self, numGames, playerOne):
         # Attempt to load the AI files
         self.loadAIs(False)
 
+        # create a game queue of AI vs AI games and block the queue until the current game has finished
         self.game_calls  = []
         for player in self.players:
             if player[0].author != playerOne:
@@ -198,20 +258,25 @@ class Game(object):
             fx_start()
         pass
 
-    ### testing - sara
-    def temp ( self, numGames, playerOne ) :
-        for player in self.players:
-            if player[0].author != playerOne:
-                while ( self.game_in_progress ) :
-                    continue
-                self.game_in_progress = True
-                self.startAIvsAI(numGames, playerOne, player[0].author)
-
+    ##
+    # startSelf
+    #
+    # Description: Set up the Game object instance variables so that a game can
+    #              be started with the specific information for an Agent to play itself
+    #
+    # Parameters: numGames - An int which specifies the number of games for the each player pair to play
+    #             playerOne - A string that specifies the non-human Agent name
+    #
+    ##
     def startSelf(self, numGames, playerOne):
+        # initiate variables as to a tournament setup -- pre-setup
         self.tourneyPathCallback()
+        # create a copy of the Agent you want to play itself
         self.createAICopy(playerOne)
+        # set the number of games to be played as an instance variable
         self.numGames = numGames
-        playerTwo = playerOne + "Copy"
+        # set playerTwo to the predetermined copy name
+        playerTwo = playerOne + "@@"
 
         # AI names should be specified as next command line args
         # need exactly two AI names
@@ -232,34 +297,48 @@ class Game(object):
         for index in aiNameIndices:
             self.checkBoxClickedCallback(index)
 
+        # post-setup AI choice instance variables that need to be set
         self.submitClickedCallback()
         self.startGameCallback()
         pass
 
-
     ##
     # processCommandLine
     #
-    # parses the command line arguments and configures the game
-    # appropriately.
-    # "debug" arguments are supported. In this format:
-    #           python Game.py debug [<myAIName>] [random]
-    # "-t" or tournament arguments are suported in this format:
-    #           python Game.py -t <AIName1> <AIName2> [-n <number of games>]
-    #       The number of games defaults to 10 if no -n argument is specified.
+    # Description: Parses the command line arguments and configures the game appropriately.
+    #
+    # Formats:
+    #           Mutually Exclusive Game Types:
+    #           --RR    >> Round robin of given Agents
+    #           --RRall >> Round robin between all Agents
+    #           --self  >> Allow the Agent to play itself
+    #           --all   >> Play all other AI's
+    #           --2p    >> Two player game
+    #
+    #           Meta-Variables:
+    #           -n >> Number of Games
+    #           -p >> List of Agents (can be "human" if it applies)
+    #
+    #           Useful Command Flags:
+    #           -v >> Verbose print out game records to console
+    #           -h >> Print the command option help page
+    #
+    #           Example:
+    #           python Game.py --2P -p <AIName1> <AIName2> -n <number of games>
+    #
     ##
     def processCommandLine(self):
         parser = argparse.ArgumentParser(description='Lets play Antics!', add_help=True)
         group = parser.add_mutually_exclusive_group(required=False)
-        group.add_argument('--RR', action='store_true', dest='RR', default=False,
+        group.add_argument('-RR', '--RR', action='store_true', dest='RR', default=False,
                            help='Round robin of given AI\'s(minimum of 3 AI’s required)')
-        group.add_argument('--RRall', action='store_true', dest='RRall', default=False,
+        group.add_argument('-RRall', '--RRall', action='store_true', dest='RRall', default=False,
                            help='Round robin between all AI\'s')
-        group.add_argument('--self', action='store_true', dest='self', default=False,
+        group.add_argument('-self', '--self', action='store_true', dest='self', default=False,
                            help='Allow the AI to play itself')
-        group.add_argument('--all', action='store_true', dest='all', default=False,
+        group.add_argument('-all', '--all', action='store_true', dest='all', default=False,
                            help='Play all other AI\'s total games = NUMGAMES * (total number of AI\'s)')
-        group.add_argument('--2p', action='store_true', dest='twoP', default=False,
+        group.add_argument('-2p', '--2p', action='store_true', dest='twoP', default=False,
                            help='Two player game')
         parser.add_argument('-randomLayout', action='store_true', dest='randomLayout', default=False,
                             help='Override layout calls to human/agent with a random layout')
@@ -275,6 +354,7 @@ class Game(object):
         args = parser.parse_args()
         numCheck = re.compile("[0-9]*[1-9][0-9]*")
 
+        # Error and bounds checking for command line parameters
         if not numCheck.match(str(args.numgames)):
             parser.error('NumGames must be a positive number')
         if args.verbose:
@@ -290,13 +370,13 @@ class Game(object):
             if "human" == args.players[0].lower():
                 if args.numgames != 1:
                     parser.error('Human Vs Player can only have 1 game. (-n 1)')
-                self.startHumanVsAI(args, 1)
+                self.startHumanVsAI(args.players[1])
                 if args.randomLayout:
                     self.randomSetup = True
             elif "human" == args.players[1].lower():
                 if args.numgames != 1:
                     parser.error('Human Vs Player can only have 1 game. (-n 1)')
-                self.startHumanVsAI(args, 0)
+                self.startHumanVsAI(args.players[0])
                 if args.randomLayout:
                     self.randomSetup = True
             else:
@@ -902,7 +982,7 @@ class Game(object):
                 temp = importlib.import_module(moduleName)
                 if temp.AIPlayer(-1).author == player:
                     lst = [temp.AIPlayer(-1)]
-                    lst[0].author += "Copy"
+                    lst[0].author += "@@"
                     self.players.append([lst[0], INACTIVE])
                     break
         sys.path.pop(0)
