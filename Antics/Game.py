@@ -72,6 +72,8 @@ class Game(object):
         self.UI.settingsHandler.changePlayers ( [ ai[0].author for ai in self.players ] )
         self.UI.settingsHandler.createFrames ( )
         self.UI.settingsHandler.giveGame ( self )
+        self.UI.gameHandler.createFrames()
+        self.UI.gameHandler.giveGame(self)
 
         print("Starting")
         self.gameThread = threading.Thread(target=self.start, daemon=True)
@@ -793,6 +795,9 @@ class Game(object):
     def resolveEndGame(self):
         if self.state.phase != MENU_PHASE:
             # check mode for appropriate response to game over
+            if self.UI is not None:
+                self.UI.showState(self.state)
+
             if self.mode == HUMAN_MODE:
                 self.state.phase = MENU_PHASE
 
