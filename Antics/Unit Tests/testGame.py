@@ -23,18 +23,6 @@ class testGame(unittest.TestCase):
         self.assertEqual(self.gameTest.mode, HUMAN_MODE)
         self.assertEqual(self.gameTest.state.phase, SETUP_PHASE_1)
 
-    def testProcessSettings(self):
-        games = [ sp.GameGUIData ( "Two Player", 2, [ "Random", "Booger"] ),
-                  sp.GameGUIData ( "Play All", 1, [ "Random" ] ) ]
-        additional = { "verbose":True, "swap":False,"layout_chosen":"Random Override",
-                       "timeout":False, 'timeout_limit':0.3 }
-        self.gameTest.gameTest.process_settings ( games, additional )
-        self.assertEqual(self.gameTest.assertEqual(len(self.game_calls), 2 + 1*2))
-        self.assertEqual(self.gameTest.verbose, additional [ 'verbose' ])
-        self.assertEqual(self.gameTest.playerSwap, additional [ 'swap' ])
-        self.assertEqual(self.gameTest.randomSetup, additional [ 'layout_chosen' ])
-        self.assertEqual(self.gameTest.timeoutOn,additional [ 'timeout' ])
-
     def testStartAIvsAI(self):
         self.gameTest.startAIvsAI(10, "Random", "Booger")
 
@@ -74,14 +62,6 @@ class testGame(unittest.TestCase):
         self.assertEqual(self.gameTest.playerScores, [['Random', 0, 0], ['Random@@', 0, 0]])
         self.assertEqual(self.gameTest.mode, TOURNAMENT_MODE)
         self.assertEqual(self.gameTest.state.phase, SETUP_PHASE_1)
-
-class testSettings(unittest.TestCase):
-    def testInt(self):
-        rgx = re.compile("^[0-9]+$")
-        strs = { "29" : True, "hello" : False, "-18" : False, "0.25" : False }
-
-        for s in list(strs.keys()):
-            self.assertEqual( rgx.match(s) is not None, strs[s] )
 
 if __name__ == '__main__':
     unittest.main()
