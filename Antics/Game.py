@@ -29,7 +29,7 @@ class Game(object):
     #
     ##
     def __init__(self, testing=False):
-        ### new game queue
+        ### new game queue, this is a queue of function calls ( does not sub for the tournament vars )
         self.last_time = time.time()
         self.game_calls  = []
         
@@ -41,14 +41,18 @@ class Game(object):
         self.gamesToPlay = []  # ((p1.id, p2.id), numGames)
         self.numGames = None
         # debug mode allows initial setup in human vs. AI to be automated
-        self.randomSetup = False
+        self.randomSetup = False  # overrides human setup only
         self.verbose = False
+        # additional settings
+        self.playerSwap   = False # !!! TODO - not presently implemented
+        self.timeoutOn    = False # !!! TODO - not presently implemented
+        self.timeoutLimit = -1    # !!! TODO - not presently implemented
+        # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
 
         # setup GUI
         # this has to be done in the main thread because Tkinter is dumb
         if testing:
             return
-
 
         # Initializes the UI variables
         self.UI = GUIHandler(self)
@@ -426,7 +430,16 @@ class Game(object):
                 parser.error('Only specify the Player you want to play its self')
             self.startSelf(args.numgames, args.players[0])
 
-    def process_settings ( self, games ) :
+    def process_settings ( self, games, additional ) :
+        # set the additional settings
+        self.verbose = additional [ 'verbose' ]
+        self.playerSwap = additional [ 'swap' ]
+        self.randomSetup = additional [ 'layout_chosen' ] == "Random Override"
+        self.timeoutOn = additional [ 'timeout' ]
+        if self.timeoutOn :
+            self.timeoutLimit = additional [ 'timeout_limit' ]
+        
+        # set the game queue
         self.game_calls = []
         for g in games :
             t = g.game_type
@@ -445,7 +458,7 @@ class Game(object):
                 for player in self.players:
                     if player[0].author != g.players[0]:
                         self.game_calls.append ( partial ( self.startAIvsAI, g.num_games, g.players[0], player[0].author ) )
-
+                        
     ##
     # start
     # Description: Runs the main game loop, requesting turns for each player.

@@ -199,7 +199,18 @@ class GameSettingsFrame ( ) :
 
     def changeFrameStart ( self ) :
         print("start pressed")
-        self.the_game.process_settings ( [ g.copy() for g in self.my_games ] )
+        games = [ g.copy() for g in self.my_games ]
+        more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
+        more_settings [ "timeout_limit" ] = self.additionalOptionsFrame.public_timeout 
+        more_settings [ "layout_chosen" ] = self.additionalOptionsFrame.public_layout
+
+        if more_settings [ "timeout" ] and more_settings [ "timeout_limit" ] <= 0 :
+            title = "Error: Additional Settings"
+            message = "Games could not be started.\nError: Invalid timeout"
+            wgt.ShowError( title, message, self.handler.root )
+            return
+        
+        self.the_game.process_settings ( games, more_settings )
         self.the_game.gameStartRequested ()
         self.handler.showFrame(2)
 
@@ -211,7 +222,12 @@ class GameSettingsFrame ( ) :
         new_len =  len ( self.my_games ) 
         if orig_len + 1 == new_len :
             g = self.my_games.pop ( new_len - 1 )
-            self.the_game.process_settings ( [ g ] )
+            more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
+            for k in list ( more_settings.keys() ) :
+                more_settings[k] = False
+            more_settings [ "timeout_limit" ] = [ False, -1 ]
+            more_settings [ "layout_chosen" ] = LAYOUT_OPTIONS[0]
+            self.the_game.process_settings ( [ g ], more_settings )
             self.the_game.gameStartRequested ()
             self.handler.showFrame(2)
         
@@ -554,7 +570,7 @@ class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
 
                 var = tk.StringVar ( self.interior )
                 self.values[item_name] = ttk.Combobox ( self.interior, values = list(range(self.tracking[o])), \
-                                                        textvariable = var, state = "readonly" ) #, bg = c, fg = "white" )
+                                                        textvariable = var, state = "readonly" )
                 bText = self.values[item_name]
                 bText.grid ( row = loc, column = 1, sticky=tk.W )
                 bText.bind("<<ComboboxSelected>>", partial ( self.newSelection, idx = item_name ) )
