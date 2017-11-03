@@ -28,7 +28,7 @@ class Game(object):
     # Description: Initializes the game's attributes and UI.
     #
     ##
-    def __init__(self):
+    def __init__(self, testing=False):
         ### new game queue
         self.last_time = time.time()
         self.game_calls  = []
@@ -41,12 +41,14 @@ class Game(object):
         self.gamesToPlay = []  # ((p1.id, p2.id), numGames)
         self.numGames = None
         # debug mode allows initial setup in human vs. AI to be automated
-        self.debugMode = False
         self.randomSetup = False
         self.verbose = False
 
         # setup GUI
         # this has to be done in the main thread because Tkinter is dumb
+        if testing:
+            return
+
 
         # Initializes the UI variables
         self.UI = GUIHandler(self)
@@ -118,8 +120,6 @@ class Game(object):
     def startHumanVsAI(self, givenPlayer):
         # set the number of games to be played
         self.numGames = 1
-        # TODO: set debugMode to True -- I don't think this does anything
-        self.debugMode = True
         # setup instance variable necessary for human gameplay, e.g. pre-setup
         self.humanPathCallback()
         # find the given, non-human, agent in the player list and get its index
@@ -402,12 +402,7 @@ class Game(object):
                 if args.randomLayout:
                     self.randomSetup = True
             else:
-                randBit = random.getrandbits(1)
-                if randBit == 0:
-                    otherBit = 1
-                else:
-                    otherBit = 0
-                self.startAIvsAI(args.numgames, args.players[randBit], args.players[otherBit])
+                self.startAIvsAI(args.numgames, args.players[0], args.players[1])
         elif args.RR:
             if 'human' in args.players:
                 parser.error('Human not allowed in round robin')
