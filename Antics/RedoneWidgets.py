@@ -4,6 +4,7 @@ from functools import partial
 from tkinter import ttk
 from tkinter import messagebox
 import time
+import platform
 
 ####
 # COLORS - dimmed to be lighter on the eyes
@@ -33,13 +34,18 @@ class ColoredButton(tk.Label):
 
         self.command = command
         self.flash = flash
+        self.notAMac = platform.system() != "Darwin"
 
         self.config(text = text, bg = backgroundcolor, fg = textcolor, activebackground = FLASH_COLOR, borderwidth=5, relief="raised")
         self.bind("<Button-1>", self.pressed)
 
     def pressed(self, thing):
-        if self.flash :
+        # safe to flash if not on Mac
+        if self.notAMac:
             self.flashButton()
+        elif self.flash :
+            self.flashButton()
+            
         if self.command:
             self.command()
 
