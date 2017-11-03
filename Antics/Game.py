@@ -448,7 +448,7 @@ class Game(object):
             elif t == "Play All":
                 fx = self.startAllOther
                 for player in self.players:
-                    if player[0].author != playerOne:
+                    if player[0].author != g.players[0]:
                         self.game_calls.append ( partial ( self.startAIvsAI, g.num_games, g.players[0], player[0].author ) )
 
     ##

@@ -197,7 +197,7 @@ class GameSettingsFrame ( ) :
 
     def changeFrameStart ( self ) :
         print("start pressed")
-        self.the_game.process_settings ( self.my_games.copy() )
+        self.the_game.process_settings ( [ g.copy() for g in self.my_games ] )
         self.the_game.gameStartRequested ()
         self.handler.showFrame(2)
 
