@@ -11,6 +11,7 @@ import SettingsPane as sp
 class testSettings(unittest.TestCase):
     def setUp(self):
         self.gameTest = Game.Game(True)
+        self.gameTest.loadAIs(False)
         pass
 
     def testInt(self):
@@ -29,7 +30,7 @@ class testSettings(unittest.TestCase):
         self.assertEqual(len(self.gameTest.game_calls), 1 + 1 * 2) # This is Broken
         self.assertEqual(self.gameTest.verbose, additional['verbose'])
         self.assertEqual(self.gameTest.playerSwap, additional['swap'])
-        self.assertEqual(self.gameTest.randomSetup, additional['layout_chosen'])
+        self.assertEqual(self.gameTest.randomSetup, True)
         self.assertEqual(self.gameTest.timeoutOn, additional['timeout'])
 
 

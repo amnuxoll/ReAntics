@@ -23,13 +23,18 @@ class GamePane:
     def __init__(self, handler, parent):
         self.parent = parent
         self.handler = handler
-
         # bookkeeping
         self.movesHighlighted = False
         self.attacksHighlighted = False
         self.baseLocation = None
         self.setupsPlaced = None
         self.setupLocations = None
+
+
+    def giveGame(self, the_game):
+        self.the_game = the_game
+
+    def createFrames(self):
 
         # make game board
         self.boardFrame = tkinter.Frame(self.parent)
@@ -211,6 +216,8 @@ class GamePane:
     # sets the board elements to reflect a given game state
     #
     def setToGameState(self, state: GameState):
+        self.p1Name.set(self.the_game.currentPlayers[PLAYER_ONE].author[0:6] + '..' + self.the_game.currentPlayers[PLAYER_ONE].author[-3:] if len(self.the_game.currentPlayers[PLAYER_ONE].author) > 6 else self.the_game.currentPlayers[PLAYER_ONE].author[0:6])
+        self.p2Name.set(self.the_game.currentPlayers[PLAYER_TWO].author[0:6] + '..' + self.the_game.currentPlayers[PLAYER_TWO].author[-3:] if len(self.the_game.currentPlayers[PLAYER_TWO].author) > 6 else self.the_game.currentPlayers[PLAYER_TWO].author[0:6])
         self.p1Food.set(state.inventories[PLAYER_ONE].foodCount)
         self.p2Food.set(state.inventories[PLAYER_TWO].foodCount)
         for col in range(BOARD_LENGTH):
