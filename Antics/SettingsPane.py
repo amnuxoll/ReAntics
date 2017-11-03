@@ -8,6 +8,9 @@ import re
 from tkinter import messagebox
 import threading
 import copy
+import Constants as cnst
+import Ant as AntMod
+import Construction as ConstrMod
 
 PLAYERS = []
 for i in range(10):
@@ -167,7 +170,6 @@ class GameSettingsFrame ( ) :
         self.addPauseConditionPlus.pack ( side=tk.LEFT )
         self.addPauseConditionPlus.command = self.pauseConditionAdded
 
-        
         #o_swap,o_gameBoard,o_verbose,o_timeout,o_timeoutText,o_layout
         
 
@@ -203,43 +205,73 @@ class GameSettingsFrame ( ) :
 
     def changeFrameQS ( self ) :
         print("quickstart pressed")
-        self.handler.showFrame(2)
+        orig_len = len ( self.my_games )
+        self.gameAdded()
+        # make sure that game was added, if so, start
+        new_len =  len ( self.my_games ) 
+        if orig_len + 1 == new_len :
+            g = self.my_games.pop ( new_len - 1 )
+            self.the_game.process_settings ( [ g ] )
+            self.the_game.gameStartRequested ()
+            self.handler.showFrame(2)
         
     def gameAdded ( self ) :
         t = self.addGameType.get() 
-
         n = self.addGameOptionsWindow.get_num_games ()
         p = self.addGameOptionsWindow.get_players ()
         box_needed = self.addGameOptionsWindow.is_box_needed ()
+
+        # adjust the game type for quickstart
+        if t == "QuickStart" :
+            num_p = len ( p )
+            if num_p == 0 :   # error
+                wgt.ShowError( "Error: QuickStart", "Error: No players selected.", self.handler.root )
+                return
+            elif num_p == 1 : # human versus agent
+                p.append ( "human" )
+                t = "Two Player"
+            else :            # num_p can be classified as round robin
+                t = "Round Robin"
         
         # convert n to integer
-
         rgx_int = re.compile ( "^[0-9]+$" )
         if not rgx_int.match(n) :
             title = "Error: Game Addtion"
             message = "No game added.\nError: Invalid number of games: {}".format(n)
             wgt.ShowError( title, message, self.handler.root )
             return
-
         n = int ( n )
+
+        # verify valid number of games
         if n < 1 :
             title = "Error: Game Addtion"
             message = "No game added.\nError: Invalid number of games: {}".format(n)
             wgt.ShowError( title, message, self.handler.root )
             return
+
+        # verify valid players
         if p is None or p == [] :
             title = "Error: Game Addtion"
-            message = "No game added.\nError: Not enough players.".format(n)
+            message = "No game added.\nError: Not enough players."
             wgt.ShowError( title, message, self.handler.root )
             return
 
+        # ensure that two player games have two different players
+        if t == "Two Player" and p[0] == p[1] :
+            title = "Error: Game Addtion"
+            message = "No game added.\nError: Use 'Play Self' instead of 'Two Player' for an agent to play itself."
+            wgt.ShowError( title, message, self.handler.root )
+            return
+
+        # make the new game
         b = None
         if box_needed :
             b = BlueBox ( self.gamesScrollFrame.interior )
             b.grid (sticky=tk.W)
             self.gamesScrollFrame.set_scrollregion() # update the scroll bar
         new_game = GameGUIData ( t, n, p, b )
-        new_game.gui_box.delButton.command = partial ( self.deleteSingleGame, new_game )
+        if box_needed :
+            new_game.gui_box.delButton.command = partial ( self.deleteSingleGame, new_game )
         self.my_games.append ( new_game )
         self.parent.update()
 
@@ -470,11 +502,10 @@ class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
         wgt.ScrollableFrame.__init__(self, parent)
         self.parent = parent
 
-        ## !! change to constants later
         self.tracking = { 
-            "Food" : 12,
-            "Queen Health" : 5,
-            "Anthill Health" : 5,
+            "Food" : cnst.FOOD_GOAL + 1,
+            "Queen Health" : AntMod.UNIT_STATS [ cnst.QUEEN ] [ cnst.HEALTH ] + 1,
+            "Anthill Health" : ConstrMod.CONSTR_STATS [ 0 ] [ cnst.CAP_HEALTH ] + 1, 
             "Num Ants" : 100
             }
         for a in ANT_NAMES :
