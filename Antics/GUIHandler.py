@@ -40,10 +40,15 @@ class GUIHandler:
         self.statsFrame = tkinter.Frame(self.baseFrame)
         self.gameFrame = tkinter.Frame(self.baseFrame)
 
+        self.settingsFrame.pack_propagate(False)
+        self.statsFrame.pack_propagate(False)
+        self.gameFrame.pack_propagate(False)
+
         # TODO implement and attach these handlers
         self.settingsHandler = GameSettingsFrame(self, self.settingsFrame)
         self.statsHandler = StatsPane(self, self.statsFrame)
         self.gameHandler = GamePane(self, self.gameFrame)
+        
 
         # we want the game to start on the settings screen, so show it first
         self.settingsFrame.pack(fill="both")

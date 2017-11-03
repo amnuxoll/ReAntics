@@ -6,16 +6,18 @@ import time
 import RedoneWidgets as wgt
 import re
 from tkinter import messagebox
+import threading
+import copy
 
 PLAYERS = []
 for i in range(10):
     PLAYERS.append ( "AI #" + str(i) )
-PLAYER_COLS = 1 #2
+PLAYER_COLS = 1 
 
 GAME_TYPES = [ "QuickStart", "Two Player", "Single Player", "Round Robin", "Play All" ]
 ANT_NAMES = [ "Workers", "Drones", "Soldiers", "Ranged Soldiers" ]
 
-PLAYER_COLORS = [ "red", "blue" ] #"#ba8a97", "#5993c0" ] #
+PLAYER_COLORS = [ "red", "blue" ] 
 PLAYER_COLORS_LIGHT = [ wgt.LIGHT_RED, wgt.LIGHT_BLUE ]
 
 FRAME_BDR = 5
@@ -50,6 +52,16 @@ class GameSettingsFrame ( ) :
         self.my_pause_conditions = []
         ##################################
         
+        
+
+    def changePlayers ( self, plyrs ) :
+        global PLAYERS
+        PLAYERS = plyrs
+
+    def giveGame ( self, the_game ) :
+        self.the_game = the_game
+
+    def createFrames ( self ) :
         ####
         # GUI
         # configure rows and columns of the main frame
@@ -165,7 +177,6 @@ class GameSettingsFrame ( ) :
     # changes the add game options, to be used when the dropdown is changed
     #####
     def addGameChanged ( self, option ) :
-        # self.addGameOptionsWindow = QuickStartFrame ( self.addGameFrame )
         self.addGameOptionsWindow.destroy()
 
         if option == "QuickStart" :
@@ -186,6 +197,8 @@ class GameSettingsFrame ( ) :
 
     def changeFrameStart ( self ) :
         print("start pressed")
+        self.the_game.process_settings ( self.my_games.copy() )
+        self.the_game.gameStartRequested ()
         self.handler.showFrame(2)
 
     def changeFrameQS ( self ) :
@@ -193,7 +206,7 @@ class GameSettingsFrame ( ) :
         self.handler.showFrame(2)
         
     def gameAdded ( self ) :
-        t = self.addGameType.get() #addGameOptionsWindow.get_game_type ()
+        t = self.addGameType.get() 
 
         n = self.addGameOptionsWindow.get_num_games ()
         p = self.addGameOptionsWindow.get_players ()
@@ -303,6 +316,9 @@ class GameGUIData () :
             box.setTopText ( " ".join( [ str(game_type) +",", "Games :", str(num_games)] ) )
             box.setTextLines ( [ ", ".join ( players ) ] )
         self.gui_box = box
+
+    def copy ( self ) :
+        return GameGUIData ( self.game_type, self.num_games, [ p for p in self.players ] )
 
 class PauseConditionGUIData () :
     def __init__ ( self, conditions = {}, players = [], box = None ) :

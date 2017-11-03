@@ -15,6 +15,7 @@ import importlib
 import argparse
 
 from functools import partial
+import copy
 
 
 ##
@@ -28,8 +29,8 @@ class Game(object):
     #
     ##
     def __init__(self):
-        ### testing sara
-        self.game_in_progress = False
+        ### new game queue
+        self.last_time = time.time()
         self.game_calls  = []
         
         # Initialize the game variables
@@ -53,12 +54,18 @@ class Game(object):
 
         # TODO: figure out how to make this work properly
         # wait for GUI to set up
+        self.loadAIs(False)
         done = False
         while not done:
             time.sleep(.1)
             if self.UI is not None:
                 done = self.UI.setup
-        self.UI.showFrame(2)
+        self.UI.showFrame(0)
+
+        # fixing the players on the settings menu
+        self.UI.settingsHandler.changePlayers ( [ ai[0].author for ai in self.players ] )
+        self.UI.settingsHandler.createFrames ( )
+        self.UI.settingsHandler.giveGame ( self )
 
         print("Starting")
         self.gameThread = threading.Thread(target=self.start, daemon=True)
@@ -66,6 +73,22 @@ class Game(object):
         print("game thread started")
 
         self.UI.root.mainloop()
+
+    def tick(self,fps):
+        interval = 60 / fps
+        current_time = time.time()
+
+        delta = current_time - self.last_time
+
+        if delta < interval :
+            time.sleep(interval - delta)
+        self.last_time = time.time()
+
+    def gameStartRequested ( self ) :
+        if len ( self.game_calls ) > 0 :
+            g = self.game_calls.pop(0)
+            g ()
+            print("started game")
 
     def closeGUI(self):
         # Tried to make it close nicely, failed
@@ -251,7 +274,6 @@ class Game(object):
         self.game_calls  = []
         for player in self.players:
             if player[0].author != playerOne:
-                self.game_in_progress = True
                 self.game_calls.append ( partial ( self.startAIvsAI, numGames, playerOne, player[0].author ) )
         if len (self.game_calls) > 0 :
             fx_start = self.game_calls.pop(0)
@@ -409,6 +431,26 @@ class Game(object):
                 parser.error('Only specify the Player you want to play its self')
             self.startSelf(args.numgames, args.players[0])
 
+    def process_settings ( self, games ) :
+        self.game_calls = []
+        for g in games :
+            t = g.game_type
+            fx = None
+            if t == "Two Player":
+                fx = self.startAIvsAI
+                self.game_calls.append( partial ( fx, g.num_games, g.players[0], g.players[1] ) )
+            elif t == "Single Player":
+                fx = self.startSelf
+                self.game_calls.append( partial ( fx, g.num_games, g.players[0] ) )
+            elif t == "Round Robin":
+                fx = self.startRR
+                self.game_calls.append( partial ( fx, g.num_games, g.players ) )
+            elif t == "Play All":
+                fx = self.startAllOther
+                for player in self.players:
+                    if player[0].author != playerOne:
+                        self.game_calls.append ( partial ( self.startAIvsAI, g.num_games, g.players[0], player[0].author ) )
+
     ##
     # start
     # Description: Runs the main game loop, requesting turns for each player.
@@ -417,18 +459,22 @@ class Game(object):
     ##
     def start(self):
         self.processCommandLine()
-
+        #self.state.phase = MENU_PHASE
+        
         while True:
+            self.tick(80)
             # Determine current chosen game mode. Enter different execution paths
             # based on the mode, which must be chosen by clicking a button.
 
             # player has clicked start game so enter game loop
-            if self.state.phase != MENU_PHASE:
-                # clear notifications
-                # self.ui.notify("")
+            #if self.state.phase != MENU_PHASE:
+            # clear notifications
+            # self.ui.notify("")
 
-                self.runGame()
-                self.resolveEndGame()
+            self.runGame()
+            self.resolveEndGame()
+            #else:
+                #self.process_settings()
 
     ##
     # runGame
@@ -795,8 +841,7 @@ class Game(object):
                     self.playerScores = []
                     self.mode = TOURNAMENT_MODE
 
-                    ### testing - sara
-                    self.game_in_progress = False
+                    ### pop the next game off the gameQ
                     if len (self.game_calls) > 0 :
                         fx_start = self.game_calls.pop(0)
                         fx_start()
