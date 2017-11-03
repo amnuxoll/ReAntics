@@ -3,7 +3,9 @@ import RedoneWidgets as wgt
 from Constants import *
 from GameState import *
 from Building import  *
+from Move import *
 from Ant import *
+from AIPlayerUtils import *
 import random
 import os
 
@@ -22,6 +24,13 @@ class GamePane:
         self.parent = parent
         self.handler = handler
 
+        # bookkeeping
+        self.movesHighlighted = False
+        self.attacksHighlighted = False
+        self.baseLocation = None
+        self.setupsPlaced = None
+        self.setupLocations = None
+
         # make game board
         self.boardFrame = tkinter.Frame(self.parent)
         self.boardFrame.config(bd = 1, bg = 'black')
@@ -36,10 +45,11 @@ class GamePane:
 
 
         # game board is based on a 10*10 grid of tiles
-        for i in range(10):
+        # access by self.boardIcons[y][x]
+        for y in range(10):
             tmp = []
-            for j in range(10):
-                button = BoardButton(self.boardFrame, self, j, i)
+            for x in range(10):
+                button = BoardButton(self.boardFrame, self, x, y)
                 tmp.append(button)
             self.boardIcons.append(tmp)
         self.boardFrame.grid(column = 1, row = 0)
@@ -234,6 +244,51 @@ class GamePane:
 
                 self.boardIcons[row][col].setImage(cType, aType, antTeam, constTeam, moved, health, False, carrying)
 
+    ##
+    # highlightValidMoves
+    #
+    # recursive method to highlight all moves
+    # an ant can make from a certain location
+    #
+    # location - a 2 tuple of integers representing a board coordinate
+    #
+    def highlightValidMoves(self, location, moveLeft):
+        self.boardIcons[location[1]][location[0]].setImage(highlight=True)
+
+        # if we're out of movement, then we're done
+        if moveLeft <= 0:
+            return
+
+        relatives = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+
+        # highlight the neighbors if we can move there
+        for i in range(4):
+            to = (location[0] + relatives[i][0], location[1] + relatives[i][1])
+            # make sure the next coordinate is legal
+            if 0 <= to[0] <= 9 and 0 <= to[1] <= 9:
+                # if there's an ant at that location, we can't move there
+                loc = self.handler.currentState.board[to[0]][to[1]]
+                if loc.ant is not None:
+                    continue
+
+                # if we don't have enough movement, we can't move there
+                remainder = moveLeft - loc.getMoveCost()
+                if remainder < 0:
+                    continue
+
+                # if there's no ant and we can move there, highlight it
+                self.highlightValidMoves(to, remainder)
+
+    ##
+    # clearHighlights
+    #
+    # clears the highlights off of all tiles
+    #
+    def clearHighlights(self):
+        for y in range(10):
+            for x in range(10):
+                self.boardIcons[y][x].setImage(highlight=False)
+
 
 
     #
@@ -244,7 +299,8 @@ class GamePane:
         self.handler.showFrame(1)
 
     def endTurnPressed(self):
-        print("End Turn")
+        if self.handler.waitingForHuman:
+            self.handler.submitHumanMove(Move(END, None, None))
 
     def pausePressed(self):
         if self.paused:
@@ -278,8 +334,121 @@ class GamePane:
         self.killPressed()
         self.handler.showFrame(0)
 
+    # TODO: Should probably break this up
     def boardButtonPressed(self, x, y):
         print("Board Clicked x: %d, y: %d" % (x, y))
+
+        # if we don't need a human move, do nothing
+        if not self.handler.waitingForHuman:
+            return
+
+        if self.handler.phase == SETUP_PHASE_1 or self.handler.phase == SETUP_PHASE_2:
+            self.handleSetupMove(x, y)
+        elif self.handler.phase == PLAY_PHASE:
+            self.handleNormalMove(x, y)
+
+
+    ##
+    # handleSetupMove
+    #
+    # handles board clicks when the game is in a setup phase for the human
+    #
+    def handleSetupMove(self, x, y):
+        # init trackers
+        if self.setupsPlaced is None:
+            self.setupsPlaced = 0
+            self.setupLocations = []
+
+        # player is placing their own anthill, tunnel, and grass is that order
+        if self.handler.phase == SETUP_PHASE_1:
+            # construct legal places for the player to place
+            possible = []
+            for i in range(10):
+                for j in range(4):
+                    if self.handler.currentState.whoseTurn == PLAYER_ONE:
+                        possible.append((i, j))
+                    else:
+                        possible.append((i, 9 - j))
+
+            # if the location is on our side and does not have anything in it
+            if (x, y) in possible and (x, y) not in self.setupLocations:
+                self.setupLocations.append((x, y))
+                self.setupsPlaced += 1
+
+                if self.setupsPlaced == 1:
+                    self.boardIcons[y][x].setImage(construct=ANTHILL)
+                elif self.setupsPlaced == 2:
+                    self.boardIcons[y][x].setImage(construct=TUNNEL)
+                else:
+                    self.boardIcons[y][x].setImage(construct=GRASS)
+
+                # if we've finished placing
+                if self.setupsPlaced == 11:
+                    # if we're player one, submit normally
+                    if self.handler.currentState.whoseTurn == PLAYER_ONE:
+                        self.handler.submitHumanMove(self.setupLocations)
+                    # if we're player two, re have to rotate the board 180 (because each player sees themselves as P1)
+                    else:
+                        locs = []
+                        for point in self.setupLocations:
+                            locs.append(self.handler.currentState.coordLookup(point, PLAYER_TWO))
+                        self.handler.submitHumanMove(locs)
+
+
+
+    ##
+    # handles board clicks when the game is in normal play for a human
+    #
+    def handleNormalMove(self, x, y):
+        # the user is currently looking at ant moves
+        # so we should either send a move, or stop looking at this ant's moves
+        if self.movesHighlighted:
+            # if the user clicked on a highlighted tile, submit the move
+            if self.boardIcons[y][x].highlight:
+                ant: Ant = getAntAt(self.handler.currentState, self.baseLocation)
+                path = createPathToward(self.handler.currentState, ant.coords, (x, y), UNIT_STATS[ant.type][0])
+                self.handler.submitHumanMove(Move(MOVE_ANT, path, None))
+
+                # clear bookkeeping
+                self.clearHighlights()
+                self.baseLocation = None
+                self.movesHighlighted = False
+                return
+            # if the user clicked a non-highlighted square, assume they want to do something other
+            # than move their selected ant. So un-select it
+            else:
+                self.clearHighlights()
+                self.baseLocation = None
+                self.movesHighlighted = False
+
+        # if there is an ant on the tile, the only action that can be taken is with that ant
+        ant: Ant = getAntAt(self.handler.currentState, (x, y))
+        if ant is not None:
+            if ant.hasMoved:
+                # no action can be taken on a square with an ant that has already moved
+                return
+
+            if ant.player != self.handler.currentState.whoseTurn:
+                # players can't move the opponent's ants
+                return
+
+            # assume player wants to move this ant
+            # highlight all squares the ant can move to
+            self.highlightValidMoves(ant.coords, UNIT_STATS[ant.type][0])
+            self.movesHighlighted = True
+            self.baseLocation = (x, y)
+            return
+
+        const = getConstrAt(self.handler.currentState, (x, y))
+        if const is not None:
+            if const.type == ANTHILL:
+                if const.player == self.handler.currentState.whoseTurn:
+                    # if the player clicks on their anthill, assume they want to build an ant
+                    # TODO: Implement
+                    pass
+
+
+
 
 
 class BoardButton:
@@ -433,9 +602,5 @@ class BoardButton:
                 else:
                     self.label.create_image((loc[0] + 3, loc[1] + i * 8), anchor=tkinter.N + tkinter.W,
                                             image=self.handler.textures["healthEmpty"])
-
-
-
-
 
 

@@ -31,7 +31,7 @@ class Game(object):
     def __init__(self, testing=False):
         ### new game queue, this is a queue of function calls ( does not sub for the tournament vars )
         self.last_time = time.time()
-        self.game_calls  = []
+        self.game_calls = []
         
         # Initialize the game variables
         self.players = []
@@ -44,8 +44,8 @@ class Game(object):
         self.randomSetup = False  # overrides human setup only
         self.verbose = False
         # additional settings
-        self.playerSwap   = False # !!! TODO - not presently implemented
-        self.timeoutOn    = False # !!! TODO - not presently implemented
+        self.playerSwap = False # !!! TODO - not presently implemented
+        self.timeoutOn = False # !!! TODO - not presently implemented
         self.timeoutLimit = -1    # !!! TODO - not presently implemented
         # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
 
@@ -69,9 +69,9 @@ class Game(object):
         self.UI.showFrame(0)
 
         # fixing the players on the settings menu
-        self.UI.settingsHandler.changePlayers ( [ ai[0].author for ai in self.players ] )
-        self.UI.settingsHandler.createFrames ( )
-        self.UI.settingsHandler.giveGame ( self )
+        self.UI.settingsHandler.changePlayers([ai[0].author for ai in self.players])
+        self.UI.settingsHandler.createFrames()
+        self.UI.settingsHandler.giveGame(self)
 
         print("Starting")
         self.gameThread = threading.Thread(target=self.start, daemon=True)
@@ -80,18 +80,18 @@ class Game(object):
 
         self.UI.root.mainloop()
 
-    def tick(self,fps):
+    def tick(self, fps):
         interval = 60 / fps
         current_time = time.time()
 
         delta = current_time - self.last_time
 
-        if delta < interval :
+        if delta < interval:
             time.sleep(interval - delta)
         self.last_time = time.time()
 
-    def gameStartRequested ( self ) :
-        if len ( self.game_calls ) > 0 :
+    def gameStartRequested(self):
+        if len(self.game_calls) > 0:
             g = self.game_calls.pop(0)
             g ()
             print("started game")

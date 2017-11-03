@@ -29,6 +29,7 @@ class GUIHandler:
         self.currentState: GameState = None
         self.setup = False
         self.waitingForHuman = False
+        self.waitingForAttack = True
         self.phase = None
 
         # set up tkinter things
@@ -130,7 +131,7 @@ class GUIHandler:
     ##
     # getHumanMove
     #
-    # sets up UI to receive a game move from a human player
+    # sets up GUI to receive a game move from a human player
     #
     def getHumanMove(self, phase):
         if phase not in [SETUP_PHASE_1, SETUP_PHASE_2, PLAY_PHASE]:
@@ -138,6 +139,33 @@ class GUIHandler:
             return
         self.waitingForHuman = True
         self.phase = phase
+
+    ##
+    # getHumanAttack
+    #
+    # sets up the GUI to receive an attack from a human player
+    def getHumanAttack(self, location):
+        self.waitingForAttack = True
+        pass
+
+    ##
+    # submitHumanMove
+    #
+    # sends a given move to the game however it needs to go
+    #
+    def submitHumanMove(self, move):
+        # TODO: Implement this method in Game.py
+        self.game.submitHumanMove(move)
+        self.waitingForHuman = False
+
+    ##
+    # submitHumanAttack
+    #
+    #
+    def submitHumanAttack(self, attack):
+        # TODO: implement this method in Game.py
+        self.game.submitHumanAttack(attack)
+        self.waitingForAttack = False
 
 # test code to check GUI without running the game itself
 

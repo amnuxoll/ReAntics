@@ -90,6 +90,26 @@ class GameState(object):
                 loc.constr = None
 
     ##
+    # getBlankState
+    #
+    # returns a game board with nothing on it
+    #
+    @staticmethod
+    def getBlankState():
+        board = []
+        for y in range(10):
+            tmp = []
+            for x in range(10):
+                tmp.append(Location((x, y)))
+            board.append(tmp)
+
+        invents = [Inventory(PLAYER_ONE, [], [], 0),
+                   Inventory(PLAYER_TWO, [], [], 0),
+                   Inventory(NEUTRAL, [], [], 0)]
+        return GameState(board, invents, SETUP_PHASE_1, PLAYER_ONE)
+
+
+    ##
     #clone
     #Description: Returns a deep copy of itself
     #
