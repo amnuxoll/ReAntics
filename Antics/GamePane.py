@@ -393,13 +393,49 @@ class GamePane:
                 if self.setupsPlaced == 11:
                     # if we're player one, submit normally
                     if self.handler.currentState.whoseTurn == PLAYER_ONE:
-                        self.handler.submitHumanMove(self.setupLocations)
+                        locs = self.setupLocations
                     # if we're player two, re have to rotate the board 180 (because each player sees themselves as P1)
                     else:
                         locs = []
                         for point in self.setupLocations:
                             locs.append(self.handler.currentState.coordLookup(point, PLAYER_TWO))
-                        self.handler.submitHumanMove(locs)
+                    self.handler.submitHumanSetup(locs)
+
+        # player is placing food for the opponent
+        if self.handler.phase == SETUP_PHASE_2:
+            # construct legal places for the player to place
+            possible = []
+            for i in range(10):
+                for j in range(4):
+                    if self.handler.currentState.whoseTurn == PLAYER_ONE:
+                        loc = (i, 9 - j)
+                    else:
+                        loc = (i, j)
+
+                    # food can only be placed on empty tiles
+                    constr = getConstrAt(self.handler.currentState, loc)
+                    if constr is None and loc not in self.setupLocations:
+                        possible.append(loc)
+
+            if (x, y) in possible:
+                self.setupLocations.append((x, y))
+                self.setupsPlaced += 1
+
+                self.boardIcons[y][x].setImage(construct=GRASS)
+
+                if self.setupsPlaced == 2:
+                    # if we're player one, submit normally
+                    if self.handler.currentState.whoseTurn == PLAYER_ONE:
+                        locs = self.setupLocations
+                    # if we're player two, re have to rotate the board 180 (because each player sees themselves as P1)
+                    else:
+                        locs = []
+                        for point in self.setupLocations:
+                            locs.append(self.handler.currentState.coordLookup(point, PLAYER_TWO))
+                    self.handler.submitHumanSetup(locs)
+
+
+
 
 
 
@@ -414,6 +450,14 @@ class GamePane:
             if self.boardIcons[y][x].highlight:
                 ant: Ant = getAntAt(self.handler.currentState, self.baseLocation)
                 path = createPathToward(self.handler.currentState, ant.coords, (x, y), UNIT_STATS[ant.type][0])
+
+                # flip for player 2
+                if self.handler.currentState.whoseTurn == PLAYER_TWO:
+                    newPath = []
+                    for point in path:
+                        newPath.append(self.handler.currentState.coordLookup(point, PLAYER_TWO))
+                    path = newPath
+
                 self.handler.submitHumanMove(Move(MOVE_ANT, path, None))
 
                 # clear bookkeeping

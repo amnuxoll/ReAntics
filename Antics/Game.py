@@ -32,6 +32,8 @@ class Game(object):
         ### new game queue, this is a queue of function calls ( does not sub for the tournament vars )
         self.last_time = time.time()
         self.game_calls = []
+
+        self.waitCond = threading.Condition()
         
         # Initialize the game variables
         self.players = []
@@ -118,6 +120,37 @@ class Game(object):
 
         # theoretically sys.exit() should work here. I'm not sure why it doesn't.
         os._exit(0)
+
+    def submitHumanMove(self, move):
+        if not self.waitCond.acquire(blocking=False):
+            # we should be able to get the lock here
+            # if not, something broke
+            print("Error getting lock for human move")
+            return
+        self.submittedMove = move
+        self.waitCond.notify()
+        self.waitCond.release()
+
+
+    def submitHumanAttack(self, attack):
+        if not self.waitCond.acquire(blocking=False):
+            # we should be able to get the lock here
+            # if not, something broke
+            print("Error getting lock for human move")
+            return
+        self.submittedAttack = attack
+        self.waitCond.notify()
+        self.waitCond.release()
+
+    def submitHumanSetup(self, locations):
+        if not self.waitCond.acquire(blocking=False):
+            # we should be able to get the lock here
+            # if not, something broke
+            print("Error getting lock for human move")
+            return
+        self.submittedSetup = locations
+        self.waitCond.notify()
+        self.waitCond.release()
 
 
     ##
@@ -485,6 +518,7 @@ class Game(object):
     #
     ##
     def start(self):
+        self.waitCond.acquire()
         self.processCommandLine()
         #self.state.phase = MENU_PHASE
         
@@ -494,9 +528,6 @@ class Game(object):
             # based on the mode, which must be chosen by clicking a button.
 
             # player has clicked start game so enter game loop
-            #if self.state.phase != MENU_PHASE:
-            # clear notifications
-            # self.ui.notify("")
 
             self.runGame()
             self.resolveEndGame()
@@ -537,15 +568,6 @@ class Game(object):
 
             if self.state.phase == SETUP_PHASE_1 or self.state.phase == SETUP_PHASE_2:
                 currentPlayer = self.currentPlayers[self.state.whoseTurn]
-                # if type(currentPlayer) is HumanPlayer.HumanPlayer:
-                #     if constrsToPlace[0].type == ANTHILL:
-                #         self.ui.notify("Place anthill on your side.")
-                #     elif constrsToPlace[0].type == TUNNEL:
-                #         self.ui.notify("Place tunnel on your side.")
-                #     elif constrsToPlace[0].type == GRASS:
-                #         self.ui.notify("Place grass on your side.")
-                #     elif constrsToPlace[0].type == FOOD:
-                #         self.ui.notify("Place food on enemy's side.")
                 # clear targets list as anything on list been processed on last loop
                 targets = []
 
@@ -565,7 +587,14 @@ class Game(object):
                     theState.clearConstrs()
 
                 # get the placement from the player
-                targets += currentPlayer.getPlacement(theState)
+                if isinstance(currentPlayer, HumanPlayer.HumanPlayer) and not self.randomSetup:
+                    self.UI.getHumanMove(theState.phase)
+                    self.waitCond.wait()
+                    targets += self.submittedSetup
+                    self.submittedSetup = None
+                else:
+                    targets += currentPlayer.getPlacement(theState)
+
                 # only want to place as many targets as constructions to place
                 if len(targets) > len(constrsToPlace):
                     targets = targets[:len(constrsToPlace)]
@@ -654,26 +683,20 @@ class Game(object):
                 currentPlayer = self.currentPlayers[self.state.whoseTurn]
 
                 # display instructions for human player
-                if type(currentPlayer) is HumanPlayer.HumanPlayer:
-                    # An error message is showing
-
-                    pass
-                    # if not self.errorNotify:
-                    #     #nothing selected yet
-                    #     if not currentPlayer.coordList:
-                    #         self.ui.notify("Select an ant or building.")
-                    #     #ant selected
-                    #     elif not self.state.board[currentPlayer.coordList[0][0]][currentPlayer.coordList[0][1]].ant == None:
-                    #         self.ui.notify("Select move for ant.")
-                    #     #Anthill selected
-                    #     elif not self.state.board[currentPlayer.coordList[0][0]][currentPlayer.coordList[0][1]].constr == None:
-                    #         self.ui.notify("Select an ant type to build.")
-                    #     else:
-                    #         self.ui.notify("")
 
                 # get the move from the current player in a separate
                 # process so that we can time it out
-                move = currentPlayer.getMove(theState)
+
+                # TODO: implement human waiting
+                if isinstance(currentPlayer, HumanPlayer.HumanPlayer):
+                    # alert the UI that we need a move, then wait until it gives one to us
+                    self.UI.getHumanMove(theState.phase)
+                    self.waitCond.wait()
+                    move = self.submittedMove
+                    self.submittedMove = None
+                else:
+                    move = currentPlayer.getMove(theState)
+
 
                 if move != None and move.coordList != None:
                     for i in range(0, len(move.coordList)):
@@ -940,47 +963,22 @@ class Game(object):
             attackCoord = None
             validAttack = False
 
-            # if a human player, let it know an attack is expected (to affect location clicked context)
-            if type(currentPlayer) is HumanPlayer.HumanPlayer:
-                # give the valid attack coords to the ui to highlight
-                # self.ui.attackList = validAttackCoords
-                # set expecting attack for location clicked context
-                self.expectingAttack = True
+            theState = self.state.clone()
 
-            # keep requesting coords until valid attack is given
-            while attackCoord == None or not validAttack:
-                # Draw the board again (to recognize user input inside loop)
-                # self.ui.drawBoard(self.state, self.mode)
+            if self.UI is not None:
+                self.UI.showState(theState)
 
-                if self.state.phase == MENU_PHASE:
-                    # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
-                    return
+            if theState.whoseTurn == PLAYER_TWO:
+                theState.flipBoard()
 
-                # Create a clone of the state to give to the player
-                theState = self.state.clone()
-                if theState.whoseTurn == PLAYER_TWO:
-                    theState.flipBoard()
-
-                # get the attack from the player (flipped for player two)
+            if isinstance(currentPlayer, HumanPlayer.HumanPlayer) and not self.randomSetup:
+                self.UI.getHumanAttack(attackingAnt.coords)
+                self.waitCond.wait()
+                attackCoord = self.submittedAttack
+                self.submittedAttack = None
+            else:
                 attackCoord = self.state.coordLookup(
                     currentPlayer.getAttack(theState, attackingAnt.clone(), validAttackCoords), currentPlayer.playerId)
-
-                # check for the move's validity
-                validAttack = self.isValidAttack(attackingAnt, attackCoord)
-                if not validAttack:
-                    if not type(currentPlayer) is HumanPlayer.HumanPlayer:
-                        # if an ai submitted an invalid attack, exit
-                        self.error(INVALID_ATTACK, attackCoord)
-                        break
-                    else:
-                        # if a human submitted an invalid attack, reset coordList
-                        currentPlayer.coordList = []
-
-            # if we reached this point though loop, we must have a valid attack
-            # if a human player, let it know an attack is expected (to affect location clicked context)
-            if type(currentPlayer) is HumanPlayer.HumanPlayer:
-                self.expectingAttack = False
-                currentPlayer.coordList = []
 
             # decrement ants health
             attackedAnt = self.state.board[attackCoord[0]][attackCoord[1]].ant
@@ -1019,6 +1017,10 @@ class Game(object):
         self.nextClicked = False
         self.continueClicked = False
         # Don't reset Tournament Mode's variables, might need to run more games
+
+        self.submittedMove = None
+        self.submittedAttack = None
+        self.submittedSetup = None
 
     ##
     # loadAIs

@@ -149,6 +149,15 @@ class GUIHandler:
         pass
 
     ##
+    # submitHumanSetup
+    #
+    #
+    #
+    def submitHumanSetup(self, locations):
+        self.game.submitHumanSetup(locations)
+        self.waitingForHuman = False
+
+    ##
     # submitHumanMove
     #
     # sends a given move to the game however it needs to go

@@ -16,6 +16,7 @@ class testGamePane(unittest.TestCase):
 
     def testBoardHighlighting(self):
         handler = GUIHandler(None)
+        handler.gameHandler.createFrames()
         handler.showFrame(2)
         state = GameState.getBlankState()
         handler.showState(state)
