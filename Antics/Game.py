@@ -44,7 +44,8 @@ class Game(object):
         self.randomSetup = False  # overrides human setup only
         self.verbose = False
         # additional settings
-        self.playerSwap   = False # !!! TODO - not presently implemented
+        self.playerSwap      = False   # additonal settings
+        self.playersReversed = False   # whether the players are currently swapped
         self.timeoutOn    = False # !!! TODO - not presently implemented
         self.timeoutLimit = -1    # !!! TODO - not presently implemented
         # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
@@ -432,10 +433,21 @@ class Game(object):
                 parser.error('Only specify the Player you want to play its self')
             self.startSelf(args.numgames, args.players[0])
 
+    ##
+    # process_settings
+    #
+    # Description: process the current settings and assign values within the game class accordingly
+    #              set the game_calls queue
+    #
+    # Parameters: games - GameGUIData Objects list
+    #             additional - dictionary of additional settings
+    #
+    ##
     def process_settings ( self, games, additional ) :
         # set the additional settings
         self.verbose = additional [ 'verbose' ]
         self.playerSwap = additional [ 'swap' ]
+        self.playersReversed = False
         self.randomSetup = additional [ 'layout_chosen' ] == "Random Override"
         self.timeoutOn = additional [ 'timeout' ]
         if self.timeoutOn :
@@ -869,8 +881,13 @@ class Game(object):
                     self.state.phase = SETUP_PHASE_1
 
                     # get players from next pairing
-                    playerOneId = self.gamesToPlay[0][0][0]
-                    playerTwoId = self.gamesToPlay[0][0][1]
+                    if self.playerSwap and self.playersReversed:
+                        playerTwoId = self.gamesToPlay[0][0][0]
+                        playerOneId = self.gamesToPlay[0][0][1]
+                    else:
+                        playerOneId = self.gamesToPlay[0][0][0]
+                        playerTwoId = self.gamesToPlay[0][0][1]
+                    self.playersReversed = not self.playersReversed
 
                     # set up new current players
                     self.currentPlayers.append(self.players[playerOneId][0])
