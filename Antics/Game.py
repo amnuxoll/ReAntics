@@ -470,6 +470,8 @@ class Game(object):
             if len(args.players) != 1:
                 parser.error('Only specify the Player you want to play its self')
             self.startSelf(args.numgames, args.players[0])
+        if args.RR or args.RRall or args.self or args.all or args.twoP:
+            self.UI.showFrame(2)
 
     ##
     # process_settings
@@ -497,8 +499,12 @@ class Game(object):
             t = g.game_type
             fx = None
             if t == "Two Player":
-                fx = self.startAIvsAI
-                self.game_calls.append( partial ( fx, g.num_games, g.players[0], g.players[1] ) )
+                human_loc = [ p.lower() for p in g.players ].index("human")
+                if human_loc != -1 :
+                    self.game_calls.append ( partial ( self.startHumanVsAI, g.players[1-human_loc] ) )
+                else:
+                    fx = self.startAIvsAI
+                    self.game_calls.append( partial ( fx, g.num_games, g.players[0], g.players[1] ) )
             elif t == "Single Player":
                 fx = self.startSelf
                 self.game_calls.append( partial ( fx, g.num_games, g.players[0] ) )

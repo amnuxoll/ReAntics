@@ -706,8 +706,8 @@ class TwoPlayerFrame ( tk.Frame ) :
         self.player2Text = tk.Label ( self.playersFrame, text = "Player 2:" )
         self.player2Text.grid ( row = 1, column = 0, rowspan = 1, columnspan = 1, sticky = tk.W )
         self.player2Type = tk.StringVar ( self )
-        self.player2Type.set(self.players[0])
-        self.o_player2 = tk.OptionMenu(self.playersFrame, self.player2Type, *self.players )
+        self.player2Type.set(PLAYERS[0])
+        self.o_player2 = tk.OptionMenu(self.playersFrame, self.player2Type, *PLAYERS )
         self.o_player2.grid ( row = 1, column = 1, rowspan = 1, columnspan = 10, sticky = tk.W )
 
         self.filler = tk.Label ( self.playersFrame, text="\n"*10 )
