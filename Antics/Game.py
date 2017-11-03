@@ -437,6 +437,8 @@ class Game(object):
             if len(args.players) != 1:
                 parser.error('Only specify the Player you want to play its self')
             self.startSelf(args.numgames, args.players[0])
+        if args.RR or args.RRall or args.self or args.all or args.twoP:
+            self.UI.showFrame(2)
 
     ##
     # process_settings
