@@ -5,7 +5,6 @@ from tkinter import ttk
 from tkinter import messagebox
 import time
 
-
 ####
 # COLORS - dimmed to be lighter on the eyes
 GREEN = "#398e2e"
@@ -26,25 +25,29 @@ FLASH_TIME = 0.05
 
 
 class ColoredButton(tk.Label):
-    def __init__(self, parent = None, text = "", backgroundcolor = "green", textcolor = "black", command = None):
+    def __init__(self, parent = None, text = "", backgroundcolor = "green", textcolor = "black", command = None, flash = False):
         # initialize UI object
         tk.Label.__init__(self, parent)
         # store event handler to close later
         self.parent = parent
 
         self.command = command
+        self.flash = flash
 
         self.config(text = text, bg = backgroundcolor, fg = textcolor, activebackground = FLASH_COLOR, borderwidth=5, relief="raised")
         self.bind("<Button-1>", self.pressed)
 
     def pressed(self, thing):
+        if self.flash :
+            self.flashButton
+        if self.command:
+            self.command()
+
+    def flashButton (self):
         self.config(state = "active")
         self.update()
         time.sleep(FLASH_TIME)
-        self.config(state = "normal")
-
-        if self.command:
-            self.command()
+        self.config(state = "normal")       
 
 
 #####

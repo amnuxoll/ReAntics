@@ -87,7 +87,7 @@ class GameSettingsFrame ( ) :
         self.gameQLabel = tk.Label ( self.gameQFrame, text = "Game Queue", \
                                      fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT )
         self.gameQLabel.pack ( side=tk.TOP, fill=tk.X )
-        self.gameQClearButton = wgt.ColoredButton ( self.gameQFrame, "Clear All Games", wgt.RED, "black", self.clearGameList )
+        self.gameQClearButton = wgt.ColoredButton ( self.gameQFrame, "Clear All Games", wgt.RED, "black", self.clearGameList, True )
         self.gameQClearButton.config ( font = BUTTON2_FONT )
         self.gameQClearButton.pack ( side=tk.BOTTOM, fill=tk.X, padx=2,pady=2 )
         
@@ -107,7 +107,7 @@ class GameSettingsFrame ( ) :
                                                fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT )
         self.pauseConditionsLabel.pack ( side=tk.TOP, fill=tk.X )
         self.pauseConditionsClearButton = wgt.ColoredButton ( self.pauseConditionsFrame, "Clear All Pause Conditions",\
-                                                              wgt.RED, "black", self.clearPCList )
+                                                              wgt.RED, "black", self.clearPCList, True )
         self.pauseConditionsClearButton.config ( font = BUTTON2_FONT )
         self.pauseConditionsClearButton.pack ( side=tk.BOTTOM, fill=tk.X, padx=2,pady=2 )
 
@@ -123,7 +123,7 @@ class GameSettingsFrame ( ) :
         self.startButtonFrame = tk.Frame ( self.parent, bg="white" )
         self.startButtonFrame.grid ( row = 21, column = 0, rowspan = 1, columnspan = 1, sticky = tk.E+tk.W )
 
-        self.startButton = wgt.ColoredButton ( self.startButtonFrame, "START", wgt.GREEN, "black", self.changeFrameStart  )
+        self.startButton = wgt.ColoredButton ( self.startButtonFrame, "START", wgt.GREEN, "black", self.changeFrameStart, True  )
         self.startButton.config ( font = BUTTON1_FONT )
         self.startButton.pack ( fill = tk.X )
 
@@ -165,7 +165,7 @@ class GameSettingsFrame ( ) :
         self.addPauseOptionsFrame = AddPauseOptionsFrame ( self.addPauseConditionsFrame )
         self.addPauseOptionsFrame.pack (side=tk.BOTTOM, fill="both")
 
-        self.addPauseConditionPlus = wgt.ColoredButton ( self.addPauseConditionsFrame, " "*2 + "+" + " "*2, "black", "white" )
+        self.addPauseConditionPlus = wgt.ColoredButton ( self.addPauseConditionsFrame, " "*2 + "+" + " "*2, "black", "white", flash=True )
         self.addPauseConditionPlus.config ( font = BUTTON1_FONT )
         self.addPauseConditionPlus.pack ( side=tk.LEFT )
         self.addPauseConditionPlus.command = self.pauseConditionAdded
@@ -207,6 +207,11 @@ class GameSettingsFrame ( ) :
         if more_settings [ "timeout" ] and more_settings [ "timeout_limit" ] <= 0 :
             title = "Error: Additional Settings"
             message = "Games could not be started.\nError: Invalid timeout"
+            wgt.ShowError( title, message, self.handler.root )
+            return
+        if len(games) <= 0 :
+            title = "Error: Games"
+            message = "Games could not be started.\nError: No Games in queue"
             wgt.ShowError( title, message, self.handler.root )
             return
         
@@ -409,7 +414,7 @@ class BlueBox ( tk.Frame ) :
         self.topLabel = tk.Label ( self, textvar = self.myTopText, anchor=tk.W, justify=tk.LEFT, bg = bc, font = fnt )
         self.topLabel.grid ( row = 0, column = 0, columnspan = 8, sticky = tk.W )
         
-        self.delButton = wgt.ColoredButton ( self, "x", "white", wgt.RED )
+        self.delButton = wgt.ColoredButton ( self, "x", "white", wgt.RED, flash = True )
         self.delButton.config ( font = BUTTON1_FONT )
         self.delButton.grid ( row = 0, column = 8 )
 
@@ -643,7 +648,7 @@ class QuickStartFrame ( tk.Frame ) :
         self.numGamesEntry.delete ( 0,tk.END )
         self.numGamesEntry.insert ( 0, "1" )
 
-        self.startButton = wgt.ColoredButton ( self.gameStartFrame, "QuickStart", wgt.LIGHT_GREEN, "black" )
+        self.startButton = wgt.ColoredButton ( self.gameStartFrame, "QuickStart", wgt.LIGHT_GREEN, "black", flash=True )
         self.startButton.pack ( fill=tk.X, side=tk.BOTTOM )
         self.startButton.config ( font = BUTTON2_FONT )
 
@@ -712,7 +717,7 @@ class TwoPlayerFrame ( tk.Frame ) :
         self.numGamesLabel = tk.Label ( self.numGamesFrame, text = "Games:    " )
         self.numGamesLabel.pack ( side=tk.LEFT ) 
 
-        self.plusButton = wgt.ColoredButton ( self.numGamesFrame, "  +  ", "black", "white"  )
+        self.plusButton = wgt.ColoredButton ( self.numGamesFrame, "  +  ", "black", "white", flash=True )
         self.plusButton.config ( font=BUTTON1_FONT )
         self.plusButton.pack ( side=tk.RIGHT )
         
@@ -764,7 +769,7 @@ class SinglePlayerFrame ( tk.Frame ) :
         self.numGamesLabel = tk.Label ( self.numGamesFrame, text = "Games:    " )
         self.numGamesLabel.pack ( side=tk.LEFT ) 
 
-        self.plusButton = wgt.ColoredButton ( self.numGamesFrame, "  +  ", "black", "white"  )
+        self.plusButton = wgt.ColoredButton ( self.numGamesFrame, "  +  ", "black", "white", flash=True  )
         self.plusButton.config ( font=BUTTON1_FONT )
         self.plusButton.pack ( side=tk.RIGHT )
         
@@ -818,7 +823,7 @@ class RoundRobinFrame ( tk.Frame ) :
         self.numGamesLabel = tk.Label ( self.numGamesFrame, text = "Games:    " )
         self.numGamesLabel.pack ( side=tk.LEFT ) 
 
-        self.plusButton = wgt.ColoredButton ( self.numGamesFrame, "  +  ", "black", "white"  )
+        self.plusButton = wgt.ColoredButton ( self.numGamesFrame, "  +  ", "black", "white", flash=True )
         self.plusButton.config ( font=BUTTON1_FONT )
         self.plusButton.pack ( side=tk.RIGHT )
         
