@@ -39,7 +39,7 @@ class ColoredButton(tk.Label):
 
     def pressed(self, thing):
         if self.flash :
-            self.flashButton
+            self.flashButton()
         if self.command:
             self.command()
 
