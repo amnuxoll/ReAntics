@@ -339,11 +339,10 @@ class GamePane:
 
     def settingsPressed(self):
         self.killPressed()
-        self.handler.showFrame(0)
+        #self.handler.showFrame(0)
 
     # TODO: Should probably break this up
     def boardButtonPressed(self, x, y):
-        print("Board Clicked x: %d, y: %d" % (x, y))
 
         # if we don't need a human move, do nothing
         if not self.handler.waitingForHuman:
@@ -400,6 +399,7 @@ class GamePane:
                         for point in self.setupLocations:
                             locs.append(self.handler.currentState.coordLookup(point, PLAYER_TWO))
                     self.handler.submitHumanSetup(locs)
+                    self.setupsPlaced = None
 
         # player is placing food for the opponent
         if self.handler.phase == SETUP_PHASE_2:
@@ -421,7 +421,7 @@ class GamePane:
                 self.setupLocations.append((x, y))
                 self.setupsPlaced += 1
 
-                self.boardIcons[y][x].setImage(construct=GRASS)
+                self.boardIcons[y][x].setImage(construct=FOOD)
 
                 if self.setupsPlaced == 2:
                     # if we're player one, submit normally
@@ -433,6 +433,7 @@ class GamePane:
                         for point in self.setupLocations:
                             locs.append(self.handler.currentState.coordLookup(point, PLAYER_TWO))
                     self.handler.submitHumanSetup(locs)
+                    self.setupsPlaced = None
 
 
 
@@ -513,6 +514,11 @@ class BoardButton:
         # borderwidth has to be 0 to make seamless grid
         self.label = tkinter.Canvas(self.parent)
         self.label.config(bd = 1, bg = "black", width = 66, height = 66, highlightthickness = 0)
+        if self.y < 4:
+            self.label.config(bg = "blue")
+        if self.y > 5:
+            self.label.config(bg = "red")
+
         self.label.grid(column = self.x, row = self.y)
 
         # bind click listener

@@ -137,6 +137,9 @@ class GUIHandler:
         if phase not in [SETUP_PHASE_1, SETUP_PHASE_2, PLAY_PHASE]:
             print("Game in wrong phase for human move")
             return
+
+        print("Asked for human move: %d" % phase)
+
         self.waitingForHuman = True
         self.phase = phase
 
