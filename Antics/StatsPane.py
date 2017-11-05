@@ -31,6 +31,9 @@ class StatsPane:
         self.handler = handler
 
         ## make GameLog display frame
+        self.log = []
+        self.cur_log = None
+        
         self.gLFrame = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
         self.gLFrame.grid(column=0, row=0, columnspan=3, sticky=tkinter.E + tkinter.W + tkinter.S + tkinter.N, padx =5)
         self.gameLog = tkinter.StringVar()
@@ -45,9 +48,9 @@ class StatsPane:
         self.logTextFrame.config( padx = 2, pady=2 )
         self.logTextFrame.canvas.config(height=450)
 
-        for i in range(10):
-            b = PurpleBox(self.logTextFrame.interior)
-            b.grid()
+##        for i in range(10):
+##            b = PurpleBox(self.logTextFrame.interior)
+##            b.grid()
 
 ##        self.logTextLabel = tkinter.Label(self.logTextFrame.interior, text="Game Log stuff here", fg ="black", \
 ##                                          bg="purple", borderwidth=FL_BD, font= ("Herculanum", 12),height=HEIGHT, width=WIDTH)
@@ -201,6 +204,28 @@ class StatsPane:
     def addGameToLog ( self ) :
         return
 
+    def addLogItem ( self ) :
+        b = PurpleBox(self.logTextFrame.interior)
+        b.grid()
+
+        self.log.append(b)
+        self.cur_log = b
+
+        b.myClock.Reset()
+        b.myClock.Start()
+
+    def stopCurLogItem ( self ) :
+        self.cur_log.myClock.Stop()
+
+    def updateCurLogItem ( self, s ) :
+        self.cur_log.setTextLines(s)
+
+    def clearLog ( self ) :
+        for b in self.log :
+            b.destroy()
+
+        self.log = []
+        self.cur_log = None
 
 
 #####
@@ -216,14 +241,14 @@ class PurpleBox ( tkinter.Frame ) :
         self.maxl = 38
 
         bc = wgt.LIGHT_PURPLE
-        fnt = ( "Courier", 11 )
+        fnt = ( "Courier", 5 )
 
         self.config ( bg = bc, padx = 2, pady = 2, width = 500 )
         self.config ( highlightbackground="white", highlightcolor="white", highlightthickness=2, bd= 0 )
 
         self.textLines = []
         self.myText = tkinter.StringVar()
-        self.setTextLines ( [ "player,"*50 ] )
+        self.setTextLines ( "" )
         
         self.myTextFrame = tkinter.Frame ( self, bg = bc, padx = 2, pady = 2 )
         self.myTextLabel = tkinter.Label ( self.myTextFrame, textvar = self.myText, anchor=tkinter.W, justify=tkinter.LEFT, bg = bc, font = fnt )
@@ -237,6 +262,9 @@ class PurpleBox ( tkinter.Frame ) :
     # setTextLines
     #####
     def setTextLines ( self, textArray ) :
+        self.myText.set ( textArray )
+        return
+        
         padded = []
         for l in textArray :
             for i in range ( 0, len(l), self.maxl ) :

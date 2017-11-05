@@ -180,6 +180,7 @@ class Game(object):
                 print('    "' + player[0].author + '"')
             return
 
+        self.UI.statsHandler.addLogItem()
         # select the specified AI and click "Submit"
         self.checkBoxClickedCallback(index)
         self.submitClickedCallback()
@@ -222,6 +223,7 @@ class Game(object):
         for index in aiNameIndices:
             self.checkBoxClickedCallback(index)
 
+        self.UI.statsHandler.addLogItem()
         # post-setup AI choice instance variables that need to be set
         self.submitClickedCallback()
         self.startGameCallback()
@@ -265,6 +267,7 @@ class Game(object):
         for index in aiNameIndices:
             self.checkBoxClickedCallback(index)
 
+        self.UI.statsHandler.addLogItem()
         # post-setup AI choice instance variables that need to be set
         self.submitClickedCallback()
         self.startGameCallback()
@@ -295,6 +298,7 @@ class Game(object):
         for index in aiNameIndices:
             self.checkBoxClickedCallback(index)
 
+        self.UI.statsHandler.addLogItem()
         # post-setup AI choice instance variables that need to be set
         self.submitClickedCallback()
         self.startGameCallback()
@@ -363,6 +367,7 @@ class Game(object):
         for index in aiNameIndices:
             self.checkBoxClickedCallback(index)
 
+        self.UI.statsHandler.addLogItem()
         # post-setup AI choice instance variables that need to be set
         self.submitClickedCallback()
         self.startGameCallback()
@@ -526,6 +531,7 @@ class Game(object):
                 for player in self.players:
                     if player[0].author != g.players[0]:
                         self.game_calls.append ( partial ( self.startAIvsAI, g.num_games, g.players[0], player[0].author ) )
+        self.UI.statsHandler.clearLog()
                         
     ##
     # start
@@ -888,7 +894,8 @@ class Game(object):
                 tournament_str = self.tournamentStr()
                 if self.verbose:
                     self.printTournament()
-                self.UI.statsHandler.setScoreRecord ( tournament_str ) #sara
+                self.UI.statsHandler.updateCurLogItem ( tournament_str ) #sara
+                
 
                 # reset the game
                 self.initGame()
@@ -909,11 +916,13 @@ class Game(object):
                     tournament_str = self.tournamentStr()
                     if not self.verbose:
                         self.printTournament()
-                    self.UI.statsHandler.setScoreRecord ( tournament_str ) #sara
+                    self.UI.statsHandler.updateCurLogItem ( tournament_str ) #sara
                     
                     self.numGames = 0
                     self.playerScores = []
                     self.mode = TOURNAMENT_MODE
+
+                    self.UI.statsHandler.stopCurLogItem()
 
                     ### pop the next game off the gameQ
                     if len (self.game_calls) > 0 :
