@@ -886,7 +886,7 @@ class Game(object):
 
                 # if CommandLine Mode print the values to the console
                 tournament_str = self.tournamentStr()
-                if not self.verbose:
+                if self.verbose:
                     self.printTournament()
                 self.UI.statsHandler.setScoreRecord ( tournament_str ) #sara
 

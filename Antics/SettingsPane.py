@@ -173,6 +173,7 @@ class GameSettingsFrame ( ) :
         #o_swap,o_gameBoard,o_verbose,o_timeout,o_timeoutText,o_layout
         
 
+
     #####
     # addGameChanged
     #
