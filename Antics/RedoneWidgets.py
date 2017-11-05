@@ -12,6 +12,7 @@ LIGHT_GREEN = "#80c577"
 RED = "#c3473c"
 LIGHT_RED = "#b8746e"
 LIGHT_BLUE = "#a8d5ff"
+LIGHT_PURPLE = "#c9b6e3"
 
 
 

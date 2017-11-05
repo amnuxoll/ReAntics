@@ -41,10 +41,19 @@ class StatsPane:
         self.gameLogLabel.pack(side = tkinter.TOP, fill=tkinter.X)
         self.gLFrame.columnconfigure(0, weight=1)
 
-        self.logTextLabel = tkinter.Label(self.gLFrame, text="Game Log stuff here", fg ="black", \
-                                          bg="purple", borderwidth=FL_BD, font= ("Herculanum", 12),height=HEIGHT, width=WIDTH)
-        self.logTextLabel.pack(side=tkinter.BOTTOM, fill=tkinter.X, padx = 2)
+        self.logTextFrame = wgt.ScrollableFrame ( self.gLFrame )
+        self.logTextFrame.config( padx = 2, pady=2 )
+        self.logTextFrame.canvas.config(height=450)
+
+        for i in range(10):
+            b = PurpleBox(self.logTextFrame.interior)
+            b.grid()
+
+##        self.logTextLabel = tkinter.Label(self.logTextFrame.interior, text="Game Log stuff here", fg ="black", \
+##                                          bg="purple", borderwidth=FL_BD, font= ("Herculanum", 12),height=HEIGHT, width=WIDTH)
+##        self.logTextLabel.pack(side=tkinter.BOTTOM, fill=tkinter.X, padx = 2)
         self.gLFrame.columnconfigure(0, weight=1)
+        self.logTextFrame.pack ( fill="both" )
 
         ## make totals display frame
         self.tFrame = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
@@ -83,7 +92,7 @@ class StatsPane:
 ##        self.setTotalTime ( 0 )
 ##        self.timeLabel = tkinter.Label(self.timeHeaderFrame, textvar=self.totalTimeVar, fg="black", \
 ##                                       bg="white", borderwidth=FL_BD, font=("Herculanum", 50, "bold"))
-        self.timeLabel = wgt.StopWatch (self.timeHeaderFrame) # trying something new
+        self.timeLabel = wgt.StopWatch (self.timeHeaderFrame) 
         self.timeLabel.label.config(font=("Courier", 50, "bold"))
         self.timeLabel.pack(side=tkinter.TOP, fill=tkinter.X, padx=2)
         self.timeHeaderFrame.columnconfigure(0, weight =1)
@@ -188,6 +197,54 @@ class StatsPane:
 
     def setScoreRecord ( self, s ) :
         self.totalsStrVar.set ( s )
+
+    def addGameToLog ( self ) :
+        return
+
+
+
+#####
+# PurpleBox
+#
+# used for the game log
+#####
+class PurpleBox ( tkinter.Frame ) :
+    def __init__ ( self, parent = None) :
+        tkinter.Frame.__init__(self, parent)
+        self.parent = parent
+        
+        self.maxl = 38
+
+        bc = wgt.LIGHT_PURPLE
+        fnt = ( "Courier", 11 )
+
+        self.config ( bg = bc, padx = 2, pady = 2, width = 500 )
+        self.config ( highlightbackground="white", highlightcolor="white", highlightthickness=2, bd= 0 )
+
+        self.textLines = []
+        self.myText = tkinter.StringVar()
+        self.setTextLines ( [ "player,"*50 ] )
+        
+        self.myTextFrame = tkinter.Frame ( self, bg = bc, padx = 2, pady = 2 )
+        self.myTextLabel = tkinter.Label ( self.myTextFrame, textvar = self.myText, anchor=tkinter.W, justify=tkinter.LEFT, bg = bc, font = fnt )
+        self.myTextLabel.pack()
+        self.myTextFrame.grid ( row = 0, column = 0, columnspan = 8 )
+
+        self.myClock = self.timeLabel = wgt.StopWatch (self)
+        self.myClock.grid ( row = 1, column = 0, columnspan = 8 )
+
+    #####
+    # setTextLines
+    #####
+    def setTextLines ( self, textArray ) :
+        padded = []
+        for l in textArray :
+            for i in range ( 0, len(l), self.maxl ) :
+                cur = l [i: i+self.maxl ]
+                cur = cur + " " * ( self.maxl - len (cur) )
+                padded.append ( cur )
+
+        self.myText.set ( "\n".join ( padded ) )
 
 
 
