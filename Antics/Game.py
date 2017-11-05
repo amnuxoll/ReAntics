@@ -1588,16 +1588,24 @@ class Game(object):
     def tournamentStr(self):
         transposedList = list(map(list, zip(*self.playerScores)))
         strTransList = [[str(n) for n in i] for i in transposedList]
-        longest_len = len(max(strTransList[0], key=len))
+        
 
         scoreAndTitle = [['Player', 'Wins', 'Losses']] + [['-------', '-------', '-------']] + self.playerScores
         scoreAndTitles = [[str(n) for n in i] for i in scoreAndTitle]
 
+        transposedList = list(map(list, zip(*scoreAndTitles)))
+        strTransList = [[str(n) for n in i] for i in transposedList]
+
+        longest_len_0 = len(max(strTransList[0], key=len))
+        longest_len_1 = len(max(strTransList[1], key=len))+2
+        longest_len_2 = len(max(strTransList[2], key=len))+2
+
         s = []
         for row in scoreAndTitles:
-            s.append("".join(str(word).rjust(longest_len+2) for word in row))
+            s.append(row[0].rjust(longest_len_0) + row[1].rjust(longest_len_1) + row[2].rjust(longest_len_2) )
         s = "\n".join(s)
         return s
+
 
     ##
     # error

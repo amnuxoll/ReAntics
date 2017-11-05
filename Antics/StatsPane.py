@@ -238,10 +238,10 @@ class PurpleBox ( tkinter.Frame ) :
         tkinter.Frame.__init__(self, parent)
         self.parent = parent
         
-        self.maxl = 38
+        self.maxl = 45#38 #for 11
 
         bc = wgt.LIGHT_PURPLE
-        fnt = ( "Courier", 5 )
+        fnt = ( "Courier", 10 )
 
         self.config ( bg = bc, padx = 2, pady = 2, width = 500 )
         self.config ( highlightbackground="white", highlightcolor="white", highlightthickness=2, bd= 0 )
@@ -262,7 +262,7 @@ class PurpleBox ( tkinter.Frame ) :
     # setTextLines
     #####
     def setTextLines ( self, textArray ) :
-        self.myText.set ( textArray )
+        self.myText.set ( " "*self.maxl + "\n" + textArray )
         return
         
         padded = []

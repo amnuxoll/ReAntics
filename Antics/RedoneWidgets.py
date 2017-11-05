@@ -126,7 +126,8 @@ class StopWatch(tk.Frame):
     def Start(self):
         """ Start the stopwatch, ignore if running. """
         if not self._running:
-            print("aaah")
+            #print("aaah")
+            pass
             ''' make self.start the time now - zero'''
         self._start = time.time() - self._elapsedtime
             
@@ -134,16 +135,17 @@ class StopWatch(tk.Frame):
         self._update(self.timestr, 1.0)
 
     def Stop(self):
-        print("in stop")
+        #print("in stop")
         """ Stop the stopwatch, ignore if stopped. """
         if self._running:
-            print("stopping")
+            pass
+            #print("stopping")
         self.after_cancel(self._timer)
         self._timer = None
         self._elapsedtime = time.time() - self._start
         self._setTime(self._elapsedtime,self.timestr)
         self._running = 0
-        print("running", self._running)
+        #print("running", self._running)
 
     def Reset(self):
         """ Reset the stopwatch. """
