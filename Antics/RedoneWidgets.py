@@ -100,6 +100,7 @@ class StopWatch(tk.Frame):
         self.timestr = tk.StringVar()
         self.label = None
         self.makeWidgets()
+        self._timer = None
 
     def makeWidgets(self):
         """ Make the time label. """
@@ -112,7 +113,8 @@ class StopWatch(tk.Frame):
         """ Update the label with elapsed time. """
         self._elapsedtime = time.time() - self._start
         self._setTime(self._elapsedtime * rate, string_obj)
-        self._timer = self.after(50, self._update, string_obj, rate)
+        if self._running:
+           self._timer = self.after(50, self._update, string_obj, rate)
 
     def _setTime(self, elap, string_obj):
         """ Set the time string to Minutes:Seconds:Hundreths """
@@ -124,18 +126,24 @@ class StopWatch(tk.Frame):
     def Start(self):
         """ Start the stopwatch, ignore if running. """
         if not self._running:
+            print("aaah")
             ''' make self.start the time now - zero'''
-            self._start = time.time() - self._elapsedtime
-            self._update(self.timestr, 1.0)
-            self._running = 1
+        self._start = time.time() - self._elapsedtime
+            
+        self._running = 1
+        self._update(self.timestr, 1.0)
 
     def Stop(self):
+        print("in stop")
         """ Stop the stopwatch, ignore if stopped. """
         if self._running:
-            self.after_cancel(self._timer)
-            self._elapsedtime = time.time() - self._start
-            self._setTime(self._elapsedtime,self.timestr)
-            self._running = 0
+            print("stopping")
+        self.after_cancel(self._timer)
+        self._timer = None
+        self._elapsedtime = time.time() - self._start
+        self._setTime(self._elapsedtime,self.timestr)
+        self._running = 0
+        print("running", self._running)
 
     def Reset(self):
         """ Reset the stopwatch. """
