@@ -46,8 +46,8 @@ class Game(object):
         self.randomSetup = False  # overrides human setup only
         self.verbose = False
         # additional settings
-        self.playerSwap = False # !!! TODO - not presently implemented
-        self.timeoutOn = False # !!! TODO - not presently implemented
+        self.playerSwap = False 
+        self.timeoutOn = False 
         self.playerSwap      = False   # additonal settings
         self.playersReversed = False   # whether the players are currently swapped
         self.timeoutOn    = False # !!! TODO - not presently implemented
@@ -74,9 +74,6 @@ class Game(object):
         self.UI.showFrame(0)
 
         # fixing the players on the settings menu
-        self.UI.settingsHandler.changePlayers([ai[0].author for ai in self.players])
-        self.UI.settingsHandler.createFrames()
-        self.UI.settingsHandler.giveGame(self)
         self.UI.settingsHandler.changePlayers ( [ ai[0].author for ai in self.players ] )
         self.UI.settingsHandler.createFrames ( )
         self.UI.settingsHandler.giveGame ( self )
@@ -104,6 +101,8 @@ class Game(object):
         if len(self.game_calls) > 0:
             g = self.game_calls.pop(0)
             g ()
+            self.UI.statsHandler.timeLabel.Reset()
+            self.UI.statsHandler.timeLabel.Start()
             print("started game")
 
     def closeGUI(self):
@@ -448,28 +447,38 @@ class Game(object):
                     self.randomSetup = True
             else:
                 self.startAIvsAI(args.numgames, args.players[0], args.players[1])
+                self.UI.statsHandler.timeLabel.Reset()
+                self.UI.statsHandler.timeLabel.Start()
         elif args.RR:
             if 'human' in args.players:
                 parser.error('Human not allowed in round robin')
             if len(args.players) <= 2:
                 parser.error('3 or more players needed for round robin')
             self.startRR(args.numgames, args.players)
+            self.UI.statsHandler.timeLabel.Reset()
+            self.UI.statsHandler.timeLabel.Start()
         elif args.RRall:
             if args.players is not None:
                 parser.error('Do not specify players with (-p), (--RRall) is for all players')
             self.startRRall(args.numgames)
+            self.UI.statsHandler.timeLabel.Reset()
+            self.UI.statsHandler.timeLabel.Start()
         elif args.all:
             if 'human' in args.players:
                 parser.error('Human not allowed in play all others')
             if len(args.players) != 1:
                 parser.error('Only specify the Player you want to play all others')
             self.startAllOther(args.numgames, args.players[0])
+            self.UI.statsHandler.timeLabel.Reset()
+            self.UI.statsHandler.timeLabel.Start()
         elif args.self:
             if 'human' in args.players:
                 parser.error('Human not allowed in play all others')
             if len(args.players) != 1:
                 parser.error('Only specify the Player you want to play its self')
             self.startSelf(args.numgames, args.players[0])
+            self.UI.statsHandler.timeLabel.Reset()
+            self.UI.statsHandler.timeLabel.Start()
         if args.RR or args.RRall or args.self or args.all or args.twoP:
             self.UI.showFrame(2)
 
@@ -499,7 +508,8 @@ class Game(object):
             t = g.game_type
             fx = None
             if t == "Two Player":
-                human_loc = [ p.lower() for p in g.players ].index("human")
+                lower_p = [ p.lower() for p in g.players ]
+                human_loc = lower_p.index("human") if "human" in lower_p else -1
                 if human_loc != -1 :
                     self.game_calls.append ( partial ( self.startHumanVsAI, g.players[1-human_loc] ) )
                 else:
@@ -904,6 +914,8 @@ class Game(object):
                     if len (self.game_calls) > 0 :
                         fx_start = self.game_calls.pop(0)
                         fx_start()
+                    else:
+                        self.UI.statsHandler.timeLabel.Stop()
 
                     # seems out of place, did I add this?
                     # TODO: implement this nicely

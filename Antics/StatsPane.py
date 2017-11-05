@@ -3,6 +3,7 @@ import RedoneWidgets as wgt
 from Constants import *
 import random
 import os
+import time
 
 #
 # class StatsPane
@@ -28,52 +29,65 @@ class StatsPane:
 
         ## make GameLog display frame
         self.gLFrame = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
-        self.gLFrame.grid(column=0, row=0, sticky=tkinter.E + tkinter.W + tkinter.S + tkinter.N, padx =5)
+        self.gLFrame.grid(column=0, row=0, columnspan=3, sticky=tkinter.E + tkinter.W + tkinter.S + tkinter.N, padx =5)
         self.gameLog = tkinter.StringVar()
         self.gameLog.set("Game Log")
-        self.gameLogLabel = tkinter.Label(self.gLFrame, textvar=self.gameLog, fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT)
+        self.gameLogLabel = tkinter.Label(self.gLFrame, textvar=self.gameLog, fg = FL_TEXT_COLOR, \
+                                          bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT)
         self.gameLogLabel.grid(column=0, row=0)
         self.gameLogLabel.pack(side = tkinter.TOP, fill=tkinter.X)
         self.gLFrame.columnconfigure(0, weight=1)
 
-        self.logTextLabel = tkinter.Label(self.gLFrame, text="Game Log stuff here", fg ="black", bg="white", borderwidth=FL_BD, font= ("Herculanum", 12))
+        self.logTextLabel = tkinter.Label(self.gLFrame, text="Game Log stuff here", fg ="black", \
+                                          bg="purple", borderwidth=FL_BD, font= ("Herculanum", 12),height=35, width=35)
         self.logTextLabel.pack(side=tkinter.BOTTOM, fill=tkinter.X, padx = 2)
         self.gLFrame.columnconfigure(0, weight=1)
 
-
         ## make totals display frame
         self.tFrame = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
-        self.tFrame.grid(column=1, row=0, sticky=tkinter.E + tkinter.W + tkinter.S + tkinter.N, padx = 5)
+        self.tFrame.grid(column=3, row=0, columnspan=3, sticky=tkinter.E + tkinter.W + tkinter.S + tkinter.N, padx = 5)
         self.totals = tkinter.StringVar()
         self.totals.set("Totals")
-        self.totalsLabel = tkinter.Label(self.tFrame, textvar=self.totals, fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT)
-        self.totalsLabel.grid(column=3, row=0)
+        self.totalsLabel = tkinter.Label(self.tFrame, textvar=self.totals, fg = FL_TEXT_COLOR, \
+                                         bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT, width=35)
+##        self.totalsLabel.grid(column=3, row=0)
         self.totalsLabel.pack(side=tkinter.TOP, fill=tkinter.X)
         self.tFrame.columnconfigure(3, weight=1)
 
-        self.totalsTextLabel = tkinter.Label(self.tFrame, text="Totals stuff here", fg="black", bg="white", borderwidth=FL_BD, font=("Herculanum", 12))
+        self.totalsStrVar =  tkinter.StringVar()
+        self.setScoreRecord ( "Totals stuff here" )
+        self.totalsTextLabel = tkinter.Label(self.tFrame, textvar=self.totalsStrVar, fg="black", \
+                                             bg="green", borderwidth=FL_BD, font=("Herculanum", 12),\
+                                             height=35)
         self.totalsTextLabel.pack(side=tkinter.BOTTOM, fill=tkinter.X, padx=2)
         self.tFrame.columnconfigure(0, weight=1)
 
+        self.totalsLabel.pack(side=tkinter.TOP, fill=tkinter.X)
+
         ## make time display frame
         self.timeHeaderFrame = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
-        self.timeHeaderFrame.grid(columnspan=2, column=0, row=1, sticky=tkinter.W+tkinter.E+tkinter.N, padx = 5, pady = 5)
+        self.timeHeaderFrame.grid(columnspan=6, column=0, row=1, sticky=tkinter.W+tkinter.E+tkinter.N, \
+                                  padx = 5, pady = 5)
         self.timeInfo = tkinter.StringVar()
         self.timeInfo.set("Time")
-        self.timeInfoLabel = tkinter.Label(self.timeHeaderFrame, textvar = self.timeInfo, fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT)
+        self.timeInfoLabel = tkinter.Label(self.timeHeaderFrame, textvar = self.timeInfo, fg = FL_TEXT_COLOR,\
+                                           bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT)
         self.timeInfoLabel.grid(column=2, row=2)
         self.timeInfoLabel.pack(side=tkinter.TOP, fill = tkinter.X)
         self.timeHeaderFrame.columnconfigure(0, weight=1)
 
-        self.timeLabel = tkinter.Label(self.timeHeaderFrame, text=0, fg="black", bg="white", borderwidth=FL_BD, font=("Herculanum", 12))
+        self.totalTimeVar = tkinter.StringVar()
+        self.setTotalTime ( 0 )
+        self.timeLabel = tkinter.Label(self.timeHeaderFrame, textvar=self.totalTimeVar, fg="black", \
+                                       bg="white", borderwidth=FL_BD, font=("Herculanum", 50, "bold"))
+        self.timeLabel = wgt.StopWatch (self.timeHeaderFrame) # trying something new
+        self.timeLabel.label.config(font=("Courier", 50, "bold"))
         self.timeLabel.pack(side=tkinter.TOP, fill=tkinter.X, padx=2)
         self.timeHeaderFrame.columnconfigure(0, weight =1)
 
-
-
         ## Make control buttons
         self.buttonFrame = tkinter.Frame(self.parent)
-        self.buttonFrame.grid(column = 3, row = 0, rowspan = 2, sticky = tkinter.N + tkinter.S)
+        self.buttonFrame.grid(column = 6, row = 0, rowspan = 2, sticky = tkinter.N + tkinter.S)
 
         self.buttonText = tkinter.StringVar()
 
@@ -149,9 +163,11 @@ class StatsPane:
         if self.stats:
             self.stats = False
             self.statsText.set("Print Stats On")
+            self.handler.game.verbose = False
         else:
             self.stats = True
             self.statsText.set("Print Stats Off")
+            self.handler.game.verbose = True
 
     def killPressed(self):
         print("Kill")
@@ -166,5 +182,13 @@ class StatsPane:
 
     def boardButtonPressed(self, x, y):
         print("Board Clicked x: %d, y: %d" % (x, y))
+
+    def setTotalTime ( self, t ) :
+        self.totalTimeVar.set ( str ( int(t/3600)) + " : " + "%02d"%(int(t/60)) + " : " + "%02d"%(t%60) )
+
+    def setScoreRecord ( self, s ) :
+        self.totalsStrVar.set ( s )
+
+
 
 

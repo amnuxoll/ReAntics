@@ -25,7 +25,8 @@ FLASH_TIME = 0.05
 
 
 class ColoredButton(tk.Label):
-    def __init__(self, parent = None, text = "", backgroundcolor = "green", textcolor = "black", command = None, flash = False):
+    def __init__(self, parent = None, text = "", backgroundcolor = "green", \
+                 textcolor = "black", command = None, flash = False):
         # initialize UI object
         tk.Label.__init__(self, parent)
         # store event handler to close later
@@ -34,7 +35,8 @@ class ColoredButton(tk.Label):
         self.command = command
         self.flash = flash # no longer needed, before needed for mac compatibility issues
 
-        self.config(text = text, bg = backgroundcolor, fg = textcolor, activebackground = FLASH_COLOR, borderwidth=5, relief="raised")
+        self.config(text = text, bg = backgroundcolor, fg = textcolor, \
+                    activebackground = FLASH_COLOR, borderwidth=5, relief="raised")
         self.bind("<Button-1>", self.pressed)
 
     def pressed(self, thing):
@@ -85,6 +87,60 @@ class ScrollableFrame ( tk.Frame ) :
     def set_scrollregion(self, event=None):
         """ Set the scroll region on the canvas"""
         self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+
+# https://stackoverflow.com/questions/46287270/trying-to-grab-current-time-from-a-stopwatch-widget-when-i-hit-a-button-tkinte
+class StopWatch(tk.Frame):
+    """ Implements a stop watch frame widget. """
+    def __init__(self, parent=None, **kw):
+        tk.Frame.__init__(self, parent, kw)
+        self._start = 0.0
+        self._elapsedtime = 0
+        self._running = 0
+        self.timestr = tk.StringVar()
+        self.label = None
+        self.makeWidgets()
+
+    def makeWidgets(self):
+        """ Make the time label. """
+        self.label  = tk.Label(self, textvariable=self.timestr)
+        self._setTime(self._elapsedtime, self.timestr)
+        self.label.pack(fill=tk.X, expand=tk.NO, pady=2, padx=2)
+
+
+    def _update(self, string_obj, rate):
+        """ Update the label with elapsed time. """
+        self._elapsedtime = time.time() - self._start
+        self._setTime(self._elapsedtime * rate, string_obj)
+        self._timer = self.after(50, self._update, string_obj, rate)
+
+    def _setTime(self, elap, string_obj):
+        """ Set the time string to Minutes:Seconds:Hundreths """
+        minutes = int(elap/60)
+        seconds = int(elap - minutes*60.0)
+        hseconds = int((elap - minutes*60.0 - seconds)*100)
+        string_obj.set('%02d:%02d:%02d' % (minutes, seconds, hseconds))
+
+    def Start(self):
+        """ Start the stopwatch, ignore if running. """
+        if not self._running:
+            ''' make self.start the time now - zero'''
+            self._start = time.time() - self._elapsedtime
+            self._update(self.timestr, 1.0)
+            self._running = 1
+
+    def Stop(self):
+        """ Stop the stopwatch, ignore if stopped. """
+        if self._running:
+            self.after_cancel(self._timer)
+            self._elapsedtime = time.time() - self._start
+            self._setTime(self._elapsedtime,self.timestr)
+            self._running = 0
+
+    def Reset(self):
+        """ Reset the stopwatch. """
+        self._start = time.time()
+        self._elapsedtime = 0.0
+        self._setTime(self._elapsedtime,self.timestr)
 
 ###########################################################################
 # standard message dialogs... showinfo, showwarning, showerror

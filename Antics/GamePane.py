@@ -326,9 +326,11 @@ class GamePane:
         if self.stats:
             self.stats = False
             self.statsText.set("Print Stats On")
+            self.handler.game.verbose = False
         else:
             self.stats = True
             self.statsText.set("Print Stats Off")
+            self.handler.game.verbose = True
 
     def killPressed(self):
         print("Kill")
