@@ -885,8 +885,10 @@ class Game(object):
                 self.playerScores[self.loser][2] += 1
 
                 # if CommandLine Mode print the values to the console
-                if self.verbose:
+                tournament_str = self.tournamentStr()
+                if not self.verbose:
                     self.printTournament()
+                self.UI.statsHandler.setScoreRecord ( tournament_str ) #sara
 
                 # reset the game
                 self.initGame()
@@ -904,8 +906,11 @@ class Game(object):
 
                 if len(self.gamesToPlay) == 0:
                     # if no more games to play, reset tournament stuff
+                    tournament_str = self.tournamentStr()
                     if not self.verbose:
                         self.printTournament()
+                    self.UI.statsHandler.setScoreRecord ( tournament_str ) #sara
+                    
                     self.numGames = 0
                     self.playerScores = []
                     self.mode = TOURNAMENT_MODE
@@ -916,6 +921,7 @@ class Game(object):
                         fx_start()
                     else:
                         self.UI.statsHandler.timeLabel.Stop()
+                        print("should have stopped")
 
                     # seems out of place, did I add this?
                     # TODO: implement this nicely
@@ -1562,6 +1568,15 @@ class Game(object):
     #
     ##
     def printTournament(self):
+        print(self.tournamentStr())
+        print('')
+
+    ##
+    # tournamentStr
+    # Description: prints the status of the tournament
+    #
+    ##
+    def tournamentStr(self):
         transposedList = list(map(list, zip(*self.playerScores)))
         strTransList = [[str(n) for n in i] for i in transposedList]
         longest_len = len(max(strTransList[0], key=len))
@@ -1569,9 +1584,11 @@ class Game(object):
         scoreAndTitle = [['Player', 'Wins', 'Losses']] + [['-------', '-------', '-------']] + self.playerScores
         scoreAndTitles = [[str(n) for n in i] for i in scoreAndTitle]
 
+        s = []
         for row in scoreAndTitles:
-            print("".join(str(word).rjust(longest_len+2) for word in row))
-        print('')
+            s.append("".join(str(word).rjust(longest_len+2) for word in row))
+        s = "\n".join(s)
+        return s
 
     ##
     # error
