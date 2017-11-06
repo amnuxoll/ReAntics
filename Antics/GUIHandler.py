@@ -125,8 +125,8 @@ class GUIHandler:
     #
     def setPlayers(self, p1, p2):
         # TODO: Find where to call this from
-        self.gameHandler.p1Name.set(p1)
-        self.gameHandler.p2Name.set(p2)
+        self.gameHandler.p1Name.set(p1[0:6] + '..' + p1[-3:] if len(p1) > 6 else p1[0:6])
+        self.gameHandler.p2Name.set(p2[0:6] + '..' + p2[-3:] if len(p2) > 6 else p2[0:6])
 
     ##
     # getHumanMove

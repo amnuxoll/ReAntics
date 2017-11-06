@@ -185,6 +185,7 @@ class Game(object):
         self.checkBoxClickedCallback(index)
         self.submitClickedCallback()
         self.startGameCallback()
+        self.UI.setPlayers("Human", givenPlayer)
 
     ##
     # startAIvsAI
@@ -953,6 +954,7 @@ class Game(object):
                     # set up new current players
                     self.currentPlayers.append(self.players[playerOneId][0])
                     self.currentPlayers.append(self.players[playerTwoId][0])
+                    self.UI.setPlayers(self.currentPlayers[PLAYER_ONE].author, self.currentPlayers[PLAYER_TWO].author)
 
     ##
     # setWinner
@@ -1751,6 +1753,7 @@ class Game(object):
                 break
 
             self.currentPlayers = tempCurrent
+            self.UI.setPlayers(self.currentPlayers[PLAYER_ONE].author, self.currentPlayers[PLAYER_TWO].author)
 
             # change the phase to setup
             self.state.phase = SETUP_PHASE_1
