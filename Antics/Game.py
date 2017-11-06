@@ -926,13 +926,11 @@ class Game(object):
                     self.state.phase = SETUP_PHASE_1
 
                     # get players from next pairing
-                    if self.playerSwap and self.playersReversed:
-                        playerTwoId = self.gamesToPlay[0][0][0]
-                        playerOneId = self.gamesToPlay[0][0][1]
-                    else:
-                        playerOneId = self.gamesToPlay[0][0][0]
-                        playerTwoId = self.gamesToPlay[0][0][1]
-                    self.playersReversed = not self.playersReversed
+                    if self.playerSwap:
+                        self.gamesToPlay[0][0] = self.gamesToPlay[0][0][::-1]
+
+                    playerOneId = self.gamesToPlay[0][0][0]
+                    playerTwoId = self.gamesToPlay[0][0][1]
 
                     # set up new current players
                     self.currentPlayers.append(self.players[playerOneId][0])
