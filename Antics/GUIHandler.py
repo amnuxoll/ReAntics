@@ -38,9 +38,19 @@ class GUIHandler:
         self.root.protocol("WM_DELETE_WINDOW", self.onClose)
         self.root.title("ReAntics")
         self.baseFrame = tkinter.Frame(self.root)
-        self.settingsFrame = tkinter.Frame(self.baseFrame )
+        self.settingsFrame = tkinter.Frame(self.baseFrame)
         self.statsFrame = tkinter.Frame(self.baseFrame)
         self.gameFrame = tkinter.Frame(self.baseFrame)
+
+        # shared tkinter variables
+        # note these have to be here after root is made
+        self.pauseVar = tkinter.StringVar()
+        self.pauseVar.set("Play")
+        self.statsText = tkinter.StringVar()
+        self.statsText.set("Print Stats On")
+        self.blue = "#8bbcda"
+        self.stats = False
+        self.paused = True
 
         self.settingsFrame.pack_propagate(False)
         self.statsFrame.pack_propagate(False)
@@ -124,7 +134,6 @@ class GUIHandler:
     # sets the name of the current players
     #
     def setPlayers(self, p1, p2):
-        # TODO: Find where to call this from
         self.gameHandler.p1Name.set(p1[0:6] + '..' + p1[-3:] if len(p1) > 6 else p1[0:6])
         self.gameHandler.p2Name.set(p2[0:6] + '..' + p2[-3:] if len(p2) > 6 else p2[0:6])
 
@@ -195,8 +204,43 @@ class GUIHandler:
         self.waitingForHuman = False
         self.attackingAntLoc = None
 
-# test code to check GUI without running the game itself
+    ##################################################
+    # Button Call Methods
+    #
+    # here because they need to be synced between stats
+    # and game pane
+    #
+    def pausePressed(self):
+        if self.paused:
+            self.paused = False
+            self.pauseVar.set("Pause")
+            self.gameHandler.pauseButton.config(bg = self.blue)
+            self.statsHandler.pauseButton.config(bg = self.blue)
+            self.game.generalWake()
+        else:
+            self.paused = True
+            self.pauseVar.set("Play")
+            self.gameHandler.pauseButton.config(bg = 'green')
+            self.statsHandler.pauseButton.config(bg = 'green')
 
-if __name__ == "__main__":
-    handler = GUIHandler(None)
-    handler.root.mainloop()
+    def stepPressed(self):
+        self.game.generalWake()
+
+    def statsPressed(self):
+        if self.stats:
+            self.stats = False
+            self.statsText.set("Print Stats On")
+        else:
+            self.stats = True
+            self.statsText.set("Print Stats Off")
+
+    def killPressed(self):
+        print("Kill")
+
+    def restartPressed(self):
+        self.killPressed()
+        print("Restart")
+
+    def settingsPressed(self):
+        self.killPressed()
+        print("settings")

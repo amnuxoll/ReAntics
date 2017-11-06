@@ -48,9 +48,9 @@ class Game(object):
         # additional settings
         self.playerSwap = False 
         self.timeoutOn = False 
-        self.playerSwap      = False   # additonal settings
+        self.playerSwap = False   # additonal settings
         self.playersReversed = False   # whether the players are currently swapped
-        self.timeoutOn    = False # !!! TODO - not presently implemented
+        self.timeoutOn = False # !!! TODO - not presently implemented
         self.timeoutLimit = -1    # !!! TODO - not presently implemented
         # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
 
@@ -102,20 +102,13 @@ class Game(object):
             g = self.game_calls.pop(0)
             self.UI.statsHandler.timeLabel.Reset()
             self.UI.statsHandler.timeLabel.Start()
-            g ()
+            g()
             print("started game")
 
     def closeGUI(self):
         # Tried to make it close nicely, failed
         # instead we brute force
         # TODO: make this work better
-
-        # if self.UI is not None:
-        #     self.UI.closed = True
-        #     self.UI.root.after(50, self.UI.root.destroy())
-        #
-        # if self.GUIthread is not None:
-        #     self.GUIthread.join()
 
         # theoretically sys.exit() should work here. I'm not sure why it doesn't.
         os._exit(0)
@@ -543,10 +536,10 @@ class Game(object):
     def start(self):
         self.waitCond.acquire()
         self.processCommandLine()
-        #self.state.phase = MENU_PHASE
         
         while True:
             self.tick(80)
+            print("test")
             # Determine current chosen game mode. Enter different execution paths
             # based on the mode, which must be chosen by clicking a button.
 
@@ -574,20 +567,17 @@ class Game(object):
         constrsToPlace += [Construction(None, GRASS) for i in range(0, 9)]
 
         while not self.gameOver:
-            if self.state.phase == MENU_PHASE:
-                # if we are in menu phase at this point, a reset was requested so break
-                break
-            else:
-                # create a copy of the state to share with the player
-                theState = self.state.clone()
 
-                # I think this is where it should go
-                if self.UI is not None:
-                    self.UI.showState(theState)
+            # create a copy of the state to share with the player
+            theState = self.state.clone()
 
-                # if the player is player two, flip the board
-                if theState.whoseTurn == PLAYER_TWO:
-                    theState.flipBoard()
+            # I think this is where it should go
+            if self.UI is not None:
+                self.UI.showState(theState)
+
+            # if the player is player two, flip the board
+            if theState.whoseTurn == PLAYER_TWO:
+                theState.flipBoard()
 
             if self.state.phase == SETUP_PHASE_1 or self.state.phase == SETUP_PHASE_2:
                 currentPlayer = self.currentPlayers[self.state.whoseTurn]
@@ -640,10 +630,7 @@ class Game(object):
                             self.state.inventories[NEUTRAL].constrs.append(constr)
 
                     # if AI mode, pause to observe move until next or continue is clicked
-                    self.pauseForAIMode()
-                    if self.state.phase == MENU_PHASE:
-                        # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
-                        break
+                    self.pauseGame()
 
                     if not constrsToPlace:
                         constrsToPlace = []
@@ -687,7 +674,6 @@ class Game(object):
                                 p1inventory.foodCount = 1
                                 p2inventory.foodCount = 1
                                 # change to play phase
-                                # self.ui.notify("")
                                 self.state.phase = PLAY_PHASE
 
                         # change player turn in state
@@ -698,9 +684,6 @@ class Game(object):
                         # cause current player to lose game because AIs aren't allowed to make mistakes.
                         self.error(INVALID_PLACEMENT, targets)
                         break
-                    elif validPlace != None:
-                        # self.ui.notify("Invalid placement.")
-                        self.errorNotify = True
 
             elif self.state.phase == PLAY_PHASE:
                 currentPlayer = self.currentPlayers[self.state.whoseTurn]
@@ -744,7 +727,7 @@ class Game(object):
                         self.state.board[endCoord[0]][endCoord[1]].ant = antToMove
 
                         # if AI mode, pause to observe move until next or continue is clicked
-                        self.pauseForAIMode()
+                        self.pauseGame()
 
                         # check and take action for attack (workers can not attack)
                         if antToMove.type != WORKER:
@@ -769,7 +752,7 @@ class Game(object):
                             self.state.inventories[self.state.whoseTurn].ants.append(ant)
 
                         # if AI mode, pause to observe move until next or continue is clicked
-                        self.pauseForAIMode()
+                        self.pauseGame()
                         if self.state.phase == MENU_PHASE:
                             # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
                             break
@@ -812,7 +795,7 @@ class Game(object):
                         # self.ui.notify(nextPlayerName + "'s turn.")
 
                         # if AI mode, pause to observe move until next or continue is clicked
-                        self.pauseForAIMode()
+                        self.pauseGame()
                         if self.state.phase == MENU_PHASE:
                             # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
                             break
@@ -833,11 +816,6 @@ class Game(object):
             elif self.hasWon(PLAYER_TWO):
                 self.setWinner(PLAYER_TWO)
 
-                # redraw the board periodically and check for user input
-                # self.ui.drawBoard(self.state, self.mode)
-
-                # end game loop
-
     def resolveEndGame(self):
         if self.state.phase != MENU_PHASE:
             # check mode for appropriate response to game over
@@ -847,21 +825,12 @@ class Game(object):
             if self.mode == HUMAN_MODE:
                 self.state.phase = MENU_PHASE
 
-                # notify the user of the winner
-                # if self.winner == PLAYER_ONE:
-                #     self.ui.notify("You have won the game!")
-                # else:
-                #     self.ui.notify("The AI has won the game!")
-
-                self.errorNotify = True
-
             if self.mode == AI_MODE:
                 self.state.phase = MENU_PHASE
 
                 # notify the user of the winner
                 winnerName = self.players[self.winner][0].author
                 # self.ui.notify(winnerName + " has won the game!")
-                self.errorNotify = True
 
             elif self.mode == TOURNAMENT_MODE:
                 # adjust the count of games to play for the current pair
@@ -878,7 +847,7 @@ class Game(object):
                 tournament_str = self.tournamentStr()
                 if self.verbose:
                     self.printTournament()
-                self.UI.statsHandler.updateCurLogItem ( tournament_str ) #sara
+                self.UI.statsHandler.updateCurLogItem(tournament_str) #sara
                 
 
                 # reset the game
@@ -914,12 +883,8 @@ class Game(object):
                         fx_start()
                     else:
                         self.UI.statsHandler.timeLabel.Stop()
+                        self.UI.showFrame(0)
                         print("should have stopped")
-
-                    # seems out of place, did I add this?
-                    # TODO: implement this nicely
-                    # self.closeGUI()
-                    # sys.exit(0)
                 else:
                     # setup game to run again
                     self.mode = TOURNAMENT_MODE
@@ -1008,7 +973,7 @@ class Game(object):
                 self.state.inventories[opponentId].ants.remove(attackedAnt)
 
             # if AI mode, pause to observe attack until next or continue is clicked
-            self.pauseForAIMode()
+            self.pauseGame()
 
     ##
     # initGame
@@ -1023,7 +988,6 @@ class Game(object):
         self.state = GameState(board, [p1Inventory, p2Inventory, neutralInventory], MENU_PHASE, PLAYER_ONE)
         self.currentPlayers = []
         self.mode = None
-        self.errorNotify = False
         self.gameOver = False
         self.winner = None
         self.loser = None
@@ -1250,8 +1214,6 @@ class Game(object):
                         self.errorReport("ERROR: Invalid Move: " + str(move))
                         self.errorReport("       Player has " + str(currFood) + " food but needs " + str(
                             buildCost) + " to build this ant")
-                        # self.ui.notify("Requires " + str(buildCost) + " food.")
-                        self.errorNotify = True
                         return False
                 else:
                     # we know we're building a construction
@@ -1268,8 +1230,6 @@ class Game(object):
                                         self.state.board[aCoord[0]][aCoord[1]].constr.type == FOOD):
                                 self.errorReport("ERROR: Invalid Move: " + str(move))
                                 self.errorReport("       Cannot tunnel build next to food.")
-                                # self.ui.notify("Cannot tunnel build next to food.")
-                                self.errorNotify = True
                                 return False
 
                     buildCost = CONSTR_STATS[TUNNEL][BUILD_COST]
@@ -1277,8 +1237,6 @@ class Game(object):
                         # self.ui.notify("")
                         return True
                     else:
-                        # self.ui.notify("Requires "+ str(buildCost) + " food.")
-                        self.errorNotify = True
                         self.errorReport("ERROR: Invalid Move: " + str(move))
                         self.errorReport("       Must have at least " + str(buildCost) + " food to build a tunnel.")
                         return False
@@ -1540,19 +1498,32 @@ class Game(object):
             return False
 
     ##
-    # pauseForAIMode
+    # pauseGame
     # Description: Will pause the game if set to AI mode until user clicks next or continue
     #
     ##
-    def pauseForAIMode(self):
-        if self.mode == AI_MODE:
-            while not self.nextClicked and not self.continueClicked:
-                # self.ui.drawBoard(self.state, self.mode)
-                if self.state.phase == MENU_PHASE:
-                    # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
-                    return
-            # reset nextClicked to catch next move
-            self.nextClicked = False
+    def pauseGame(self):
+        # nothing to pause for if there's no UI
+        if self.UI is None:
+            return
+
+        if not self.UI.paused:
+            return
+
+        # pause using this wait condition
+        # The GUI thread will wake
+        self.waitCond.wait()
+
+    ##
+    # generalWake
+    #
+    # wake the game thread from waiting without doing any other action
+    # could cause errors if used in the wrong place
+    #
+    def generalWake(self):
+        self.waitCond.acquire()
+        self.waitCond.notify()
+        self.waitCond.release()
 
     ##
     # printTournament
@@ -1679,20 +1650,6 @@ class Game(object):
                 # reset tournament variables
                 self.playerScores = []  # [[author,wins,losses], ...]
                 self.gamesToPlay = []  # ((p1.id, p2.id), numGames)
-                # TODO: Im not sure what this did but it was messing up round robin
-                # self.numGames = None
-                # notify UI tournament has started
-                # self.ui.tournamentStartTime = time.clock()
-                # self.ui.tournamentInProgress = True
-
-                # if self.ui.textBoxContent != '':
-                #     self.numGames = int(self.ui.textBoxContent)
-                # else:
-                #     self.ui.textBoxContent = '0'
-                #     self.numGames = 0
-
-                # TODO: Im not sure what this did but it was messing up round robin
-                # self.numGames = 10
 
                 # if numGames is non-positive, dont set up game
                 if self.numGames <= 0:
@@ -1708,7 +1665,6 @@ class Game(object):
                         tempAuth = tempAuth[0:21] + "..."
 
                     self.playerScores.append([tempAuth, 0, 0])
-                    # self.ui.tournamentScores.append([tempAuth, 0, 0])
 
                     for j in range(i, len(self.players)):
                         if self.players[i][0] != self.players[j][0]:
@@ -1747,7 +1703,6 @@ class Game(object):
     def tourneyPathCallback(self):
         # Reset the game
         self.initGame()
-        # self.initUI()
         # Reset tournament mode variables
         self.playerScores = []
         self.gamesToPlay = []
@@ -1756,12 +1711,7 @@ class Game(object):
         self.loadAIs(False)
         # Check right number of players, if successful set the mode.
         if len(self.players) >= 2:
-            # self.ui.choosingAIs = True
             self.mode = TOURNAMENT_MODE
-            # self.ui.notify("Mode set to Tournament. Submit two or more AI players.")
-        else:
-            # self.ui.notify("Could not load enough AI players for game type.")
-            self.errorNotify = True
 
     ##
     # humanPathCallback
@@ -1778,12 +1728,7 @@ class Game(object):
         self.players.insert(PLAYER_ONE, (HumanPlayer.HumanPlayer(PLAYER_ONE), ACTIVE))
         # Check right number of players, if successful set the mode.
         if len(self.players) >= 2:
-            # self.ui.choosingAIs = True
             self.mode = HUMAN_MODE
-            # self.ui.notify("Mode set to Human vs. AI. Submit one AI.")
-        else:
-            # self.ui.notify("Could not load enough AI players for game type.")
-            self.errorNotify = True
 
     ##
     # aiPathCallback
@@ -1798,12 +1743,7 @@ class Game(object):
         self.loadAIs(False)
         # Check right number of players, if successful set the mode.
         if len(self.players) >= 2:
-            # self.ui.choosingAIs = True
             self.mode = AI_MODE
-            # self.ui.notify("Mode set to AI vs. AI. Submit two AIs.")
-        else:
-            # self.ui.notify("Could not load enough AI players for game type.")
-            self.errorNotify = True
 
     ##
     # checkBoxClickedCallback
@@ -1832,10 +1772,8 @@ class Game(object):
 
         # check to see if we have enough checked players
         if (len(self.players) - len(inactivePlayers)) < 2:
-            # self.ui.notify("Please select more AIs to play this game type.")
             return
         if (len(self.players) - len(inactivePlayers)) > 23 and self.mode == TOURNAMENT_MODE:
-            # self.ui.notify("Please select less than 24 AI players to play this game type.")
             return
 
         # remove all inactive players

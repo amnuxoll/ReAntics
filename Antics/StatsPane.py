@@ -106,97 +106,47 @@ class StatsPane:
 
         self.buttonText = tkinter.StringVar()
 
-
-        self.blue = "#8bbcda"
         font = ("Times New Roman", 24)
 
         self.UIbutton = wgt.ColoredButton(self.buttonFrame, text="Show UI", command=self.UIbuttonPressed)
-        self.UIbutton.config(bg=self.blue, fg='white', font=font, width=12, pady=3)
+        self.UIbutton.config(bg=self.handler.blue, fg='white', font=font, width=12, pady=3)
         self.UIbutton.grid()
 
-        self.endTurnButton = wgt.ColoredButton(self.buttonFrame, text="End Turn", command=self.endTurnPressed)
-        self.endTurnButton.config(bg=self.blue, fg='white', font=font, width=12, pady=3)
-        self.endTurnButton.grid(row=1)
-
-        self.pauseVar = tkinter.StringVar()
-        self.pauseVar.set("Play")
-        self.pauseButton = wgt.ColoredButton(self.buttonFrame, command=self.pausePressed)
-        self.pauseButton.config(textvar=self.pauseVar)
+        self.pauseButton = wgt.ColoredButton(self.buttonFrame, command=self.handler.pausePressed)
+        self.pauseButton.config(textvar=self.handler.pauseVar)
         self.pauseButton.config(bg='green', fg='white', font=font, width=12, pady=3)
-        self.pauseButton.grid(row=2)
+        self.pauseButton.grid(row=1)
         self.paused = True
 
-        self.stepButton = wgt.ColoredButton(self.buttonFrame, text="Step", command=self.stepPressed)
-        self.stepButton.config(bg=self.blue, fg='white', font=font, width=12, pady=3)
-        self.stepButton.grid(row=3)
+        self.stepButton = wgt.ColoredButton(self.buttonFrame, text="Step", command=self.handler.stepPressed)
+        self.stepButton.config(bg=self.handler.blue, fg='white', font=font, width=12, pady=3)
+        self.stepButton.grid(row=2)
 
-        self.statsText = tkinter.StringVar()
-        self.statsText.set("Print Stats On")
-        self.statsButton = wgt.ColoredButton(self.buttonFrame, command=self.statsPressed)
-        self.statsButton.config(textvar=self.statsText)
-        self.statsButton.config(bg=self.blue, fg='white', font=font, width=12, pady=3)
-        self.statsButton.grid(row=4)
+        self.statsButton = wgt.ColoredButton(self.buttonFrame, command=self.handler.statsPressed)
+        self.statsButton.config(textvar=self.handler.statsText)
+        self.statsButton.config(bg=self.handler.blue, fg='white', font=font, width=12, pady=3)
+        self.statsButton.grid(row=3)
         self.stats = False
 
-        self.killButton = wgt.ColoredButton(self.buttonFrame, text="Kill Game", command=self.killPressed)
+        self.killButton = wgt.ColoredButton(self.buttonFrame, text="Kill Game", command=self.handler.killPressed)
         self.killButton.config(bg='red', fg='white', font=font, width=12, pady=3)
-        self.killButton.grid(row=5)
+        self.killButton.grid(row=4)
 
-        self.restartButton = wgt.ColoredButton(self.buttonFrame, text="Restart All", command=self.restartPressed)
+        self.restartButton = wgt.ColoredButton(self.buttonFrame, text="Restart All", command=self.handler.restartPressed)
         self.restartButton.config(bg='red', fg='white', font=font, width=12, pady=3)
-        self.restartButton.grid(row=6)
+        self.restartButton.grid(row=5)
 
-        self.settingsButton = wgt.ColoredButton(self.buttonFrame, text="Settings", command=self.settingsPressed)
+        self.settingsButton = wgt.ColoredButton(self.buttonFrame, text="Settings", command=self.handler.settingsPressed)
         self.settingsButton.config(bg='red', fg='white', font=font, width=12, pady=3)
-        self.settingsButton.grid(row=7)
+        self.settingsButton.grid(row=6)
 
         # make buttons space out a bit
-        for i in range(8):
+        for i in range(7):
             self.buttonFrame.rowconfigure(i, weight=1)
 
 
     def UIbuttonPressed(self):
         self.handler.showFrame(2)
-
-    def endTurnPressed(self):
-        print("End Turn")
-
-    def pausePressed(self):
-        if self.paused:
-            self.paused = False
-            self.pauseVar.set("Pause")
-            self.pauseButton.config(bg = self.blue)
-        else:
-            self.paused = True
-            self.pauseVar.set("Play")
-            self.pauseButton.config(bg = 'green')
-
-    def stepPressed(self):
-        print("Step")
-
-    def statsPressed(self):
-        if self.stats:
-            self.stats = False
-            self.statsText.set("Print Stats On")
-##            self.handler.game.verbose = False
-        else:
-            self.stats = True
-            self.statsText.set("Print Stats Off")
-##            self.handler.game.verbose = True
-
-    def killPressed(self):
-        print("Kill")
-
-    def restartPressed(self):
-        self.killPressed()
-        print("Restart")
-
-    def settingsPressed(self):
-        self.killPressed()
-        self.handler.showFrame(0)
-
-    def boardButtonPressed(self, x, y):
-        print("Board Clicked x: %d, y: %d" % (x, y))
 
     def setScoreRecord ( self, s ) :
         self.totalsStrVar.set ( s )
