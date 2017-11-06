@@ -705,12 +705,6 @@ class Game(object):
             elif self.state.phase == PLAY_PHASE:
                 currentPlayer = self.currentPlayers[self.state.whoseTurn]
 
-                # display instructions for human player
-
-                # get the move from the current player in a separate
-                # process so that we can time it out
-
-                # TODO: implement human waiting
                 if isinstance(currentPlayer, HumanPlayer.HumanPlayer):
                     # alert the UI that we need a move, then wait until it gives one to us
                     self.UI.getHumanMove(theState.phase)
@@ -738,34 +732,23 @@ class Game(object):
 
                         # take ant from start coord
                         antToMove = self.state.board[startCoord[0]][startCoord[1]].ant
+
                         # change ant's coords and hasMoved status
                         antToMove.coords = (endCoord[0], endCoord[1])
                         antToMove.hasMoved = True
+
                         # remove ant from location
                         self.state.board[startCoord[0]][startCoord[1]].ant = None
+
                         # put ant at last loc in coordList
                         self.state.board[endCoord[0]][endCoord[1]].ant = antToMove
 
-                        # clear all highlights after move happens
-                        # self.ui.coordList = []
-
                         # if AI mode, pause to observe move until next or continue is clicked
                         self.pauseForAIMode()
-                        if self.state.phase == MENU_PHASE:
-                            # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
-                            break
 
                         # check and take action for attack (workers can not attack)
-                        if (antToMove.type != WORKER):
+                        if antToMove.type != WORKER:
                             self.resolveAttack(antToMove, currentPlayer)
-
-                        # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
-                        if self.state.phase == MENU_PHASE:
-                            break
-
-                            # clear all highlights after attack happens
-                            # self.ui.coordList = []
-                            # self.ui.attackList = []
 
                     elif move.moveType == BUILD:
                         coord = move.coordList[0]
@@ -984,7 +967,6 @@ class Game(object):
         # check if player wants to attack
         validAttackCoords = []
         opponentId = (self.state.whoseTurn + 1) % 2
-        range = UNIT_STATS[attackingAnt.type][RANGE]
         for ant in self.state.inventories[opponentId].ants:
             if self.isValidAttack(attackingAnt, ant.coords):
                 # keep track of valid attack coords (flipped for player two)
@@ -1007,7 +989,8 @@ class Game(object):
                 theState.flipBoard()
 
             if isinstance(currentPlayer, HumanPlayer.HumanPlayer) and not self.randomSetup:
-                self.UI.getHumanAttack(attackingAnt.coords)
+                # have to swap ant back for the GUI if its player 2
+                self.UI.getHumanAttack(self.state.coordLookup(attackingAnt.coords, currentPlayer.playerId))
                 self.waitCond.wait()
                 attackCoord = self.submittedAttack
                 self.submittedAttack = None
