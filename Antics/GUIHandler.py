@@ -29,7 +29,8 @@ class GUIHandler:
         self.currentState: GameState = None
         self.setup = False
         self.waitingForHuman = False
-        self.waitingForAttack = True
+        self.waitingForAttack = False
+        self.attackingAntLoc = None
         self.phase = None
 
         # set up tkinter things
@@ -45,7 +46,6 @@ class GUIHandler:
         self.statsFrame.pack_propagate(False)
         self.gameFrame.pack_propagate(False)
 
-        # TODO implement and attach these handlers
         self.settingsHandler = GameSettingsFrame(self, self.settingsFrame)
         self.statsHandler = StatsPane(self, self.statsFrame)
         self.gameHandler = GamePane(self, self.gameFrame)
@@ -140,6 +140,13 @@ class GUIHandler:
 
         print("Asked for human move: %d" % phase)
 
+        if phase == SETUP_PHASE_1:
+            self.gameHandler.setInstructionText("Select where to build your anthill.")
+        elif phase == SETUP_PHASE_2:
+            self.gameHandler.setInstructionText("Select where to place your enemy's food.")
+        else:
+            self.gameHandler.setInstructionText("Submit a move.")
+
         self.waitingForHuman = True
         self.phase = phase
 
@@ -147,9 +154,15 @@ class GUIHandler:
     # getHumanAttack
     #
     # sets up the GUI to receive an attack from a human player
+    # the location passed from the game is already swapped back to P1 at top
+    #
     def getHumanAttack(self, location):
+        print("Asked for human attack")
+        self.gameHandler.setInstructionText("Select an ant to attack.")
+        self.waitingForHuman = True
         self.waitingForAttack = True
-        pass
+        self.attackingAntLoc = location
+        self.gameHandler.highlightValidAttacks(getAntAt(self.currentState, location))
 
     ##
     # submitHumanSetup
@@ -157,6 +170,7 @@ class GUIHandler:
     #
     #
     def submitHumanSetup(self, locations):
+        self.gameHandler.setInstructionText("")
         self.game.submitHumanSetup(locations)
         self.waitingForHuman = False
 
@@ -166,7 +180,7 @@ class GUIHandler:
     # sends a given move to the game however it needs to go
     #
     def submitHumanMove(self, move):
-        # TODO: Implement this method in Game.py
+        self.gameHandler.setInstructionText("")
         self.game.submitHumanMove(move)
         self.waitingForHuman = False
 
@@ -175,9 +189,11 @@ class GUIHandler:
     #
     #
     def submitHumanAttack(self, attack):
-        # TODO: implement this method in Game.py
+        self.gameHandler.setInstructionText("")
         self.game.submitHumanAttack(attack)
         self.waitingForAttack = False
+        self.waitingForHuman = False
+        self.attackingAntLoc = None
 
 # test code to check GUI without running the game itself
 

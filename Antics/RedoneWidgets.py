@@ -26,7 +26,7 @@ FLASH_TIME = 0.05
 
 
 class ColoredButton(tk.Label):
-    def __init__(self, parent = None, text = "", backgroundcolor = "green", \
+    def __init__(self, parent = None, text = "", backgroundcolor = "green",
                  textcolor = "black", command = None, flash = False):
         # initialize UI object
         tk.Label.__init__(self, parent)
@@ -36,7 +36,7 @@ class ColoredButton(tk.Label):
         self.command = command
         self.flash = flash # no longer needed, before needed for mac compatibility issues
 
-        self.config(text = text, bg = backgroundcolor, fg = textcolor, \
+        self.config(text = text, bg = backgroundcolor, fg = textcolor,
                     activebackground = FLASH_COLOR, borderwidth=5, relief="raised")
         self.bind("<Button-1>", self.pressed)
 
@@ -161,17 +161,17 @@ class StopWatch(tk.Frame):
 
 def ShowInfo(title='Title', message='your message here.', root = None):
     if root is not None:
-        root.update()
+        root.update_idletasks()
         messagebox.showinfo( title, message )
     
     return
 def ShowWarning(title='Title', message='your message here.', root = None):
     if root is not None:
-        root.update()
+        root.update_idletasks()
         messagebox.showwarning( title, message )
     return
 def ShowError(title='Title', message='your message here.', root = None):
     if root is not None:
-        root.update()
+        root.update_idletasks()
         messagebox.showerror( title, message )
     return

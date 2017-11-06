@@ -5,7 +5,9 @@ from GameState import *
 from Building import  *
 from Move import *
 from Ant import *
+from GUIHandler import *
 from AIPlayerUtils import *
+from functools import partial
 import random
 import os
 
@@ -22,13 +24,14 @@ class GamePane:
 
     def __init__(self, handler, parent):
         self.parent = parent
-        self.handler = handler
+        self.handler: GUIHandler = handler
         # bookkeeping
         self.movesHighlighted = False
         self.attacksHighlighted = False
         self.baseLocation = None
         self.setupsPlaced = None
         self.setupLocations = None
+        self.hillCoords = None
 
 
     def giveGame(self, the_game):
@@ -107,7 +110,6 @@ class GamePane:
         self.messageFrame.columnconfigure(0, weight = 1)
 
         # Make control buttons
-        # TODO: make them look fancy
         self.blue = "#8bbcda"
         font = ("Times New Roman", 24)
         
@@ -259,7 +261,7 @@ class GamePane:
     #
     # location - a 2 tuple of integers representing a board coordinate
     #
-    def highlightValidMoves(self, location, moveLeft):
+    def highlightValidMoves(self, location, moveLeft, queen = False):
         self.boardIcons[location[1]][location[0]].setImage(highlight=True)
 
         # if we're out of movement, then we're done
@@ -273,6 +275,14 @@ class GamePane:
             to = (location[0] + relatives[i][0], location[1] + relatives[i][1])
             # make sure the next coordinate is legal
             if 0 <= to[0] <= 9 and 0 <= to[1] <= 9:
+                # queens can't move outside their home area
+                if queen:
+                    if self.handler.currentState.whoseTurn == PLAYER_ONE:
+                        if to[1] > 3:
+                            continue
+                    elif to[1] < 6:
+                        continue
+
                 # if there's an ant at that location, we can't move there
                 loc = self.handler.currentState.board[to[0]][to[1]]
                 if loc.ant is not None:
@@ -284,7 +294,7 @@ class GamePane:
                     continue
 
                 # if there's no ant and we can move there, highlight it
-                self.highlightValidMoves(to, remainder)
+                self.highlightValidMoves(to, remainder, queen)
 
     ##
     # clearHighlights
@@ -296,7 +306,58 @@ class GamePane:
             for x in range(10):
                 self.boardIcons[y][x].setImage(highlight=False)
 
+    ##
+    # highlightValidAttacks
+    #
+    # highlights all ants able to be attacked by the given ant
+    #
+    def highlightValidAttacks(self, ant: Ant):
+        # this shouldn't happen
+        if ant is None:
+            print("Something went wrong sending an attacking ant")
+            return
 
+        antR = UNIT_STATS[ant.type][3]
+        locations = []
+        # generate list of possible ants to attack
+        # these will exist in a subset of the square with radius ant attack range
+        for x in range(-antR, antR + 1):
+            for y in range(-antR, antR + 1):
+                # the actual area forms a taxicab circle inside this square
+                if abs(x) + abs(y) > antR:
+                    continue
+
+                loc = (ant.coords[0] + x, ant.coords[1] + y)
+                # make sure the coordinate is in the game board
+                if not (0 <= loc[0] <= 9 and 0 <= loc[1] <= 9):
+                    continue
+
+                # we have to have an enemy ant to attack
+                target = getAntAt(self.handler.currentState, loc)
+                if target is None:
+                    continue
+
+                if target.player == ant.player:
+                    continue
+
+                # if we got here, this coordinate has a valid ant to attack
+                locations.append(loc)
+
+        # this shouldn't happen
+        if len(locations) == 0:
+            print("Somehow got 0 ants to attack")
+            return
+
+        for loc in locations:
+            self.boardIcons[loc[1]][loc[0]].setImage(highlight=True)
+
+    ##
+    # setInstructionText
+    #
+    # sets the text below the game board to a given string
+    #
+    def setInstructionText(self, text: str):
+        self.messageText.set(text)
 
     #
     # button handling functions
@@ -343,106 +404,117 @@ class GamePane:
         self.killPressed()
         #self.handler.showFrame(0)
 
-    # TODO: Should probably break this up
     def boardButtonPressed(self, x, y):
-
         # if we don't need a human move, do nothing
         if not self.handler.waitingForHuman:
             return
 
-        if self.handler.phase == SETUP_PHASE_1 or self.handler.phase == SETUP_PHASE_2:
-            self.handleSetupMove(x, y)
+        # handle move based on state of game
+        if self.handler.phase == SETUP_PHASE_1:
+            self.handleSetup1Move(x, y)
+        elif self.handler.phase == SETUP_PHASE_2:
+            self.handleSetup2Move(x, y)
         elif self.handler.phase == PLAY_PHASE:
-            self.handleNormalMove(x, y)
-
+            if self.handler.waitingForAttack:
+                self.handleAttackMove(x, y)
+            else:
+                self.handleNormalMove(x, y)
 
     ##
-    # handleSetupMove
+    # handleSetup2Move
     #
-    # handles board clicks when the game is in a setup phase for the human
+    # handle board clicks when the game is ins setup phase 2 for human
+    # player is placing food for the opponent
     #
-    def handleSetupMove(self, x, y):
+    def handleSetup2Move(self, x, y):
         # init trackers
         if self.setupsPlaced is None:
             self.setupsPlaced = 0
             self.setupLocations = []
 
-        # player is placing their own anthill, tunnel, and grass is that order
-        if self.handler.phase == SETUP_PHASE_1:
-            # construct legal places for the player to place
-            possible = []
-            for i in range(10):
-                for j in range(4):
-                    if self.handler.currentState.whoseTurn == PLAYER_ONE:
-                        possible.append((i, j))
-                    else:
-                        possible.append((i, 9 - j))
-
-            # if the location is on our side and does not have anything in it
-            if (x, y) in possible and (x, y) not in self.setupLocations:
-                self.setupLocations.append((x, y))
-                self.setupsPlaced += 1
-
-                if self.setupsPlaced == 1:
-                    self.boardIcons[y][x].setImage(construct=ANTHILL)
-                elif self.setupsPlaced == 2:
-                    self.boardIcons[y][x].setImage(construct=TUNNEL)
+        # construct legal places for the player to place
+        possible = []
+        for i in range(10):
+            for j in range(4):
+                if self.handler.currentState.whoseTurn == PLAYER_ONE:
+                    loc = (i, 9 - j)
                 else:
-                    self.boardIcons[y][x].setImage(construct=GRASS)
+                    loc = (i, j)
 
-                # if we've finished placing
-                if self.setupsPlaced == 11:
-                    # if we're player one, submit normally
-                    if self.handler.currentState.whoseTurn == PLAYER_ONE:
-                        locs = self.setupLocations
-                    # if we're player two, re have to rotate the board 180 (because each player sees themselves as P1)
-                    else:
-                        locs = []
-                        for point in self.setupLocations:
-                            locs.append(self.handler.currentState.coordLookup(point, PLAYER_TWO))
-                    self.handler.submitHumanSetup(locs)
-                    self.setupsPlaced = None
+                # food can only be placed on empty tiles
+                constr = getConstrAt(self.handler.currentState, loc)
+                if constr is None and loc not in self.setupLocations:
+                    possible.append(loc)
 
-        # player is placing food for the opponent
-        if self.handler.phase == SETUP_PHASE_2:
-            # construct legal places for the player to place
-            possible = []
-            for i in range(10):
-                for j in range(4):
-                    if self.handler.currentState.whoseTurn == PLAYER_ONE:
-                        loc = (i, 9 - j)
-                    else:
-                        loc = (i, j)
+        if (x, y) in possible:
+            self.setupLocations.append((x, y))
+            self.setupsPlaced += 1
 
-                    # food can only be placed on empty tiles
-                    constr = getConstrAt(self.handler.currentState, loc)
-                    if constr is None and loc not in self.setupLocations:
-                        possible.append(loc)
+            self.boardIcons[y][x].setImage(construct=FOOD)
 
-            if (x, y) in possible:
-                self.setupLocations.append((x, y))
-                self.setupsPlaced += 1
-
-                self.boardIcons[y][x].setImage(construct=FOOD)
-
-                if self.setupsPlaced == 2:
-                    # if we're player one, submit normally
-                    if self.handler.currentState.whoseTurn == PLAYER_ONE:
-                        locs = self.setupLocations
-                    # if we're player two, re have to rotate the board 180 (because each player sees themselves as P1)
-                    else:
-                        locs = []
-                        for point in self.setupLocations:
-                            locs.append(self.handler.currentState.coordLookup(point, PLAYER_TWO))
-                    self.handler.submitHumanSetup(locs)
-                    self.setupsPlaced = None
-
-
-
-
-
+            if self.setupsPlaced == 2:
+                # if we're player one, submit normally
+                if self.handler.currentState.whoseTurn == PLAYER_ONE:
+                    locs = self.setupLocations
+                # if we're player two, re have to rotate the board 180 (because each player sees themselves as P1)
+                else:
+                    locs = []
+                    for point in self.setupLocations:
+                        locs.append(self.handler.currentState.coordLookup(point, PLAYER_TWO))
+                self.handler.submitHumanSetup(locs)
+                self.setupsPlaced = None
 
     ##
+    # handleSetupMove
+    #
+    # handles board clicks when the game is in a setup phase 1 for the human
+    # player is placing their own anthill, tunnel, and grass is that order
+    #
+    def handleSetup1Move(self, x, y):
+        # init trackers
+        if self.setupsPlaced is None:
+            self.setupsPlaced = 0
+            self.setupLocations = []
+
+        # construct legal places for the player to place
+        possible = []
+        for i in range(10):
+            for j in range(4):
+                if self.handler.currentState.whoseTurn == PLAYER_ONE:
+                    possible.append((i, j))
+                else:
+                    possible.append((i, 9 - j))
+
+        # if the location is on our side and does not have anything in it
+        if (x, y) in possible and (x, y) not in self.setupLocations:
+            self.setupLocations.append((x, y))
+            self.setupsPlaced += 1
+
+            if self.setupsPlaced == 1:
+                self.boardIcons[y][x].setImage(construct=ANTHILL)
+                self.setInstructionText("Select where to place your tunnel.")
+            elif self.setupsPlaced == 2:
+                self.boardIcons[y][x].setImage(construct=TUNNEL)
+                self.setInstructionText("Select where to place grass on your side.")
+            else:
+                self.boardIcons[y][x].setImage(construct=GRASS)
+
+            # if we've finished placing
+            if self.setupsPlaced == 11:
+                # if we're player one, submit normally
+                if self.handler.currentState.whoseTurn == PLAYER_ONE:
+                    locs = self.setupLocations
+                # if we're player two, re have to rotate the board 180 (because each player sees themselves as P1)
+                else:
+                    locs = []
+                    for point in self.setupLocations:
+                        locs.append(self.handler.currentState.coordLookup(point, PLAYER_TWO))
+                self.handler.submitHumanSetup(locs)
+                self.setupsPlaced = None
+
+    ##
+    # handleNormalMove
+    #
     # handles board clicks when the game is in normal play for a human
     #
     def handleNormalMove(self, x, y):
@@ -452,6 +524,8 @@ class GamePane:
             # if the user clicked on a highlighted tile, submit the move
             if self.boardIcons[y][x].highlight:
                 ant: Ant = getAntAt(self.handler.currentState, self.baseLocation)
+                # TODO: CreatePathTowards doesn't always find the right path
+                # Needs to get fixed in AIPlayerUtils update
                 path = createPathToward(self.handler.currentState, ant.coords, (x, y), UNIT_STATS[ant.type][0])
 
                 # flip for player 2
@@ -486,20 +560,62 @@ class GamePane:
                 # players can't move the opponent's ants
                 return
 
+            # because queens can't go outside their start area, their movement needs special handling
+            isQueen = ant.type == QUEEN
+
             # assume player wants to move this ant
             # highlight all squares the ant can move to
-            self.highlightValidMoves(ant.coords, UNIT_STATS[ant.type][0])
+            self.highlightValidMoves(ant.coords, UNIT_STATS[ant.type][0], isQueen)
             self.movesHighlighted = True
             self.baseLocation = (x, y)
             return
 
+        # if the player clicks on an anthill without an ant on it, assume they want to build
         const = getConstrAt(self.handler.currentState, (x, y))
         if const is not None:
             if const.type == ANTHILL:
                 if const.player == self.handler.currentState.whoseTurn:
+                    self.hillCoords = self.handler.currentState.coordLookup(const.coords, const.player)
                     # if the player clicks on their anthill, assume they want to build an ant
-                    # TODO: Implement
-                    pass
+
+                    # the popup window opens really fast and can read the "open menu" click and the "build ant" click
+                    # without a delay
+                    # TODO: this still happens when the cursor is moving during the click, delay does not fix
+                    time.sleep(.1)
+
+                    popup = tkinter.Menu()
+                    popup.config(tearoff=0)
+                    popup.add_command(label="Worker: %d" % UNIT_STATS[WORKER][4], command=partial(self.buildAnt, ant=WORKER))
+                    popup.add_command(label="Soldier: %d" % UNIT_STATS[SOLDIER][4], command=partial(self.buildAnt, ant=SOLDIER))
+                    popup.add_command(label="R Soldier: %d" % UNIT_STATS[R_SOLDIER][4], command=partial(self.buildAnt, ant=R_SOLDIER))
+                    popup.add_command(label="Drone: %d" % UNIT_STATS[DRONE][4], command=partial(self.buildAnt, ant=DRONE))
+                    try:
+                        locX = self.boardIcons[y][x].label.winfo_rootx()
+                        locY = self.boardIcons[y][x].label.winfo_rooty()
+                        popup.tk_popup(locX, locY)
+                    finally:
+                        popup.grab_release()
+
+    def buildAnt(self, ant):
+        food = self.handler.currentState.inventories[self.handler.currentState.whoseTurn].foodCount
+
+        if food >= UNIT_STATS[ant][4]:
+            self.handler.submitHumanMove(Move(BUILD, [self.hillCoords], ant))
+        else:
+            self.setInstructionText("You need %d food to build that ant, try something else." % UNIT_STATS[ant][4])
+
+    ##
+    # handleAttackMove
+    #
+    # handles board clicks when the player needs to attack an ant
+    #
+    def handleAttackMove(self, x, y):
+        # player must submit an attack to continue the game
+        if self.boardIcons[y][x].highlight:
+            # must flip the coordinate for p2
+            self.handler.submitHumanAttack(self.handler.currentState.coordLookup((x, y),
+                                                                                 self.handler.currentState.whoseTurn))
+            self.clearHighlights()
 
 
 
