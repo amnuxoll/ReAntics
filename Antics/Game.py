@@ -54,6 +54,7 @@ class Game(object):
         self.loser = None
         self.running = True
         self.flipped = False
+        self.goToSettings = False
 
         # Initializes tournament mode variables
         self.playerScores = []  # [[author,wins,losses], ...]
@@ -102,7 +103,7 @@ class Game(object):
         self.UI.root.mainloop()
 
     def tick(self, fps):
-        interval = 60 / fps
+        interval = 1 / fps
         current_time = time.time()
 
         delta = current_time - self.last_time
@@ -507,6 +508,9 @@ class Game(object):
             while len(self.gamesToPlay) == 0:
                 print("Waiting for game")
                 self.running = False
+                if self.goToSettings:
+                    self.goToSettings = False
+                    self.UI.showFrame(0)
                 self.UI.statsHandler.timeLabel.Stop()
                 self.condWait()
 
@@ -573,6 +577,8 @@ class Game(object):
         constrsToPlace += [Construction(None, GRASS) for i in range(0, 9)]
 
         while not self.gameOver:
+
+            self.tick(20)
 
             # create a copy of the state to share with the player
             theState = self.state.clone()

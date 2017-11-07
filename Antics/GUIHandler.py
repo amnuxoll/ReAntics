@@ -243,4 +243,5 @@ class GUIHandler:
 
     def settingsPressed(self):
         self.killPressed()
-        print("settings")
+        self.game.goToSettings = True
+        self.game.generalWake()
