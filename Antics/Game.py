@@ -578,8 +578,6 @@ class Game(object):
 
         while not self.gameOver:
 
-            self.tick(20)
-
             # create a copy of the state to share with the player
             theState = self.state.clone()
 
