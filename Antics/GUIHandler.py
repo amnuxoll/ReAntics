@@ -50,7 +50,7 @@ class GUIHandler:
         self.statsText.set("Print Stats On")
         self.blue = "#8bbcda"
         self.stats = False
-        self.paused = True
+        self.paused = False
 
         self.settingsFrame.pack_propagate(False)
         self.statsFrame.pack_propagate(False)
@@ -69,6 +69,7 @@ class GUIHandler:
 
         self.count = 0
         self.closed = False
+        #self.pausePressed()
         self.setup = True
 
     ##

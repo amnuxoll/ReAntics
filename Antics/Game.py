@@ -42,6 +42,7 @@ class Game(object):
         self.players = []
         self.state = None
         self.currentPlayers = []
+        self.currentPlayerScores = []
         self.gamesToPlay = []
         self.gamesToPlayLock = threading.Lock()
 
@@ -52,6 +53,7 @@ class Game(object):
         self.winner = None
         self.loser = None
         self.running = True
+        self.flipped = False
 
         # Initializes tournament mode variables
         self.playerScores = []  # [[author,wins,losses], ...]
@@ -113,7 +115,6 @@ class Game(object):
         while len(self.game_calls) > 0:
             g = self.game_calls.pop(0)
             self.UI.statsHandler.timeLabel.Reset()
-            self.UI.statsHandler.timeLabel.Start()
             g()
 
     def closeGUI(self):
@@ -180,7 +181,7 @@ class Game(object):
             return
 
         self.gamesToPlayLock.acquire()
-        self.gamesToPlay.append(GameData(HumanPlayer.HumanPlayer(-1), self.players[index]))
+        self.gamesToPlay.append(GameData(HumanPlayer.HumanPlayer(-1), self.players[index][0]))
         self.gamesToPlayLock.release()
         self.generalWake()
 
@@ -498,13 +499,18 @@ class Game(object):
     ##
     def start(self):
         self.processCommandLine()
+
+        self.UI.statsHandler.timeLabel.Start()
         
         while True:
             # if we have nothing to do, wait
             while len(self.gamesToPlay) == 0:
                 print("Waiting for game")
                 self.running = False
+                self.UI.statsHandler.timeLabel.Stop()
                 self.condWait()
+
+            self.UI.statsHandler.timeLabel.Start()
 
             self.running = True
 
@@ -512,18 +518,22 @@ class Game(object):
             game = self.gamesToPlay.pop()
             self.gamesToPlayLock.release()
 
+            self.currentPlayerScores = []
+            self.currentPlayerScores.append([game.p1.author, 0, 0])
+            self.currentPlayerScores.append([game.p2.author, 0, 0])
+
             self.UI.statsHandler.addLogItem()
 
             for j in range(game.n):
+                self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
+                self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
                 self.setup(game, j)
                 self.UI.setPlayers(self.currentPlayers[0].author, self.currentPlayers[1].author)
                 self.runGame()
                 self.resolveEndGame()
 
-                tournament_str = self.tournamentStr()
-                if self.verbose:
-                    self.printTournament()
-                self.UI.statsHandler.updateCurLogItem(tournament_str)
+            self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
+            self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
 
             self.UI.statsHandler.stopCurLogItem()
 
@@ -535,10 +545,12 @@ class Game(object):
         self.currentPlayers = []
         self.currentPlayers.append(game.p1)
         self.currentPlayers.append(game.p2)
+        self.flipped = False
 
         # switch the order of the players if we should
         if self.playerSwap and count % 2 == 1:
             self.currentPlayers = self.currentPlayers[::-1]
+            self.flipped = True
 
         self.gameOver = False
         self.winner = None
@@ -786,7 +798,7 @@ class Game(object):
 
                         # notify player which AI is acting
                         nextPlayerName = self.players[self.state.whoseTurn][0].author
-                        # self.ui.notify(nextPlayerName + "'s turn.")
+                        self.UI.gameHandler.setInstructionText(nextPlayerName + "'s turn.")
 
                         # if AI mode, pause to observe move until next or continue is clicked
                         self.pauseGame()
@@ -814,7 +826,12 @@ class Game(object):
         if self.UI is not None:
             self.UI.showState(self.state)
             # notify the user of the winner
-            winnerName = self.players[self.winner][0].author
+            winnerName = "Copy"
+            try:
+                winnerName = self.players[self.winner][0].author
+            except:
+                # TODO deal with this
+                pass
             self.UI.gameHandler.setInstructionText("%s has won!" % winnerName)
 
         # adjust the wins and losses of players
@@ -828,6 +845,8 @@ class Game(object):
             self.playerScores[self.loser][2] += 1
         except:
             pass
+
+        self.pauseGame()
 
     ##
     # setWinner
@@ -844,6 +863,13 @@ class Game(object):
         # tell the players if they won or lost
         self.currentPlayers[id].registerWin(True)
         self.currentPlayers[1 - id].registerWin(False)
+
+        # make sure scores go to the right place
+        if self.flipped:
+            id = 1 - id
+
+        self.currentPlayerScores[id][1] += 1
+        self.currentPlayerScores[1 - id][2] += 1
 
     ##
     # resolveAttack
@@ -1450,7 +1476,7 @@ class Game(object):
     #
     ##
     def printTournament(self):
-        print(self.tournamentStr())
+        print(self.tournamentStr(False))
         print('')
 
     ##
@@ -1458,12 +1484,16 @@ class Game(object):
     # Description: prints the status of the tournament
     #
     ##
-    def tournamentStr(self):
-        transposedList = list(map(list, zip(*self.playerScores)))
+    def tournamentStr(self, current = True):
+        if current:
+            scores = self.currentPlayerScores
+        else:
+            scores = self.playerScores
+        transposedList = list(map(list, zip(*scores)))
         strTransList = [[str(n) for n in i] for i in transposedList]
         
 
-        scoreAndTitle = [['Player', 'Wins', 'Losses']] + [['-------', '-------', '-------']] + self.playerScores
+        scoreAndTitle = [['Player', 'Wins', 'Losses']] + [['-------', '-------', '-------']] + scores
         scoreAndTitles = [[str(n) for n in i] for i in scoreAndTitle]
 
         transposedList = list(map(list, zip(*scoreAndTitles)))
