@@ -70,7 +70,6 @@ class GUIHandler:
         self.count = 0
         self.closed = False
         self.setup = True
-        print("Setup")
 
     ##
     # is called when the program is closed
