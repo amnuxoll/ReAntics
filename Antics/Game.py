@@ -8,6 +8,7 @@ from Building import *
 from Location import *
 from Ant import *
 from Move import *
+from Player import Player
 from GUIHandler import *
 import threading
 import time
@@ -17,7 +18,11 @@ import argparse
 from functools import partial
 import copy
 
-
+class GameData:
+    def __init__(self, p1: Player, p2: Player, numGames=1):
+        self.p1 = p1
+        self.p2 = p2
+        self.n = numGames
 ##
 # Game
 # Description: Keeps track of game logic and manages the play loop.
@@ -31,22 +36,32 @@ class Game(object):
     def __init__(self, testing=False):
         ### new game queue, this is a queue of function calls ( does not sub for the tournament vars )
         self.last_time = time.time()
-        self.game_calls = []
-
         self.waitCond = threading.Condition()
         
         # Initialize the game variables
         self.players = []
-        self.initGame()
+        self.state = None
+        self.currentPlayers = []
+        self.currentPlayerScores = []
+        self.gamesToPlay = []
+        self.gamesToPlayLock = threading.Lock()
+
+        self.submittedMove = None
+        self.submittedAttack = None
+        self.submittedSetup = None
+        self.gameOver = False
+        self.winner = None
+        self.loser = None
+        self.running = True
+        self.flipped = False
+        self.goToSettings = False
+
         # Initializes tournament mode variables
         self.playerScores = []  # [[author,wins,losses], ...]
-        self.gamesToPlay = []  # ((p1.id, p2.id), numGames)
-        self.numGames = None
         # debug mode allows initial setup in human vs. AI to be automated
         self.randomSetup = False  # overrides human setup only
         self.verbose = False
         # additional settings
-        self.playerSwap = False 
         self.timeoutOn = False 
         self.playerSwap = False   # additonal settings
         self.playersReversed = False   # whether the players are currently swapped
@@ -65,7 +80,7 @@ class Game(object):
 
         # TODO: figure out how to make this work properly
         # wait for GUI to set up
-        self.loadAIs(False)
+        self.loadAIs()
         done = False
         while not done:
             time.sleep(.1)
@@ -74,13 +89,13 @@ class Game(object):
         self.UI.showFrame(0)
 
         # fixing the players on the settings menu
-        self.UI.settingsHandler.changePlayers ( [ ai[0].author for ai in self.players ] )
-        self.UI.settingsHandler.createFrames ( )
-        self.UI.settingsHandler.giveGame ( self )
+        self.UI.settingsHandler.changePlayers([ai[0].author for ai in self.players])
+        self.UI.settingsHandler.createFrames()
+        self.UI.settingsHandler.giveGame(self)
         self.UI.gameHandler.createFrames()
         self.UI.gameHandler.giveGame(self)
 
-        print("Starting")
+
         self.gameThread = threading.Thread(target=self.start, daemon=True)
         self.gameThread.start()
         print("game thread started")
@@ -88,7 +103,7 @@ class Game(object):
         self.UI.root.mainloop()
 
     def tick(self, fps):
-        interval = 60 / fps
+        interval = 1 / fps
         current_time = time.time()
 
         delta = current_time - self.last_time
@@ -98,12 +113,10 @@ class Game(object):
         self.last_time = time.time()
 
     def gameStartRequested(self):
-        if len(self.game_calls) > 0:
+        while len(self.game_calls) > 0:
             g = self.game_calls.pop(0)
             self.UI.statsHandler.timeLabel.Reset()
-            self.UI.statsHandler.timeLabel.Start()
             g()
-            print("started game")
 
     def closeGUI(self):
         # Tried to make it close nicely, failed
@@ -155,30 +168,23 @@ class Game(object):
     #
     ##
     def startHumanVsAI(self, givenPlayer):
-        # set the number of games to be played
-        self.numGames = 1
-        # setup instance variable necessary for human gameplay, e.g. pre-setup
-        self.humanPathCallback()
         # find the given, non-human, agent in the player list and get its index
-        aiName = givenPlayer
         index = -1
         for player in self.players:
-            if aiName == player[0].author:
+            if givenPlayer == player[0].author:
                 index = self.players.index(player)
                 break
         if (index < 0):
-            print("ERROR:  AI '" + aiName + "' not found.")
+            print("ERROR:  AI '" + givenPlayer + "' not found.")
             print("Please specify one of the following:")
             for player in self.players[1:]:
                 print('    "' + player[0].author + '"')
             return
 
-        self.UI.statsHandler.addLogItem()
-        # select the specified AI and click "Submit"
-        self.checkBoxClickedCallback(index)
-        self.submitClickedCallback()
-        self.startGameCallback()
-        self.UI.setPlayers("Human", givenPlayer)
+        self.gamesToPlayLock.acquire()
+        self.gamesToPlay.append(GameData(HumanPlayer.HumanPlayer(-1), self.players[index][0]))
+        self.gamesToPlayLock.release()
+        self.generalWake()
 
     ##
     # startAIvsAI
@@ -192,36 +198,26 @@ class Game(object):
     #
     ##
     def startAIvsAI(self, numGames, player1, player2):
-        # initiate variables as to a tournament setup -- pre-setup
-        self.tourneyPathCallback()
-        # set the number of games to be played as an instance variable
-        self.numGames = numGames
 
         # AI names should be specified as next command line args
         # need exactly two AI names
-        aiNameIndices = []
-        index = -1
+        ais = []
         for player in self.players:
             if player1 == player[0].author or player2 == player[0].author:
                 # append the name of the indices for the tournament
-                aiNameIndices.append(self.players.index(player))
+                ais.append(player[0])
 
-        if (len(aiNameIndices) < 2):
+        if len(ais) != 2:
             print("ERROR:  AI '" + player1 + "' OR AI '" + player2 + "' not found.")
             print("Please specify one of the following:")
             for player in self.players:
                 print('    "' + player[0].author + '"')
             return
 
-        # now that we have the AI's check the check boxes
-        for index in aiNameIndices:
-            self.checkBoxClickedCallback(index)
-
-        self.UI.statsHandler.addLogItem()
-        # post-setup AI choice instance variables that need to be set
-        self.submitClickedCallback()
-        self.startGameCallback()
-        pass
+        self.gamesToPlayLock.acquire()
+        self.gamesToPlay.append(GameData(ais[0], ais[1], numGames))
+        self.gamesToPlayLock.release()
+        self.generalWake()
 
     ##
     # startRR
@@ -234,38 +230,33 @@ class Game(object):
     #
     ##
     def startRR(self, numGames, givenPlayers):
-        # initiate variables as to a tournament setup -- pre-setup
-        self.tourneyPathCallback()
-        # set the number of games to be played as an instance variable
-        self.numGames = numGames
-
         # AI names should be specified as next command line args
-        # need exactly two AI names
-        aiNameIndices = []
+        ais = []
 
         for givenPlayer in givenPlayers:
             index = -1
             for player in self.players:
                 if givenPlayer == player[0].author:
                     # append the name of the indices for the tournament
-                    aiNameIndices.append(self.players.index(player))
+                    ais.append(player[0])
                     index = 1
             if index == -1:
                 print("ERROR:  AI '" + givenPlayer + "' not found.")
                 print("Please specify one of the following:")
-                for thisPlayer in self.players[1:]:
+                for thisPlayer in self.players:
                     print('    "' + thisPlayer[0].author + '"')
                 return
 
-        # now that we have the AI's check the check boxes
-        for index in aiNameIndices:
-            self.checkBoxClickedCallback(index)
-
-        self.UI.statsHandler.addLogItem()
-        # post-setup AI choice instance variables that need to be set
-        self.submitClickedCallback()
-        self.startGameCallback()
-        pass
+        # now that we have the AI's make all pairs
+        self.gamesToPlayLock.acquire()
+        for i in range(len(ais)):
+            for j in range(i + 1, len(ais)):
+                # don't make ais play themselves
+                if i == j:
+                    continue
+                self.gamesToPlay.append(GameData(ais[i], ais[j], numGames))
+        self.gamesToPlayLock.release()
+        self.generalWake()
 
     ##
     # startRRall
@@ -277,26 +268,16 @@ class Game(object):
     #
     ##
     def startRRall(self, numGames):
-        # initiate variables as to a tournament setup -- pre-setup
-        self.tourneyPathCallback()
-        # set the number of games to be played as an instance variable
-        self.numGames = numGames
-
-        # AI names should be specified as next command line args
-        # need exactly two AI names
-        aiNameIndices = []
-        for player in self.players:
-            aiNameIndices.append(self.players.index(player))
-
-        # now that we have the AI's check the check boxes
-        for index in aiNameIndices:
-            self.checkBoxClickedCallback(index)
-
-        self.UI.statsHandler.addLogItem()
-        # post-setup AI choice instance variables that need to be set
-        self.submitClickedCallback()
-        self.startGameCallback()
-        pass
+        # pair up every loaded AI
+        self.gamesToPlayLock.acquire()
+        for i in range(len(self.players)):
+            for j in range(i + 1, len(self.players)):
+                # don't make ais play themselves
+                if i == j:
+                    continue
+                self.gamesToPlay.append(GameData(self.players[i][0], self.players[j][0], numGames))
+        self.gamesToPlayLock.release()
+        self.generalWake()
 
     ##
     # startAllOther
@@ -309,18 +290,20 @@ class Game(object):
     #
     ##
     def startAllOther(self, numGames, playerOne):
-        # Attempt to load the AI files
-        self.loadAIs(False)
-
-        # create a game queue of AI vs AI games and block the queue until the current game has finished
-        self.game_calls  = []
+        # get named AI
+        ai = None
         for player in self.players:
-            if player[0].author != playerOne:
-                self.game_calls.append ( partial ( self.startAIvsAI, numGames, playerOne, player[0].author ) )
-        if len (self.game_calls) > 0 :
-            fx_start = self.game_calls.pop(0)
-            fx_start()
-        pass
+            if player[0].author == playerOne:
+                ai = player[0]
+                break
+
+        self.gamesToPlayLock.acquire()
+        for player in self.players:
+            if player[0] == ai:
+                continue
+            self.gamesToPlay.append(GameData(ai, player[0], numGames))
+        self.gamesToPlayLock.release()
+        self.generalWake()
 
     ##
     # startSelf
@@ -333,39 +316,21 @@ class Game(object):
     #
     ##
     def startSelf(self, numGames, playerOne):
-        # initiate variables as to a tournament setup -- pre-setup
-        self.tourneyPathCallback()
-        # create a copy of the Agent you want to play itself
-        self.createAICopy(playerOne)
-        # set the number of games to be played as an instance variable
-        self.numGames = numGames
-        # set playerTwo to the predetermined copy name
-        playerTwo = playerOne + "@@"
-
-        # AI names should be specified as next command line args
-        # need exactly two AI names
-        aiNameIndices = []
+        # get original agent
+        p1 = None
         for player in self.players:
-            if playerOne == player[0].author or playerTwo == player[0].author:
-                # append the name of the indices for the tournament
-                aiNameIndices.append(self.players.index(player))
+            if player[0].author == playerOne:
+                p1 = player[0]
+                break
 
-        if (len(aiNameIndices) < 2):
-            print("ERROR:  AI '" + playerOne + "' not found.")
-            print("Please specify one of the following:")
-            for player in self.players:
-                print('    "' + player[0].author + '"')
-            return
+        # create a copy of the Agent you want to play itself
+        p2 = self.createAICopy(playerOne)
 
-        # now that we have the AI's check the check boxes
-        for index in aiNameIndices:
-            self.checkBoxClickedCallback(index)
+        self.gamesToPlayLock.acquire()
+        self.gamesToPlay.append(GameData(p1, p2, numGames))
+        self.gamesToPlayLock.release()
+        self.generalWake()
 
-        self.UI.statsHandler.addLogItem()
-        # post-setup AI choice instance variables that need to be set
-        self.submitClickedCallback()
-        self.startGameCallback()
-        pass
 
     ##
     # processCommandLine
@@ -491,7 +456,7 @@ class Game(object):
     #             additional - dictionary of additional settings
     #
     ##
-    def process_settings ( self, games, additional ) :
+    def process_settings(self, games, additional):
         # set the additional settings
         self.verbose = additional [ 'verbose' ]
         self.playerSwap = additional [ 'swap' ]
@@ -534,21 +499,66 @@ class Game(object):
     #
     ##
     def start(self):
-        self.waitCond.acquire()
         self.processCommandLine()
+
+        self.UI.statsHandler.timeLabel.Start()
         
         while True:
-            self.tick(80)
-            print("test")
-            # Determine current chosen game mode. Enter different execution paths
-            # based on the mode, which must be chosen by clicking a button.
+            # if we have nothing to do, wait
+            while len(self.gamesToPlay) == 0:
+                print("Waiting for game")
+                self.running = False
+                if self.goToSettings:
+                    self.goToSettings = False
+                    self.UI.showFrame(0)
+                self.UI.statsHandler.timeLabel.Stop()
+                self.condWait()
 
-            # player has clicked start game so enter game loop
+            self.UI.statsHandler.timeLabel.Start()
 
-            self.runGame()
-            self.resolveEndGame()
-            #else:
-                #self.process_settings()
+            self.running = True
+
+            self.gamesToPlayLock.acquire()
+            game = self.gamesToPlay.pop()
+            self.gamesToPlayLock.release()
+
+            self.currentPlayerScores = []
+            self.currentPlayerScores.append([game.p1.author, 0, 0])
+            self.currentPlayerScores.append([game.p2.author, 0, 0])
+
+            self.UI.statsHandler.addLogItem()
+
+            for j in range(game.n):
+                self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
+                self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
+                self.setup(game, j)
+                self.UI.setPlayers(self.currentPlayers[0].author, self.currentPlayers[1].author)
+                self.runGame()
+                self.resolveEndGame()
+
+            self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
+            self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
+
+            self.UI.statsHandler.stopCurLogItem()
+
+    def setup(self, game: GameData, count: int):
+        self.state = GameState.getBlankState()
+        self.state.phase = SETUP_PHASE_1
+
+        # load current players
+        self.currentPlayers = []
+        self.currentPlayers.append(game.p1)
+        self.currentPlayers.append(game.p2)
+        self.flipped = False
+
+        # switch the order of the players if we should
+        if self.playerSwap and count % 2 == 1:
+            self.currentPlayers = self.currentPlayers[::-1]
+            self.flipped = True
+
+        self.gameOver = False
+        self.winner = None
+        self.loser = None
 
     ##
     # runGame
@@ -567,6 +577,8 @@ class Game(object):
         constrsToPlace += [Construction(None, GRASS) for i in range(0, 9)]
 
         while not self.gameOver:
+
+            self.tick(20)
 
             # create a copy of the state to share with the player
             theState = self.state.clone()
@@ -602,7 +614,7 @@ class Game(object):
                 # get the placement from the player
                 if isinstance(currentPlayer, HumanPlayer.HumanPlayer) and not self.randomSetup:
                     self.UI.getHumanMove(theState.phase)
-                    self.waitCond.wait()
+                    self.condWait()
                     targets += self.submittedSetup
                     self.submittedSetup = None
                 else:
@@ -691,7 +703,7 @@ class Game(object):
                 if isinstance(currentPlayer, HumanPlayer.HumanPlayer):
                     # alert the UI that we need a move, then wait until it gives one to us
                     self.UI.getHumanMove(theState.phase)
-                    self.waitCond.wait()
+                    self.condWait()
                     move = self.submittedMove
                     self.submittedMove = None
                 else:
@@ -792,7 +804,7 @@ class Game(object):
 
                         # notify player which AI is acting
                         nextPlayerName = self.players[self.state.whoseTurn][0].author
-                        # self.ui.notify(nextPlayerName + "'s turn.")
+                        self.UI.gameHandler.setInstructionText(nextPlayerName + "'s turn.")
 
                         # if AI mode, pause to observe move until next or continue is clicked
                         self.pauseGame()
@@ -817,90 +829,30 @@ class Game(object):
                 self.setWinner(PLAYER_TWO)
 
     def resolveEndGame(self):
-        if self.state.phase != MENU_PHASE:
-            # check mode for appropriate response to game over
-            if self.UI is not None:
-                self.UI.showState(self.state)
-
-            if self.mode == HUMAN_MODE:
-                self.state.phase = MENU_PHASE
-
-            if self.mode == AI_MODE:
-                self.state.phase = MENU_PHASE
-
-                # notify the user of the winner
+        if self.UI is not None:
+            self.UI.showState(self.state)
+            # notify the user of the winner
+            winnerName = "Copy"
+            try:
                 winnerName = self.players[self.winner][0].author
-                # self.ui.notify(winnerName + " has won the game!")
+            except:
+                # TODO deal with this
+                pass
+            self.UI.gameHandler.setInstructionText("%s has won!" % winnerName)
 
-            elif self.mode == TOURNAMENT_MODE:
-                # adjust the count of games to play for the current pair
-                currentPairing = (self.currentPlayers[PLAYER_ONE].playerId, self.currentPlayers[PLAYER_TWO].playerId)
+        # adjust the wins and losses of players
+        # because of how human and copies are handled currently, problems
+        try:
+            self.playerScores[self.winner][1] += 1
+        except:
+            # TODO: deal with this
+            pass
+        try:
+            self.playerScores[self.loser][2] += 1
+        except:
+            pass
 
-                # give the new scores to the UI
-                # self.ui.tournamentScores = self.playerScores
-
-                # adjust the wins and losses of players
-                self.playerScores[self.winner][1] += 1
-                self.playerScores[self.loser][2] += 1
-
-                # if CommandLine Mode print the values to the console
-                tournament_str = self.tournamentStr()
-                if self.verbose:
-                    self.printTournament()
-                self.UI.statsHandler.updateCurLogItem(tournament_str) #sara
-                
-
-                # reset the game
-                self.initGame()
-
-                for i in range(0, len(self.gamesToPlay)):
-                    # if we found the current pairing
-                    if self.gamesToPlay[i][0] == currentPairing:
-                        # mark off another game for the pairing
-                        self.gamesToPlay[i][1] -= 1
-
-                        # if the pairing has no more games, then remove it
-                        if self.gamesToPlay[i][1] == 0:
-                            self.gamesToPlay.remove(self.gamesToPlay[i])
-                        break
-
-                if len(self.gamesToPlay) == 0:
-                    # if no more games to play, reset tournament stuff
-                    tournament_str = self.tournamentStr()
-                    if not self.verbose:
-                        self.printTournament()
-                    self.UI.statsHandler.updateCurLogItem ( tournament_str ) #sara
-                    
-                    self.numGames = 0
-                    self.playerScores = []
-                    self.mode = TOURNAMENT_MODE
-
-                    self.UI.statsHandler.stopCurLogItem()
-
-                    ### pop the next game off the gameQ
-                    if len (self.game_calls) > 0 :
-                        fx_start = self.game_calls.pop(0)
-                        fx_start()
-                    else:
-                        self.UI.statsHandler.timeLabel.Stop()
-                        self.UI.showFrame(0)
-                        print("should have stopped")
-                else:
-                    # setup game to run again
-                    self.mode = TOURNAMENT_MODE
-                    self.state.phase = SETUP_PHASE_1
-
-                    # get players from next pairing
-                    if self.playerSwap:
-                        self.gamesToPlay[0][0] = self.gamesToPlay[0][0][::-1]
-
-                    playerOneId = self.gamesToPlay[0][0][0]
-                    playerTwoId = self.gamesToPlay[0][0][1]
-
-                    # set up new current players
-                    self.currentPlayers.append(self.players[playerOneId][0])
-                    self.currentPlayers.append(self.players[playerTwoId][0])
-                    self.UI.setPlayers(self.currentPlayers[PLAYER_ONE].author, self.currentPlayers[PLAYER_TWO].author)
+        self.pauseGame()
 
     ##
     # setWinner
@@ -917,6 +869,13 @@ class Game(object):
         # tell the players if they won or lost
         self.currentPlayers[id].registerWin(True)
         self.currentPlayers[1 - id].registerWin(False)
+
+        # make sure scores go to the right place
+        if self.flipped:
+            id = 1 - id
+
+        self.currentPlayerScores[id][1] += 1
+        self.currentPlayerScores[1 - id][2] += 1
 
     ##
     # resolveAttack
@@ -954,7 +913,8 @@ class Game(object):
             if isinstance(currentPlayer, HumanPlayer.HumanPlayer) and not self.randomSetup:
                 # have to swap ant back for the GUI if its player 2
                 self.UI.getHumanAttack(self.state.coordLookup(attackingAnt.coords, currentPlayer.playerId))
-                self.waitCond.wait()
+                self.condWait()
+
                 attackCoord = self.submittedAttack
                 self.submittedAttack = None
             else:
@@ -976,33 +936,6 @@ class Game(object):
             self.pauseGame()
 
     ##
-    # initGame
-    # Description: resets the game's attributes to their starting state
-    #
-    ##
-    def initGame(self):
-        board = [[Location((col, row)) for row in range(0, BOARD_LENGTH)] for col in range(0, BOARD_LENGTH)]
-        p1Inventory = Inventory(PLAYER_ONE, [], [], 0)
-        p2Inventory = Inventory(PLAYER_TWO, [], [], 0)
-        neutralInventory = Inventory(NEUTRAL, [], [], 0)
-        self.state = GameState(board, [p1Inventory, p2Inventory, neutralInventory], MENU_PHASE, PLAYER_ONE)
-        self.currentPlayers = []
-        self.mode = None
-        self.gameOver = False
-        self.winner = None
-        self.loser = None
-        # Human vs AI mode
-        self.expectingAttack = False
-        # AI vs AI mode: used for stepping through moves
-        self.nextClicked = False
-        self.continueClicked = False
-        # Don't reset Tournament Mode's variables, might need to run more games
-
-        self.submittedMove = None
-        self.submittedAttack = None
-        self.submittedSetup = None
-
-    ##
     # loadAIs
     # Description: Loads the AIPlayers from the AI subdirectory into the game.
     #
@@ -1010,10 +943,12 @@ class Game(object):
     #   humanMode - a boolean value, if true then the IDs of he AI players are
     #           offset by 1 to account for the human player as player one.
     ##
-    def loadAIs(self, humanMode):
+    def loadAIs(self):
         # Reset the player list in case some have been loaded already
         self.players = []
-        # self.ui.allAIs = self.players
+
+        # self.addPlayer(HumanPlayer.HumanPlayer(0))
+
         # Attempt to load AIs. Exit gracefully if user trying to load weird stuff.
         filesInAIFolder = os.listdir("AI")
         # Change directory to AI subfolder so modules can be loaded (they won't load as filenames).
@@ -1022,13 +957,15 @@ class Game(object):
         # Add current directory in python's import search order.
         sys.path.insert(0, os.getcwd())
         # Make player instances from all AIs in folder.
+        i = 0
         for file in filesInAIFolder:
             if re.match(".*\.py$", file):
                 moduleName = file[:-3]
                 # Check to see if the file is already loaded.
                 # temp = __import__(moduleName, globals(), locals(), [], -1)
                 temp = importlib.import_module(moduleName)
-                self.players.append([temp.AIPlayer(-1), INACTIVE])
+                self.addPlayer(temp.AIPlayer(i))
+                i += 1
         # Remove current directory from python's import search order.
         sys.path.pop(0)
         # Revert working directory to parent.
@@ -1043,12 +980,16 @@ class Game(object):
                 moduleName = file[:-3]
                 temp = importlib.import_module(moduleName)
                 if temp.AIPlayer(-1).author == player:
-                    lst = [temp.AIPlayer(-1)]
-                    lst[0].author += "@@"
-                    self.players.append([lst[0], INACTIVE])
+                    lst = temp.AIPlayer(len(self.players))
+                    lst.author += "@@"
                     break
         sys.path.pop(0)
         os.chdir('..')
+        return lst
+
+    def addPlayer(self, p: Player):
+        self.players.append([p, ACTIVE])
+        self.playerScores.append([p.author, 0, 0])
 
     #########################################
     #   # ##### #     ##### ##### ####  #####
@@ -1512,7 +1453,15 @@ class Game(object):
 
         # pause using this wait condition
         # The GUI thread will wake
+        self.condWait()
+
+    def condWait(self):
+        # python conditions require a lock hold to notify() for some reason
+        # this is annoying in our case, where we lock to save CPU time
+        # so we have each thread hold the lock for as little as possible
+        self.waitCond.acquire()
         self.waitCond.wait()
+        self.waitCond.release()
 
     ##
     # generalWake
@@ -1521,7 +1470,9 @@ class Game(object):
     # could cause errors if used in the wrong place
     #
     def generalWake(self):
-        self.waitCond.acquire()
+        if not self.waitCond.acquire(blocking=False):
+            print("Could not get lock to wake thread.")
+            return
         self.waitCond.notify()
         self.waitCond.release()
 
@@ -1531,7 +1482,7 @@ class Game(object):
     #
     ##
     def printTournament(self):
-        print(self.tournamentStr())
+        print(self.tournamentStr(False))
         print('')
 
     ##
@@ -1539,12 +1490,16 @@ class Game(object):
     # Description: prints the status of the tournament
     #
     ##
-    def tournamentStr(self):
-        transposedList = list(map(list, zip(*self.playerScores)))
+    def tournamentStr(self, current = True):
+        if current:
+            scores = self.currentPlayerScores
+        else:
+            scores = self.playerScores
+        transposedList = list(map(list, zip(*scores)))
         strTransList = [[str(n) for n in i] for i in transposedList]
         
 
-        scoreAndTitle = [['Player', 'Wins', 'Losses']] + [['-------', '-------', '-------']] + self.playerScores
+        scoreAndTitle = [['Player', 'Wins', 'Losses']] + [['-------', '-------', '-------']] + scores
         scoreAndTitles = [[str(n) for n in i] for i in scoreAndTitle]
 
         transposedList = list(map(list, zip(*scoreAndTitles)))
@@ -1604,181 +1559,6 @@ class Game(object):
 
         print(errorMsg)
         self.setWinner((self.state.whoseTurn + 1) % 2)
-
-    #############################################################
-    #####  #####  #      #      ####   #####  #####  #   #  #####
-    #      #   #  #      #      #   #  #   #  #      #  #   #
-    #      #####  #      #      ####   #####  #      ###    #####
-    #      #   #  #      #      #   #  #   #  #      #  #       #
-    #####  #   #  #####  #####  ####   #   #  #####  #   #  #####
-    #############################################################
-
-    ##
-    # startGameCallback
-    # Description: Starts a new game. Called when start game button is clicked.
-    #
-    ##
-    def startGameCallback(self):
-        # Notice if the user hits this button in mid-game so we can reset (below)
-        reset = False
-        if self.state.phase == PLAY_PHASE:
-            reset = True
-
-        # save the mode
-        currMode = self.mode
-        # reset the game
-        self.initGame()
-        # restore the mode
-        self.mode = currMode
-
-        # if we are resetting, set the phase to MENU_PHASE with no mode
-        if reset:
-            self.state.phase = MENU_PHASE
-            self.mode = None
-
-        if self.mode == None:
-            # self.ui.notify("Please select a mode.")
-            return
-
-        # if self.ui.choosingAIs:
-        #     self.ui.notify("Please submit AIs to play game.")
-        #     return
-
-        if self.state.phase == MENU_PHASE:
-            # set up stuff for tournament mode
-            if self.mode == TOURNAMENT_MODE:
-                # reset tournament variables
-                self.playerScores = []  # [[author,wins,losses], ...]
-                self.gamesToPlay = []  # ((p1.id, p2.id), numGames)
-
-                # if numGames is non-positive, dont set up game
-                if self.numGames <= 0:
-                    return
-
-                # self.ui.tournamentScores = []
-
-                for i in range(0, len(self.players)):
-                    # initialize the player's win/loss scores
-                    tempAuth = self.players[i][0].author
-                    # If the length of the author's name is longer than 24 characters, truncate it to 24 characters
-                    if len(tempAuth) > 20:
-                        tempAuth = tempAuth[0:21] + "..."
-
-                    self.playerScores.append([tempAuth, 0, 0])
-
-                    for j in range(i, len(self.players)):
-                        if self.players[i][0] != self.players[j][0]:
-                            self.gamesToPlay.append([(self.players[i][0].playerId, self.players[j][0].playerId), None])
-
-                numPairings = len(self.gamesToPlay)
-                for i in range(0, numPairings):
-                    # assign equal number of games to each pairing (rounds down)
-                    self.gamesToPlay[i][1] = self.numGames
-
-                # print that The tournament has Started
-                print("Tournament Starting...")
-
-            # Make a temporary list to append to so that we may check how many AIs we have available.
-            tempCurrent = []
-
-            # Load the first two active players (idx 0 is human player)
-            for index in range(0, len(self.players)):
-                tempCurrent.append(self.players[index][0])
-                for playerEntry in self.players[index + 1:]:
-                    tempCurrent.append(playerEntry[0])
-                    break
-                break
-
-            self.currentPlayers = tempCurrent
-            self.UI.setPlayers(self.currentPlayers[PLAYER_ONE].author, self.currentPlayers[PLAYER_TWO].author)
-
-            # change the phase to setup
-            self.state.phase = SETUP_PHASE_1
-
-    ##
-    # tourneyPathCallback
-    # Description: Responds to a user clicking on the Tournament button
-    #
-    ##
-    def tourneyPathCallback(self):
-        # Reset the game
-        self.initGame()
-        # Reset tournament mode variables
-        self.playerScores = []
-        self.gamesToPlay = []
-        self.numGames = None
-        # Attempt to load the AI files
-        self.loadAIs(False)
-        # Check right number of players, if successful set the mode.
-        if len(self.players) >= 2:
-            self.mode = TOURNAMENT_MODE
-
-    ##
-    # humanPathCallback
-    # Description: Responds to a user clicking on the Human vs. AI button
-    #
-    ##
-    def humanPathCallback(self):
-        # Reset the game and UI
-        self.initGame()
-        # self.initUI()
-        # Attempt to load the AI files
-        self.loadAIs(True)
-        # Add the human player to the player list
-        self.players.insert(PLAYER_ONE, (HumanPlayer.HumanPlayer(PLAYER_ONE), ACTIVE))
-        # Check right number of players, if successful set the mode.
-        if len(self.players) >= 2:
-            self.mode = HUMAN_MODE
-
-    ##
-    # aiPathCallback
-    # Description: Responds to a user clicking on the AI vs. AI button
-    #
-    ##
-    def aiPathCallback(self):
-        # Reset the game
-        self.initGame()
-        # self.initUI()
-        # Attempt to load the AI files
-        self.loadAIs(False)
-        # Check right number of players, if successful set the mode.
-        if len(self.players) >= 2:
-            self.mode = AI_MODE
-
-    ##
-    # checkBoxClickedCallback
-    # Description: Responds to a user clicking on a checkbox to select AIs
-    #
-    # Parameters:
-    #   index - The index of the checkbox clicked on (int)
-    ##
-    def checkBoxClickedCallback(self, index):
-        self.players[index][1] = ACTIVE if self.players[index][1] == INACTIVE else INACTIVE
-
-    ##
-    # submitClickedCallback
-    # Description: Responds to a user clicking on the submit button when selecting AIs
-    #
-    ##
-    def submitClickedCallback(self):
-        currId = 0
-        inactivePlayers = []
-        for i in range(0, len(self.players)):
-            if self.players[i][1] == ACTIVE:
-                self.players[i][0].playerId = currId
-                currId += 1
-            else:
-                inactivePlayers.append(self.players[i])
-
-        # check to see if we have enough checked players
-        if (len(self.players) - len(inactivePlayers)) < 2:
-            return
-        if (len(self.players) - len(inactivePlayers)) > 23 and self.mode == TOURNAMENT_MODE:
-            return
-
-        # remove all inactive players
-        for player in inactivePlayers:
-            self.players.remove(player)
 
 
 # Import all the python files in the AI folder so they can be serialized

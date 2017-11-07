@@ -22,7 +22,7 @@ class HumanPlayer(Player):
     #   inputPlayerId - The id to give the new player (int)
     ##
     def __init__(self, inputPlayerId):
-        super(HumanPlayer,self).__init__(inputPlayerId, "")
+        super(HumanPlayer, self).__init__(inputPlayerId, "Human")
         self.moveType = None
         self.buildType = None
         self.coordList = []
