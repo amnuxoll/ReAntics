@@ -166,7 +166,7 @@ class GUIHandler:
     # the location passed from the game is already swapped back to P1 at top
     #
     def getHumanAttack(self, location):
-        print("Asked for human attack")
+        print("Asked for human attack, %d, %d" % location)
         self.gameHandler.setInstructionText("Select an ant to attack.")
         self.waitingForHuman = True
         self.waitingForAttack = True
@@ -244,4 +244,7 @@ class GUIHandler:
     def settingsPressed(self):
         self.killPressed()
         self.game.goToSettings = True
-        self.game.generalWake()
+
+        # don't break the game if it's waiting for a human move
+        if not self.waitingForHuman:
+            self.game.generalWake()

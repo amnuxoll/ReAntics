@@ -458,38 +458,39 @@ class Game(object):
     ##
     def process_settings(self, games, additional):
         # set the additional settings
-        self.verbose = additional [ 'verbose' ]
-        self.playerSwap = additional [ 'swap' ]
+        self.verbose = additional['verbose']
+        self.playerSwap = additional['swap']
         self.playersReversed = False
-        self.randomSetup = additional [ 'layout_chosen' ] == "Random Override"
-        self.timeoutOn = additional [ 'timeout' ]
-        if self.timeoutOn :
-            self.timeoutLimit = additional [ 'timeout_limit' ]
+        self.randomSetup = additional['layout_chosen'] == "Random Override"
+        print(self.randomSetup)
+        self.timeoutOn = additional['timeout']
+        if self.timeoutOn:
+            self.timeoutLimit = additional['timeout_limit']
         
         # set the game queue
         self.game_calls = []
-        for g in games :
+        for g in games:
             t = g.game_type
             fx = None
             if t == "Two Player":
-                lower_p = [ p.lower() for p in g.players ]
+                lower_p = [p.lower() for p in g.players]
                 human_loc = lower_p.index("human") if "human" in lower_p else -1
-                if human_loc != -1 :
-                    self.game_calls.append ( partial ( self.startHumanVsAI, g.players[1-human_loc] ) )
+                if human_loc != -1:
+                    self.game_calls.append(partial(self.startHumanVsAI, g.players[1-human_loc]))
                 else:
                     fx = self.startAIvsAI
-                    self.game_calls.append( partial ( fx, g.num_games, g.players[0], g.players[1] ) )
+                    self.game_calls.append(partial(fx, g.num_games, g.players[0], g.players[1]))
             elif t == "Single Player":
                 fx = self.startSelf
-                self.game_calls.append( partial ( fx, g.num_games, g.players[0] ) )
+                self.game_calls.append(partial(fx, g.num_games, g.players[0]))
             elif t == "Round Robin":
                 fx = self.startRR
-                self.game_calls.append( partial ( fx, g.num_games, g.players ) )
+                self.game_calls.append(partial(fx, g.num_games, g.players))
             elif t == "Play All":
                 fx = self.startAllOther
                 for player in self.players:
                     if player[0].author != g.players[0]:
-                        self.game_calls.append ( partial ( self.startAIvsAI, g.num_games, g.players[0], player[0].author ) )
+                        self.game_calls.append(partial(self.startAIvsAI, g.num_games, g.players[0], player[0].author))
         self.UI.statsHandler.clearLog()
                         
     ##
@@ -595,14 +596,14 @@ class Game(object):
                 targets = []
 
                 # do auto-random setup for human player if required
-                if (self.randomSetup) and (type(currentPlayer) is HumanPlayer.HumanPlayer):
-                    if (constrsToPlace[0].type != FOOD):
+                if self.randomSetup and isinstance(currentPlayer, HumanPlayer.HumanPlayer):
+                    if constrsToPlace[0].type != FOOD:
                         coord = (random.randint(0, 9), random.randint(0, 3))
-                        if (self.state.board[coord[0]][coord[1]].constr == None):
+                        if self.state.board[coord[0]][coord[1]].constr is None:
                             targets.append(coord)
-                    elif (constrsToPlace[0].type == FOOD):
+                    elif constrsToPlace[0].type == FOOD:
                         coord = (random.randint(0, 9), random.randint(6, 9))
-                        if (self.state.board[coord[0]][coord[1]].constr == None):
+                        if self.state.board[coord[0]][coord[1]].constr is None:
                             targets.append(coord)
 
                 # hide the 1st player's set anthill and grass placement from the 2nd player
@@ -892,14 +893,6 @@ class Game(object):
                 # keep track of valid attack coords (flipped for player two)
                 validAttackCoords.append(self.state.coordLookup(ant.coords, currentPlayer.playerId))
         if validAttackCoords != []:
-            # give instruction to human player
-            # if type(currentPlayer) is HumanPlayer.HumanPlayer:
-            #     self.ui.notify("Select ant to attack")
-
-            # players must attack if possible and we know at least one is valid
-            attackCoord = None
-            validAttack = False
-
             theState = self.state.clone()
 
             if self.UI is not None:
@@ -910,14 +903,14 @@ class Game(object):
 
             if isinstance(currentPlayer, HumanPlayer.HumanPlayer) and not self.randomSetup:
                 # have to swap ant back for the GUI if its player 2
-                self.UI.getHumanAttack(self.state.coordLookup(attackingAnt.coords, currentPlayer.playerId))
+                self.UI.getHumanAttack(self.state.coordLookup(attackingAnt.coords, theState.whoseTurn))
                 self.condWait()
 
                 attackCoord = self.submittedAttack
                 self.submittedAttack = None
             else:
                 attackCoord = self.state.coordLookup(
-                    currentPlayer.getAttack(theState, attackingAnt.clone(), validAttackCoords), currentPlayer.playerId)
+                    currentPlayer.getAttack(theState, attackingAnt.clone(), validAttackCoords), theState.whoseTurn)
 
             # decrement ants health
             attackedAnt = self.state.board[attackCoord[0]][attackCoord[1]].ant
