@@ -837,6 +837,11 @@ class Game(object):
             except:
                 # TODO deal with this
                 pass
+
+            # special handling for human currently
+            if self.winner == -1:
+                winnerName = "Human"
+
             self.UI.gameHandler.setInstructionText("%s has won!" % winnerName)
 
         # adjust the wins and losses of players
@@ -901,7 +906,7 @@ class Game(object):
             if theState.whoseTurn == PLAYER_TWO:
                 theState.flipBoard()
 
-            if isinstance(currentPlayer, HumanPlayer.HumanPlayer) and not self.randomSetup:
+            if isinstance(currentPlayer, HumanPlayer.HumanPlayer):
                 # have to swap ant back for the GUI if its player 2
                 self.UI.getHumanAttack(self.state.coordLookup(attackingAnt.coords, theState.whoseTurn))
                 self.condWait()

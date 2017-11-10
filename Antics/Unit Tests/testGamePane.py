@@ -14,6 +14,14 @@ class testGamePane(unittest.TestCase):
     def setUp(self):
         self.gameTest = Game.Game(True)
 
+    def testAttackHighlighting(self):
+        handler = GUIHandler(None)
+        handler.gameHandler.createFrames()
+        handler.showFrame(2)
+        state = GameState.getBlankState()
+        handler.showState(state)
+
+
     def testBoardHighlighting(self):
         handler = GUIHandler(None)
         handler.gameHandler.createFrames()
