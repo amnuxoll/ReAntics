@@ -469,28 +469,28 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         self.public_timeout = ERROR_CODE
 
         k = "swap"
-        self.o_swap = tk.Checkbutton ( self.interior, text = "alternate player start", command = partial(self.clicked, opt = k) )
+        self.o_swap = tk.Checkbutton ( self.interior, text = "alternate player start", command = partial(self.clicked, opt = k), bg = "white" )
         self.o_swap.grid ( row = 0, sticky=tk.W )
         self.selected[k] = tk.BooleanVar()
         self.o_swap.config ( variable = self.selected[k] )
         self.public_selected[k] = False
 
         k = "game_board"
-        self.o_gameBoard = tk.Checkbutton ( self.interior, text = "display game board", command = partial(self.clicked, opt = k) )
+        self.o_gameBoard = tk.Checkbutton ( self.interior, text = "display game board", command = partial(self.clicked, opt = k), bg = "white"  )
         self.o_gameBoard.grid ( row = 1, sticky=tk.W )
         self.selected[k] = tk.BooleanVar()
         self.o_gameBoard.config ( variable = self.selected[k] )
         self.public_selected[k] = False
 
         k = "verbose"
-        self.o_verbose = tk.Checkbutton ( self.interior, text = "verbose (print W/L)", command = partial(self.clicked, opt = k) )
+        self.o_verbose = tk.Checkbutton ( self.interior, text = "verbose (print W/L)", command = partial(self.clicked, opt = k), bg = "white" )
         self.o_verbose.grid ( row = 2, sticky=tk.W )
         self.selected[k] = tk.BooleanVar()
         self.o_verbose.config ( variable = self.selected[k] )
         self.public_selected[k] = False
 
         k = "timeout"
-        self.o_timeout = tk.Checkbutton ( self.interior, text = "move timeout", command = partial(self.clicked, opt = k) )
+        self.o_timeout = tk.Checkbutton ( self.interior, text = "move timeout", command = partial(self.clicked, opt = k), bg = "white" )
         self.o_timeout.grid ( row = 3, sticky=tk.W )
         self.selected[k] = tk.BooleanVar()
         self.o_timeout.config ( variable = self.selected[k] )
@@ -571,7 +571,7 @@ class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
                 self.selected[item_name] = tk.BooleanVar()
                 loc = j + offset + i + 1
                 b = tk.Checkbutton ( self.interior, text = item_name, variable = self.selected[item_name], \
-                                     command = partial ( self.newSelection, value = "dummy", idx = item_name ) )
+                                     command = partial ( self.newSelection, value = "dummy", idx = item_name ), bg = "white" )
                 b.grid ( row = loc, sticky=tk.W )
 
                 var = tk.StringVar ( self.interior )

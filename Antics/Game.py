@@ -410,41 +410,34 @@ class Game(object):
                 if args.randomLayout:
                     self.randomSetup = True
             else:
-                self.UI.statsHandler.timeLabel.Reset()
-                self.UI.statsHandler.timeLabel.Start()
                 self.startAIvsAI(args.numgames, args.players[0], args.players[1])
         elif args.RR:
             if 'human' in args.players:
                 parser.error('Human not allowed in round robin')
             if len(args.players) <= 2:
                 parser.error('3 or more players needed for round robin')
-            self.UI.statsHandler.timeLabel.Reset()
-            self.UI.statsHandler.timeLabel.Start()
             self.startRR(args.numgames, args.players)
         elif args.RRall:
             if args.players is not None:
                 parser.error('Do not specify players with (-p), (--RRall) is for all players')
-            self.UI.statsHandler.timeLabel.Reset()
-            self.UI.statsHandler.timeLabel.Start()
             self.startRRall(args.numgames)
         elif args.all:
             if 'human' in args.players:
                 parser.error('Human not allowed in play all others')
             if len(args.players) != 1:
                 parser.error('Only specify the Player you want to play all others')
-            self.UI.statsHandler.timeLabel.Reset()
-            self.UI.statsHandler.timeLabel.Start()
             self.startAllOther(args.numgames, args.players[0])
         elif args.self:
             if 'human' in args.players:
                 parser.error('Human not allowed in play all others')
             if len(args.players) != 1:
                 parser.error('Only specify the Player you want to play its self')
-            self.UI.statsHandler.timeLabel.Reset()
-            self.UI.statsHandler.timeLabel.Start()
+            
             self.startSelf(args.numgames, args.players[0])
         if args.RR or args.RRall or args.self or args.all or args.twoP:
             self.UI.showFrame(2)
+            self.UI.statsHandler.timeLabel.Reset()
+            self.UI.statsHandler.timeLabel.Start()
 
     ##
     # process_settings
@@ -513,6 +506,7 @@ class Game(object):
                     self.goToSettings = False
                     self.UI.showFrame(0)
                 self.UI.statsHandler.timeLabel.Stop()
+                self.UI.statsHandler.timeLabel.PermanentlyStop()
                 self.condWait()
 
             self.UI.statsHandler.timeLabel.Start()
@@ -540,7 +534,7 @@ class Game(object):
             self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
             self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
 
-            self.UI.statsHandler.stopCurLogItem()
+            self.UI.statsHandler.stopCurLogItem(True)
 
     def setup(self, game: GameData, count: int):
         self.state = GameState.getBlankState()

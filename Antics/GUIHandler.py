@@ -217,11 +217,15 @@ class GUIHandler:
             self.gameHandler.pauseButton.config(bg = self.blue)
             self.statsHandler.pauseButton.config(bg = self.blue)
             self.game.generalWake()
+            self.statsHandler.startCurLogItem()
+            self.statsHandler.timeLabel.Start()
         else:
             self.paused = True
             self.pauseVar.set("Play")
             self.gameHandler.pauseButton.config(bg = 'green')
             self.statsHandler.pauseButton.config(bg = 'green')
+            self.statsHandler.stopCurLogItem()
+            self.statsHandler.timeLabel.Stop()
 
     def stepPressed(self):
         self.game.generalWake()

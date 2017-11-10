@@ -21,7 +21,8 @@ FL_BD = 5
 FL_STYLE = "ridge"
 FL_FONT = ( "Harrington", 16, "bold")
 
-HEIGHT = 30
+# height and width for the totals score card
+HEIGHT = 20
 WIDTH = 35
 
 class StatsPane:
@@ -48,13 +49,6 @@ class StatsPane:
         self.logTextFrame.config( padx = 2, pady=2 )
         self.logTextFrame.canvas.config(height=450)
 
-##        for i in range(10):
-##            b = PurpleBox(self.logTextFrame.interior)
-##            b.grid()
-
-##        self.logTextLabel = tkinter.Label(self.logTextFrame.interior, text="Game Log stuff here", fg ="black", \
-##                                          bg="purple", borderwidth=FL_BD, font= ("Herculanum", 12),height=HEIGHT, width=WIDTH)
-##        self.logTextLabel.pack(side=tkinter.BOTTOM, fill=tkinter.X, padx = 2)
         self.gLFrame.columnconfigure(0, weight=1)
         self.logTextFrame.pack ( fill="both" )
 
@@ -65,14 +59,13 @@ class StatsPane:
         self.totals.set("Totals")
         self.totalsLabel = tkinter.Label(self.tFrame, textvar=self.totals, fg = FL_TEXT_COLOR, \
                                          bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT, width=WIDTH)
-##        self.totalsLabel.grid(column=3, row=0)
         self.totalsLabel.pack(side=tkinter.TOP, fill=tkinter.X)
         self.tFrame.columnconfigure(3, weight=1)
 
         self.totalsStrVar =  tkinter.StringVar()
         self.setScoreRecord ( "Totals stuff here" )
         self.totalsTextLabel = tkinter.Label(self.tFrame, textvar=self.totalsStrVar, fg="black", \
-                                             bg="white", borderwidth=FL_BD, font=("Courier", 12),\
+                                             bg="white", borderwidth=FL_BD, font=("Courier", 20),\
                                              height=HEIGHT,anchor=tkinter.W)
         self.totalsTextLabel.pack(side=tkinter.BOTTOM, fill=tkinter.X, padx=2)
         self.tFrame.columnconfigure(0, weight=1)
@@ -91,10 +84,6 @@ class StatsPane:
         self.timeInfoLabel.pack(side=tkinter.TOP, fill = tkinter.X)
         self.timeHeaderFrame.columnconfigure(0, weight=1)
 
-##        self.totalTimeVar = tkinter.StringVar()
-##        self.setTotalTime ( 0 )
-##        self.timeLabel = tkinter.Label(self.timeHeaderFrame, textvar=self.totalTimeVar, fg="black", \
-##                                       bg="white", borderwidth=FL_BD, font=("Herculanum", 50, "bold"))
         self.timeLabel = wgt.StopWatch (self.timeHeaderFrame) 
         self.timeLabel.label.config(font=("Courier", 50, "bold"))
         self.timeLabel.pack(side=tkinter.TOP, fill=tkinter.X, padx=2)
@@ -157,6 +146,8 @@ class StatsPane:
     def addLogItem ( self ) :
         b = PurpleBox(self.logTextFrame.interior)
         b.grid()
+        self.logTextFrame.set_scrollregion()
+        self.parent.update()
 
         self.log.append(b)
         self.cur_log = b
@@ -164,8 +155,16 @@ class StatsPane:
         b.myClock.Reset()
         b.myClock.Start()
 
-    def stopCurLogItem ( self ) :
+    def stopCurLogItem ( self, game_over = False ) :
         self.cur_log.myClock.Stop()
+        if game_over :
+            self.setCurLogItemOver()
+            
+    def startCurLogItem ( self ) :
+        self.cur_log.myClock.Start()
+
+    def setCurLogItemOver ( self ) :
+        self.cur_log.myClock.PermanentlyStop()
 
     def updateCurLogItem ( self, s ) :
         self.cur_log.setTextLines(s)
