@@ -600,10 +600,6 @@ class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
     # other frames can't access the others
     #####
     def newSelection ( self, value, idx ) :
-##        if "Player" not in idx:
-##            print ( idx, self.values[idx].get(), self.selected[idx].get() )
-##        else :
-##            print ( idx, self.values[idx].get(), self.public_selected[idx] )
         
         self.public_selected[idx] = self.selected[idx].get() if "Player" not in idx else True
         
@@ -639,7 +635,7 @@ class QuickStartFrame ( tk.Frame ) :
         for i in range ( len(self.players) ) :
             p = self.players[i]
             self.selected[p] = tk.BooleanVar()
-            b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p] )
+            b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p], bg = "white" )
             playerCheckButtons.append ( b )
             b.grid ( row = int (i/cols), column = i%cols, sticky=tk.W )
             if p == "Select All" :
@@ -652,7 +648,7 @@ class QuickStartFrame ( tk.Frame ) :
         self.numGamesLabel.pack ( side=tk.LEFT ) 
         
         self.numGamesEntry = tk.Entry ( self.numGamesFrame, text="1" )
-        self.numGamesEntry.pack ( fill=tk.X )
+        self.numGamesEntry.pack ( fill="both")#tk.X )
         self.numGamesEntry.delete ( 0,tk.END )
         self.numGamesEntry.insert ( 0, "1" )
 
@@ -674,9 +670,6 @@ class QuickStartFrame ( tk.Frame ) :
                 self.selected[x].set(v)
                 self.update()
 
-    #####
-    # !!!! TO DO !!!!!
-    #####
     def get_players ( self ) :
         p = []
         for x in self.players :
@@ -730,7 +723,7 @@ class TwoPlayerFrame ( tk.Frame ) :
         self.plusButton.pack ( side=tk.RIGHT )
         
         self.numGamesEntry = tk.Entry ( self.numGamesFrame, text="1" )
-        self.numGamesEntry.pack ( fill=tk.X )
+        self.numGamesEntry.pack ( fill="both")#tk.X )
         self.numGamesEntry.delete ( 0,tk.END )
         self.numGamesEntry.insert ( 0, "1" )
 
@@ -782,7 +775,7 @@ class SinglePlayerFrame ( tk.Frame ) :
         self.plusButton.pack ( side=tk.RIGHT )
         
         self.numGamesEntry = tk.Entry ( self.numGamesFrame, text="1" )
-        self.numGamesEntry.pack ( fill=tk.X )
+        self.numGamesEntry.pack ( fill="both")#tk.X )
         self.numGamesEntry.delete ( 0,tk.END )
         self.numGamesEntry.insert ( 0, "1" )
 
@@ -821,7 +814,7 @@ class RoundRobinFrame ( tk.Frame ) :
         for i in range ( len(self.players) ) :
             p = self.players[i]
             self.selected[p] = tk.BooleanVar()
-            b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p] )
+            b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p], bg = "white" )
             playerCheckButtons.append ( b )
             b.grid ( row = int (i/cols), column = i%cols, sticky=tk.W )
             if p == "Select All" :
@@ -836,7 +829,7 @@ class RoundRobinFrame ( tk.Frame ) :
         self.plusButton.pack ( side=tk.RIGHT )
         
         self.numGamesEntry = tk.Entry ( self.numGamesFrame, text="1" )
-        self.numGamesEntry.pack ( fill=tk.X )
+        self.numGamesEntry.pack ( fill="both")#tk.X )
         self.numGamesEntry.delete ( 0,tk.END )
         self.numGamesEntry.insert ( 0, "1" )
 
