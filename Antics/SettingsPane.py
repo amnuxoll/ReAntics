@@ -278,6 +278,13 @@ class GameSettingsFrame ( ) :
             wgt.ShowError( title, message, self.handler.root )
             return
 
+        # limit human games to 1
+        if "human" in [l.lower() for l in p] and n != 1 :
+            title = "Error: Game Addtion"
+            message = "No game added.\nError: Human Games limited to 1, add separately for more."
+            wgt.ShowError( title, message, self.handler.root )
+            return
+
         # ensure that two player games have two different players
         if t == "Two Player" and p[0] == p[1] :
             title = "Error: Game Addtion"
