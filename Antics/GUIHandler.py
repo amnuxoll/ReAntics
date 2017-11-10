@@ -45,7 +45,7 @@ class GUIHandler:
         # shared tkinter variables
         # note these have to be here after root is made
         self.pauseVar = tkinter.StringVar()
-        self.pauseVar.set("Play")
+        self.pauseVar.set("Pause")
         self.statsText = tkinter.StringVar()
         self.statsText.set("Print Stats On")
         self.blue = "#8bbcda"

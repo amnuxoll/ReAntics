@@ -125,7 +125,7 @@ class GamePane:
 
         self.pauseButton = wgt.ColoredButton(self.buttonFrame, command = self.handler.pausePressed)
         self.pauseButton.config(textvar = self.handler.pauseVar)
-        self.pauseButton.config(bg = 'green', fg = 'white', font = font, width = 12, pady = 3)
+        self.pauseButton.config(bg = self.handler.blue, fg = 'white', font = font, width = 12, pady = 3)
         self.pauseButton.grid(row = 2)
         self.paused = True
 
