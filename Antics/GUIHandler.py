@@ -147,6 +147,8 @@ class GUIHandler:
             print("Game in wrong phase for human move")
             return
 
+        print("Asked for human move: %d" % phase)
+
         if phase == SETUP_PHASE_1:
             self.gameHandler.setInstructionText("Select where to build your anthill.")
         elif phase == SETUP_PHASE_2:
@@ -164,7 +166,7 @@ class GUIHandler:
     # the location passed from the game is already swapped back to P1 at top
     #
     def getHumanAttack(self, location):
-        #print("Asked for human attack, %d, %d" % location)
+        print("Asked for human attack, %d, %d" % location)
         self.gameHandler.setInstructionText("Select an ant to attack.")
         self.waitingForHuman = True
         self.waitingForAttack = True

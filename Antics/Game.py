@@ -907,17 +907,14 @@ class Game(object):
     #   currentPlayer - The Player whose turn it currently is (Player)
     ##
     def resolveAttack(self, attackingAnt, currentPlayer):
-
         # check if player wants to attack
         validAttackCoords = []
         opponentId = (self.state.whoseTurn + 1) % 2
         for ant in self.state.inventories[opponentId].ants:
             if self.isValidAttack(attackingAnt, ant.coords):
                 # keep track of valid attack coords (flipped for player two)
-                validAttackCoords.append(self.state.coordLookup(ant.coords, self.state.whoseTurn))
+                validAttackCoords.append(self.state.coordLookup(ant.coords, currentPlayer.playerId))
         if validAttackCoords != []:
-            #print("Attack, %d, %d: %d" % (attackingAnt.coords[0], attackingAnt.coords[1], self.state.whoseTurn))
-            #print(validAttackCoords)
             theState = self.state.clone()
 
             if self.UI is not None:
