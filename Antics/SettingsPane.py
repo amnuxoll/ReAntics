@@ -166,7 +166,7 @@ class GameSettingsFrame ( ) :
         self.addPauseOptionsFrame.pack (side=tk.BOTTOM, fill="both")
 
         self.addPauseConditionPlus = wgt.ColoredButton ( self.addPauseConditionsFrame, " "*2 + "+" + " "*2, "black", "white", flash=True )
-        self.addPauseConditionPlus.config ( font = BUTTON1_FONT )
+        self.addPauseConditionPlus.config ( font = BUTTON1_FONT , height=2)
         self.addPauseConditionPlus.pack ( side=tk.LEFT )
         self.addPauseConditionPlus.command = self.pauseConditionAdded
 
