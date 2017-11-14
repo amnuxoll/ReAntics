@@ -357,6 +357,7 @@ class GamePane:
     # some of these should be replaced by references to the GUI handler
     #
     def UIbuttonPressed(self):
+        #if(self.the_game.game_type == )
         self.handler.showFrame(1)
 
     def endTurnPressed(self):

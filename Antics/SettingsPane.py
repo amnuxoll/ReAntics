@@ -258,7 +258,7 @@ class GameSettingsFrame ( ) :
         # convert n to integer
         rgx_int = re.compile ( "^[0-9]+$" )
         if not rgx_int.match(n) :
-            title = "Error: Game Addtion"
+            title = "Error: Game Addition"
             message = "No game added.\nError: Invalid number of games: {}".format(n)
             wgt.ShowError( title, message, self.handler.root )
             return
@@ -508,7 +508,7 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         self.o_timeoutText = tk.Entry ( self.interior, textvar = sv )
         self.o_timeoutText.grid ( row = 3, column = 1, sticky=tk.W )
         
-        self.layoutText = tk.Label ( self.interior, text = "Layout Option: " )
+        self.layoutText = tk.Label ( self.interior, text = "Layout Option: " , bg="white")
         self.layoutText.grid ( row = 4, sticky=tk.W )
         self.layoutType = tk.StringVar ( self.interior )
         self.layoutType.set(LAYOUT_OPTIONS[0])
