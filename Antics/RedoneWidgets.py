@@ -101,6 +101,7 @@ class StopWatch(tk.Frame):
         self.label = None
         self.makeWidgets()
         self._timer = None
+        self.game_over = False
 
     def makeWidgets(self):
         """ Make the time label. """
@@ -118,14 +119,15 @@ class StopWatch(tk.Frame):
 
     def _setTime(self, elap, string_obj):
         """ Set the time string to Minutes:Seconds:Hundreths """
-        minutes = int(elap/60)
-        seconds = int(elap - minutes*60.0)
-        hseconds = int((elap - minutes*60.0 - seconds)*100)
-        string_obj.set('%02d:%02d:%02d' % (minutes, seconds, hseconds))
+        hours = int(elap/3600)                                           #without the hours below
+        minutes = int(elap/60 - hours*60)                                #int(elap/60)
+        seconds = int(elap - hours*3600 - minutes*60.0)                  #int(elap - minutes*60.0)
+        hseconds = int((elap - hours*3600 - minutes*60.0 - seconds)*100) #int((elap - minutes*60.0 - seconds)*100)
+        string_obj.set('%02d:%02d:%02d:%02d' % (hours, minutes, seconds, hseconds))
 
     def Start(self):
-        """ Start the stopwatch, ignore if running. """
-        if self._running:
+        """ Start the stopwatch, ignore if running, or the game/event is over. """
+        if self._running or self.game_over:
             return
             #''' make self.start the time now - zero'''
         self._start = time.time() - self._elapsedtime
@@ -135,22 +137,24 @@ class StopWatch(tk.Frame):
 
     def Stop(self):
         #print("in stop")
-        """ Stop the stopwatch, ignore if stopped. """
+        """ Stop the stopwatch, ignore if stopped or the game/event is over. """
         if not self._running:
             return
-            #print("stopping")
         self.after_cancel(self._timer)
         self._timer = None
         self._elapsedtime = time.time() - self._start
         self._setTime(self._elapsedtime,self.timestr)
         self._running = 0
-        #print("running", self._running)
 
     def Reset(self):
         """ Reset the stopwatch. """
         self._start = time.time()
         self._elapsedtime = 0.0
         self._setTime(self._elapsedtime,self.timestr)
+        self.game_over = False
+
+    def PermanentlyStop(self) :
+        self.game_over = True
 
 ###########################################################################
 # standard message dialogs... showinfo, showwarning, showerror

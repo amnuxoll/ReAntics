@@ -55,6 +55,8 @@ class Game(object):
         self.running = True
         self.flipped = False
         self.goToSettings = False
+        self.commandLineFinished = False
+        self.parser_args = {}
 
         # Initializes tournament mode variables
         self.playerScores = []  # [[author,wins,losses], ...]
@@ -69,6 +71,8 @@ class Game(object):
         self.timeoutLimit = -1    # !!! TODO - not presently implemented
         # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
 
+        self.loadAIs()
+        self.processCommandLine()
         # setup GUI
         # this has to be done in the main thread because Tkinter is dumb
         if testing:
@@ -80,7 +84,6 @@ class Game(object):
 
         # TODO: figure out how to make this work properly
         # wait for GUI to set up
-        self.loadAIs()
         done = False
         while not done:
             time.sleep(.1)
@@ -100,6 +103,7 @@ class Game(object):
         self.gameThread.start()
         print("game thread started")
 
+        self.postProcessCommandLine()
         self.UI.root.mainloop()
 
     def tick(self, fps):
@@ -331,6 +335,27 @@ class Game(object):
         self.gamesToPlayLock.release()
         self.generalWake()
 
+    def postProcessCommandLine(self):
+        print(self.parser_args)
+        if self.parser_args["twoP"]:
+            if "human" == self.parser_args["players"][0].lower():
+                self.startHumanVsAI(self.parser_args["players"][1])
+            elif "human" == self.parser_args["players"][1].lower():
+                self.startHumanVsAI(self.parser_args["players"][0])
+            else:
+                self.startAIvsAI(self.parser_args["numgames"], self.parser_args["players"][0], self.parser_args["players"][1])
+        elif self.parser_args["RR"]:
+            self.startRR(self.parser_args["numgames"], self.parser_args["players"])
+        elif self.parser_args["RRall"]:
+            self.startRRall(self.parser_args["numgames"])
+        elif self.parser_args["all"]:
+            self.startAllOther(self.parser_args["numgames"], self.parser_args["players"])
+        elif self.parser_args["self"]:
+            self.startSelf(self.parser_args["numgames"], self.parser_args["players"][0])
+        if self.parser_args["RR"] or self.parser_args["RRall"] or self.parser_args["self"] or self.parser_args["all"] or self.parser_args["twoP"]:
+            self.UI.showFrame(2)
+            self.UI.statsHandler.timeLabel.Reset()
+            self.UI.statsHandler.timeLabel.Start()
 
     ##
     # processCommandLine
@@ -382,8 +407,15 @@ class Game(object):
                                  'which will be reserved for human')
 
         args = parser.parse_args()
-        numCheck = re.compile("[0-9]*[1-9][0-9]*")
+        self.parser_args["numgames"] = args.numgames
+        self.parser_args["players"] = args.players
+        self.parser_args["RR"] = args.RR
+        self.parser_args["RRall"] = args.self
+        self.parser_args["all"] = args.all
+        self.parser_args["twoP"] = args.twoP
+        self.parser_args["self"] = args.self
 
+        numCheck = re.compile("[0-9]*[1-9][0-9]*")
         # Error and bounds checking for command line parameters
         if not numCheck.match(str(args.numgames)):
             parser.error('NumGames must be a positive number')
@@ -400,51 +432,37 @@ class Game(object):
             if "human" == args.players[0].lower():
                 if args.numgames != 1:
                     parser.error('Human Vs Player can only have 1 game. (-n 1)')
-                self.startHumanVsAI(args.players[1])
                 if args.randomLayout:
                     self.randomSetup = True
             elif "human" == args.players[1].lower():
                 if args.numgames != 1:
                     parser.error('Human Vs Player can only have 1 game. (-n 1)')
-                self.startHumanVsAI(args.players[0])
                 if args.randomLayout:
                     self.randomSetup = True
-            else:
-                self.UI.statsHandler.timeLabel.Reset()
-                self.UI.statsHandler.timeLabel.Start()
-                self.startAIvsAI(args.numgames, args.players[0], args.players[1])
         elif args.RR:
             if 'human' in args.players:
                 parser.error('Human not allowed in round robin')
             if len(args.players) <= 2:
                 parser.error('3 or more players needed for round robin')
-            self.UI.statsHandler.timeLabel.Reset()
-            self.UI.statsHandler.timeLabel.Start()
-            self.startRR(args.numgames, args.players)
         elif args.RRall:
             if args.players is not None:
                 parser.error('Do not specify players with (-p), (--RRall) is for all players')
-            self.UI.statsHandler.timeLabel.Reset()
-            self.UI.statsHandler.timeLabel.Start()
-            self.startRRall(args.numgames)
         elif args.all:
             if 'human' in args.players:
                 parser.error('Human not allowed in play all others')
             if len(args.players) != 1:
                 parser.error('Only specify the Player you want to play all others')
-            self.UI.statsHandler.timeLabel.Reset()
-            self.UI.statsHandler.timeLabel.Start()
-            self.startAllOther(args.numgames, args.players[0])
         elif args.self:
             if 'human' in args.players:
                 parser.error('Human not allowed in play all others')
             if len(args.players) != 1:
                 parser.error('Only specify the Player you want to play its self')
-            self.UI.statsHandler.timeLabel.Reset()
-            self.UI.statsHandler.timeLabel.Start()
-            self.startSelf(args.numgames, args.players[0])
-        if args.RR or args.RRall or args.self or args.all or args.twoP:
-            self.UI.showFrame(2)
+        # if args.RR or args.RRall or args.self or args.all or args.twoP:
+        #     self.UI.showFrame(2)
+        #     self.UI.statsHandler.timeLabel.Reset()
+        #     self.UI.statsHandler.timeLabel.Start()
+
+        # self.commandLineFinished = True
 
     ##
     # process_settings
@@ -500,8 +518,6 @@ class Game(object):
     #
     ##
     def start(self):
-        self.processCommandLine()
-
         self.UI.statsHandler.timeLabel.Start()
         
         while True:
@@ -513,6 +529,7 @@ class Game(object):
                     self.goToSettings = False
                     self.UI.showFrame(0)
                 self.UI.statsHandler.timeLabel.Stop()
+                self.UI.statsHandler.timeLabel.PermanentlyStop()
                 self.condWait()
 
             self.UI.statsHandler.timeLabel.Start()
@@ -540,7 +557,7 @@ class Game(object):
             self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
             self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
 
-            self.UI.statsHandler.stopCurLogItem()
+            self.UI.statsHandler.stopCurLogItem(True)
 
     def setup(self, game: GameData, count: int):
         self.state = GameState.getBlankState()
@@ -777,18 +794,17 @@ class Game(object):
                             constrUnderAnt = self.state.board[ant.coords[0]][ant.coords[1]].constr
                             if constrUnderAnt != None:
                                 # if constr is enemy's and ant hasnt moved, affect capture health of buildings
-                                if type(
-                                        constrUnderAnt) is Building and not ant.hasMoved and not constrUnderAnt.player == self.state.whoseTurn:
+                                if type(constrUnderAnt) is Building and not constrUnderAnt.player == self.state.whoseTurn:
                                     constrUnderAnt.captureHealth -= 1
-                                    if constrUnderAnt.captureHealth == 0 and constrUnderAnt.type != ANTHILL:
-                                        constrUnderAnt.player = self.state.whoseTurn
-                                        constrUnderAnt.captureHealth = CONSTR_STATS[constrUnderAnt.type][CAP_HEALTH]
+                                    # TODO: This code is for tunnel claiming
+                                    # if constrUnderAnt.captureHealth == 0 and constrUnderAnt.type != ANTHILL:
+                                    #     constrUnderAnt.player = self.state.whoseTurn
+                                    #     constrUnderAnt.captureHealth = CONSTR_STATS[constrUnderAnt.type][CAP_HEALTH]
                                 # have all worker ants on food sources gather food
                                 elif constrUnderAnt.type == FOOD and ant.type == WORKER:
                                     ant.carrying = True
                                 # deposit carried food (only workers carry)
-                                elif (
-                                        constrUnderAnt.type == ANTHILL or constrUnderAnt.type == TUNNEL) and ant.carrying == True:
+                                elif (constrUnderAnt.type == ANTHILL or constrUnderAnt.type == TUNNEL) and ant.carrying == True:
                                     self.state.inventories[self.state.whoseTurn].foodCount += 1
                                     ant.carrying = False
 
@@ -896,7 +912,7 @@ class Game(object):
         for ant in self.state.inventories[opponentId].ants:
             if self.isValidAttack(attackingAnt, ant.coords):
                 # keep track of valid attack coords (flipped for player two)
-                validAttackCoords.append(self.state.coordLookup(ant.coords, currentPlayer.playerId))
+                validAttackCoords.append(self.state.coordLookup(ant.coords, self.state.whoseTurn))
         if validAttackCoords != []:
             theState = self.state.clone()
 

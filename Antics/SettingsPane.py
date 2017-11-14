@@ -166,7 +166,7 @@ class GameSettingsFrame ( ) :
         self.addPauseOptionsFrame.pack (side=tk.BOTTOM, fill="both")
 
         self.addPauseConditionPlus = wgt.ColoredButton ( self.addPauseConditionsFrame, " "*2 + "+" + " "*2, "black", "white", flash=True )
-        self.addPauseConditionPlus.config ( font = BUTTON1_FONT )
+        self.addPauseConditionPlus.config ( font = BUTTON1_FONT , height=2)
         self.addPauseConditionPlus.pack ( side=tk.LEFT )
         self.addPauseConditionPlus.command = self.pauseConditionAdded
 
@@ -258,7 +258,7 @@ class GameSettingsFrame ( ) :
         # convert n to integer
         rgx_int = re.compile ( "^[0-9]+$" )
         if not rgx_int.match(n) :
-            title = "Error: Game Addtion"
+            title = "Error: Game Addition"
             message = "No game added.\nError: Invalid number of games: {}".format(n)
             wgt.ShowError( title, message, self.handler.root )
             return
@@ -275,6 +275,13 @@ class GameSettingsFrame ( ) :
         if p is None or p == [] :
             title = "Error: Game Addtion"
             message = "No game added.\nError: Not enough players."
+            wgt.ShowError( title, message, self.handler.root )
+            return
+
+        # limit human games to 1
+        if "human" in [l.lower() for l in p] and n != 1 :
+            title = "Error: Game Addtion"
+            message = "No game added.\nError: Human Games limited to 1, add separately for more."
             wgt.ShowError( title, message, self.handler.root )
             return
 
@@ -469,28 +476,28 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         self.public_timeout = ERROR_CODE
 
         k = "swap"
-        self.o_swap = tk.Checkbutton ( self.interior, text = "alternate player start", command = partial(self.clicked, opt = k) )
+        self.o_swap = tk.Checkbutton ( self.interior, text = "alternate player start", command = partial(self.clicked, opt = k), bg = "white" )
         self.o_swap.grid ( row = 0, sticky=tk.W )
         self.selected[k] = tk.BooleanVar()
         self.o_swap.config ( variable = self.selected[k] )
         self.public_selected[k] = False
 
         k = "game_board"
-        self.o_gameBoard = tk.Checkbutton ( self.interior, text = "display game board", command = partial(self.clicked, opt = k) )
+        self.o_gameBoard = tk.Checkbutton ( self.interior, text = "display game board", command = partial(self.clicked, opt = k), bg = "white"  )
         self.o_gameBoard.grid ( row = 1, sticky=tk.W )
         self.selected[k] = tk.BooleanVar()
         self.o_gameBoard.config ( variable = self.selected[k] )
         self.public_selected[k] = False
 
         k = "verbose"
-        self.o_verbose = tk.Checkbutton ( self.interior, text = "verbose (print W/L)", command = partial(self.clicked, opt = k) )
+        self.o_verbose = tk.Checkbutton ( self.interior, text = "verbose (print W/L)", command = partial(self.clicked, opt = k), bg = "white" )
         self.o_verbose.grid ( row = 2, sticky=tk.W )
         self.selected[k] = tk.BooleanVar()
         self.o_verbose.config ( variable = self.selected[k] )
         self.public_selected[k] = False
 
         k = "timeout"
-        self.o_timeout = tk.Checkbutton ( self.interior, text = "move timeout", command = partial(self.clicked, opt = k) )
+        self.o_timeout = tk.Checkbutton ( self.interior, text = "move timeout", command = partial(self.clicked, opt = k), bg = "white" )
         self.o_timeout.grid ( row = 3, sticky=tk.W )
         self.selected[k] = tk.BooleanVar()
         self.o_timeout.config ( variable = self.selected[k] )
@@ -501,7 +508,7 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         self.o_timeoutText = tk.Entry ( self.interior, textvar = sv )
         self.o_timeoutText.grid ( row = 3, column = 1, sticky=tk.W )
         
-        self.layoutText = tk.Label ( self.interior, text = "Layout Option: " )
+        self.layoutText = tk.Label ( self.interior, text = "Layout Option: " , bg="white")
         self.layoutText.grid ( row = 4, sticky=tk.W )
         self.layoutType = tk.StringVar ( self.interior )
         self.layoutType.set(LAYOUT_OPTIONS[0])
@@ -571,7 +578,7 @@ class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
                 self.selected[item_name] = tk.BooleanVar()
                 loc = j + offset + i + 1
                 b = tk.Checkbutton ( self.interior, text = item_name, variable = self.selected[item_name], \
-                                     command = partial ( self.newSelection, value = "dummy", idx = item_name ) )
+                                     command = partial ( self.newSelection, value = "dummy", idx = item_name ), bg = "white" )
                 b.grid ( row = loc, sticky=tk.W )
 
                 var = tk.StringVar ( self.interior )
@@ -593,10 +600,6 @@ class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
     # other frames can't access the others
     #####
     def newSelection ( self, value, idx ) :
-##        if "Player" not in idx:
-##            print ( idx, self.values[idx].get(), self.selected[idx].get() )
-##        else :
-##            print ( idx, self.values[idx].get(), self.public_selected[idx] )
         
         self.public_selected[idx] = self.selected[idx].get() if "Player" not in idx else True
         
@@ -632,7 +635,7 @@ class QuickStartFrame ( tk.Frame ) :
         for i in range ( len(self.players) ) :
             p = self.players[i]
             self.selected[p] = tk.BooleanVar()
-            b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p] )
+            b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p], bg = "white" )
             playerCheckButtons.append ( b )
             b.grid ( row = int (i/cols), column = i%cols, sticky=tk.W )
             if p == "Select All" :
@@ -645,7 +648,7 @@ class QuickStartFrame ( tk.Frame ) :
         self.numGamesLabel.pack ( side=tk.LEFT ) 
         
         self.numGamesEntry = tk.Entry ( self.numGamesFrame, text="1" )
-        self.numGamesEntry.pack ( fill=tk.X )
+        self.numGamesEntry.pack ( fill="both")#tk.X )
         self.numGamesEntry.delete ( 0,tk.END )
         self.numGamesEntry.insert ( 0, "1" )
 
@@ -667,9 +670,6 @@ class QuickStartFrame ( tk.Frame ) :
                 self.selected[x].set(v)
                 self.update()
 
-    #####
-    # !!!! TO DO !!!!!
-    #####
     def get_players ( self ) :
         p = []
         for x in self.players :
@@ -723,7 +723,7 @@ class TwoPlayerFrame ( tk.Frame ) :
         self.plusButton.pack ( side=tk.RIGHT )
         
         self.numGamesEntry = tk.Entry ( self.numGamesFrame, text="1" )
-        self.numGamesEntry.pack ( fill=tk.X )
+        self.numGamesEntry.pack ( fill="both")#tk.X )
         self.numGamesEntry.delete ( 0,tk.END )
         self.numGamesEntry.insert ( 0, "1" )
 
@@ -775,7 +775,7 @@ class SinglePlayerFrame ( tk.Frame ) :
         self.plusButton.pack ( side=tk.RIGHT )
         
         self.numGamesEntry = tk.Entry ( self.numGamesFrame, text="1" )
-        self.numGamesEntry.pack ( fill=tk.X )
+        self.numGamesEntry.pack ( fill="both")#tk.X )
         self.numGamesEntry.delete ( 0,tk.END )
         self.numGamesEntry.insert ( 0, "1" )
 
@@ -814,7 +814,7 @@ class RoundRobinFrame ( tk.Frame ) :
         for i in range ( len(self.players) ) :
             p = self.players[i]
             self.selected[p] = tk.BooleanVar()
-            b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p] )
+            b = tk.Checkbutton ( self.playersFrame.interior, text = p, variable = self.selected[p], bg = "white" )
             playerCheckButtons.append ( b )
             b.grid ( row = int (i/cols), column = i%cols, sticky=tk.W )
             if p == "Select All" :
@@ -829,7 +829,7 @@ class RoundRobinFrame ( tk.Frame ) :
         self.plusButton.pack ( side=tk.RIGHT )
         
         self.numGamesEntry = tk.Entry ( self.numGamesFrame, text="1" )
-        self.numGamesEntry.pack ( fill=tk.X )
+        self.numGamesEntry.pack ( fill="both")#tk.X )
         self.numGamesEntry.delete ( 0,tk.END )
         self.numGamesEntry.insert ( 0, "1" )
 

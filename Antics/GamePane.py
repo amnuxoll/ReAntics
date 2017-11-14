@@ -125,7 +125,7 @@ class GamePane:
 
         self.pauseButton = wgt.ColoredButton(self.buttonFrame, command = self.handler.pausePressed)
         self.pauseButton.config(textvar = self.handler.pauseVar)
-        self.pauseButton.config(bg = 'green', fg = 'white', font = font, width = 12, pady = 3)
+        self.pauseButton.config(bg = self.handler.blue, fg = 'white', font = font, width = 12, pady = 3)
         self.pauseButton.grid(row = 2)
         self.paused = True
 
@@ -357,10 +357,11 @@ class GamePane:
     # some of these should be replaced by references to the GUI handler
     #
     def UIbuttonPressed(self):
+        #if(self.the_game.game_type == )
         self.handler.showFrame(1)
 
     def endTurnPressed(self):
-        if self.handler.waitingForHuman:
+        if self.handler.waitingForHuman and self.handler.phase == PLAY_PHASE:
             self.handler.submitHumanMove(Move(END, None, None))
 
     def boardButtonPressed(self, x, y):
@@ -542,12 +543,21 @@ class GamePane:
                     # TODO: this still happens when the cursor is moving during the click, delay does not fix
                     time.sleep(.1)
 
+                    maxExpense = self.handler.currentState.inventories[self.handler.currentState.whoseTurn].foodCount
+
                     popup = tkinter.Menu()
                     popup.config(tearoff=0)
-                    popup.add_command(label="Worker: %d" % UNIT_STATS[WORKER][4], command=partial(self.buildAnt, ant=WORKER))
-                    popup.add_command(label="Soldier: %d" % UNIT_STATS[SOLDIER][4], command=partial(self.buildAnt, ant=SOLDIER))
-                    popup.add_command(label="R Soldier: %d" % UNIT_STATS[R_SOLDIER][4], command=partial(self.buildAnt, ant=R_SOLDIER))
-                    popup.add_command(label="Drone: %d" % UNIT_STATS[DRONE][4], command=partial(self.buildAnt, ant=DRONE))
+
+                    c_active = "black"
+                    c_inactive = "red"
+                    fg_color = c_inactive if maxExpense <  UNIT_STATS[WORKER][4] else c_active
+                    popup.add_command(label="Worker: %d" % UNIT_STATS[WORKER][4], command=partial(self.buildAnt, ant=WORKER), foreground=fg_color)
+                    fg_color = c_inactive if maxExpense <  UNIT_STATS[SOLDIER][4] else c_active
+                    popup.add_command(label="Soldier: %d" % UNIT_STATS[SOLDIER][4], command=partial(self.buildAnt, ant=SOLDIER), foreground=fg_color)
+                    fg_color = c_inactive if maxExpense <  UNIT_STATS[R_SOLDIER][4] else c_active
+                    popup.add_command(label="R Soldier: %d" % UNIT_STATS[R_SOLDIER][4], command=partial(self.buildAnt, ant=R_SOLDIER), foreground=fg_color)
+                    fg_color = c_inactive if maxExpense <  UNIT_STATS[DRONE][4] else c_active
+                    popup.add_command(label="Drone: %d" % UNIT_STATS[DRONE][4], command=partial(self.buildAnt, ant=DRONE), foreground=fg_color)
                     try:
                         locX = self.boardIcons[y][x].label.winfo_rootx()
                         locY = self.boardIcons[y][x].label.winfo_rooty()
@@ -730,7 +740,7 @@ class BoardButton:
         # draw health
         if self.health:
             for i in range(self.health[0]):
-                if i <= self.health[1]:
+                if i < self.health[1]:
                     self.label.create_image((loc[0] + 3, loc[1] + i * 8), anchor=tkinter.N + tkinter.W,
                                             image=self.handler.textures["healthFull"])
                 else:

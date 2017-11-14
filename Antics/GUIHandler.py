@@ -45,7 +45,7 @@ class GUIHandler:
         # shared tkinter variables
         # note these have to be here after root is made
         self.pauseVar = tkinter.StringVar()
-        self.pauseVar.set("Play")
+        self.pauseVar.set("Pause")
         self.statsText = tkinter.StringVar()
         self.statsText.set("Print Stats On")
         self.blue = "#8bbcda"
@@ -216,11 +216,15 @@ class GUIHandler:
             self.gameHandler.pauseButton.config(bg = self.blue)
             self.statsHandler.pauseButton.config(bg = self.blue)
             self.game.generalWake()
+            self.statsHandler.startCurLogItem()
+            self.statsHandler.timeLabel.Start()
         else:
             self.paused = True
             self.pauseVar.set("Play")
             self.gameHandler.pauseButton.config(bg = 'green')
             self.statsHandler.pauseButton.config(bg = 'green')
+            self.statsHandler.stopCurLogItem()
+            self.statsHandler.timeLabel.Stop()
 
     def stepPressed(self):
         self.game.generalWake()
