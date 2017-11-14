@@ -794,18 +794,17 @@ class Game(object):
                             constrUnderAnt = self.state.board[ant.coords[0]][ant.coords[1]].constr
                             if constrUnderAnt != None:
                                 # if constr is enemy's and ant hasnt moved, affect capture health of buildings
-                                if type(
-                                        constrUnderAnt) is Building and not ant.hasMoved and not constrUnderAnt.player == self.state.whoseTurn:
+                                if type(constrUnderAnt) is Building and not constrUnderAnt.player == self.state.whoseTurn:
                                     constrUnderAnt.captureHealth -= 1
-                                    if constrUnderAnt.captureHealth == 0 and constrUnderAnt.type != ANTHILL:
-                                        constrUnderAnt.player = self.state.whoseTurn
-                                        constrUnderAnt.captureHealth = CONSTR_STATS[constrUnderAnt.type][CAP_HEALTH]
+                                    # TODO: This code is for tunnel claiming
+                                    # if constrUnderAnt.captureHealth == 0 and constrUnderAnt.type != ANTHILL:
+                                    #     constrUnderAnt.player = self.state.whoseTurn
+                                    #     constrUnderAnt.captureHealth = CONSTR_STATS[constrUnderAnt.type][CAP_HEALTH]
                                 # have all worker ants on food sources gather food
                                 elif constrUnderAnt.type == FOOD and ant.type == WORKER:
                                     ant.carrying = True
                                 # deposit carried food (only workers carry)
-                                elif (
-                                        constrUnderAnt.type == ANTHILL or constrUnderAnt.type == TUNNEL) and ant.carrying == True:
+                                elif (constrUnderAnt.type == ANTHILL or constrUnderAnt.type == TUNNEL) and ant.carrying == True:
                                     self.state.inventories[self.state.whoseTurn].foodCount += 1
                                     ant.carrying = False
 
