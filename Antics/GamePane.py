@@ -360,7 +360,7 @@ class GamePane:
         self.handler.showFrame(1)
 
     def endTurnPressed(self):
-        if self.handler.waitingForHuman:
+        if self.handler.waitingForHuman and self.handler.phase == PLAY_PHASE:
             self.handler.submitHumanMove(Move(END, None, None))
 
     def boardButtonPressed(self, x, y):
