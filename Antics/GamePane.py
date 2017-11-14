@@ -739,7 +739,7 @@ class BoardButton:
         # draw health
         if self.health:
             for i in range(self.health[0]):
-                if i <= self.health[1]:
+                if i < self.health[1]:
                     self.label.create_image((loc[0] + 3, loc[1] + i * 8), anchor=tkinter.N + tkinter.W,
                                             image=self.handler.textures["healthFull"])
                 else:
