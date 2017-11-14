@@ -58,8 +58,7 @@ class GUIHandler:
 
         self.settingsHandler = GameSettingsFrame(self, self.settingsFrame)
         self.statsHandler = StatsPane(self, self.statsFrame)
-        self.gameHandler = GamePane(self, self.gameFrame)
-        
+        self.gameHandler: GamePane = GamePane(self, self.gameFrame)
 
         # we want the game to start on the settings screen, so show it first
         self.settingsFrame.pack(fill="both")
@@ -69,7 +68,7 @@ class GUIHandler:
 
         self.count = 0
         self.closed = False
-        #self.pausePressed()
+        # self.pausePressed()
         self.setup = True
 
     ##
@@ -147,7 +146,7 @@ class GUIHandler:
             print("Game in wrong phase for human move")
             return
 
-        print("Asked for human move: %d" % phase)
+        # print("Asked for human move: %d" % phase)
 
         if phase == SETUP_PHASE_1:
             self.gameHandler.setInstructionText("Select where to build your anthill.")
@@ -166,7 +165,7 @@ class GUIHandler:
     # the location passed from the game is already swapped back to P1 at top
     #
     def getHumanAttack(self, location):
-        print("Asked for human attack, %d, %d" % location)
+        # print("Asked for human attack, %d, %d" % location)
         self.gameHandler.setInstructionText("Select an ant to attack.")
         self.waitingForHuman = True
         self.waitingForAttack = True

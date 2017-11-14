@@ -67,4 +67,4 @@ class Inventory(object):
     ##
     # duplicate this inventory
     def clone(self):
-        return Inventory(self.player,self.ants,self.constrs,self.foodCount)
+        return Inventory(self.player, self.ants, self.constrs, self.foodCount)
