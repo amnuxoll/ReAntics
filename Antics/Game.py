@@ -913,7 +913,7 @@ class Game(object):
         for ant in self.state.inventories[opponentId].ants:
             if self.isValidAttack(attackingAnt, ant.coords):
                 # keep track of valid attack coords (flipped for player two)
-                validAttackCoords.append(self.state.coordLookup(ant.coords, currentPlayer.playerId))
+                validAttackCoords.append(self.state.coordLookup(ant.coords, self.state.whoseTurn))
         if validAttackCoords != []:
             theState = self.state.clone()
 
