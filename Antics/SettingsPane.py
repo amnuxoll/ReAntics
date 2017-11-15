@@ -499,23 +499,23 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         self.o_swap.config ( variable = self.selected[k] )
         self.public_selected[k] = False
 
-        k = "game_board"
-        self.o_gameBoard = tk.Checkbutton ( self.interior, text = "display game board", command = partial(self.clicked, opt = k), bg = "white"  )
-        self.o_gameBoard.grid ( row = 1, sticky=tk.W )
-        self.selected[k] = tk.BooleanVar()
-        self.o_gameBoard.config ( variable = self.selected[k] )
-        self.public_selected[k] = False
+##        k = "stats_board"
+##        self.o_statsboard = tk.Checkbutton ( self.interior, text = "display stats board", command = partial(self.clicked, opt = k), bg = "white"  )
+##        self.o_statsboard.grid ( row = 1, sticky=tk.W )
+##        self.selected[k] = tk.BooleanVar()
+##        self.o_statsboard.config ( variable = self.selected[k] )
+##        self.public_selected[k] = False
 
         k = "verbose"
         self.o_verbose = tk.Checkbutton ( self.interior, text = "verbose (print W/L)", command = partial(self.clicked, opt = k), bg = "white" )
-        self.o_verbose.grid ( row = 2, sticky=tk.W )
+        self.o_verbose.grid ( row = 1, sticky=tk.W )
         self.selected[k] = tk.BooleanVar()
         self.o_verbose.config ( variable = self.selected[k] )
         self.public_selected[k] = False
 
         k = "timeout"
         self.o_timeout = tk.Checkbutton ( self.interior, text = "move timeout", command = partial(self.clicked, opt = k), bg = "white" )
-        self.o_timeout.grid ( row = 3, sticky=tk.W )
+        self.o_timeout.grid ( row = 2, sticky=tk.W )
         self.selected[k] = tk.BooleanVar()
         self.o_timeout.config ( variable = self.selected[k] )
         self.public_selected[k] = False
@@ -526,11 +526,11 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         self.o_timeoutText.grid ( row = 3, column = 1, sticky=tk.W )
         
         self.layoutText = tk.Label ( self.interior, text = "Layout Option: " , bg="white")
-        self.layoutText.grid ( row = 4, sticky=tk.W )
+        self.layoutText.grid ( row = 3, sticky=tk.W )
         self.layoutType = tk.StringVar ( self.interior )
         self.layoutType.set(LAYOUT_OPTIONS[0])
         self.o_layout = tk.OptionMenu(self.interior, self.layoutType, *LAYOUT_OPTIONS, command = self.layoutChanged )
-        self.o_layout.grid ( row = 4, column = 1, sticky=tk.W )
+        self.o_layout.grid ( row = 3, column = 1, sticky=tk.W )
             
     def clicked ( self, opt ) :
         print(opt)
