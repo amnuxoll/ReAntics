@@ -228,11 +228,20 @@ class GameSettingsFrame ( ) :
         new_len =  len ( self.my_games ) 
         if orig_len + 1 == new_len :
             g = self.my_games.pop ( new_len - 1 )
+##            more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
+##            for k in list ( more_settings.keys() ) :
+##                more_settings[k] = False
+##            more_settings [ "timeout_limit" ] = [ False, -1 ]
+##            more_settings [ "layout_chosen" ] = LAYOUT_OPTIONS[0]
             more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
-            for k in list ( more_settings.keys() ) :
-                more_settings[k] = False
-            more_settings [ "timeout_limit" ] = [ False, -1 ]
-            more_settings [ "layout_chosen" ] = LAYOUT_OPTIONS[0]
+            more_settings [ "timeout_limit" ] = self.additionalOptionsFrame.public_timeout 
+            more_settings [ "layout_chosen" ] = self.additionalOptionsFrame.public_layout
+
+            if more_settings [ "timeout" ] and more_settings [ "timeout_limit" ] <= 0 :
+                title = "Error: Additional Settings"
+                message = "Games could not be started.\nError: Invalid timeout"
+                wgt.ShowError( title, message, self.handler.root )
+                return
             self.the_game.process_settings ( [ g ], more_settings )
             self.the_game.gameStartRequested ()
             self.handler.showFrame(2)
@@ -386,7 +395,15 @@ class PauseConditionGUIData () :
         self.conditions = conditions
         self.players = players
         if box is not None :
-            box.setTopText ( "P0: " + self.players[0] + ", P1: " + self.players[1])
+##            box.setTopText ( "P0: " + self.players[0] + ", P1: " + self.players[1])
+            maxlen = 30
+            tempP0 = "P0: " + self.players[0]
+            if len(tempP0) > maxlen:
+                tempP0 = tempP0[:maxlen-3] + "..."
+            tempP1 = "P1: " + self.players[1]
+            if len(tempP1) > maxlen:
+                tempP1 = tempP1[:maxlen-3] + "..."
+            box.setTopText ( tempP0 + ",\n" + tempP1 )
             box.setTextLines ( self.getPCStr() )
         self.gui_box = box
 
