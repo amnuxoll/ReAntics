@@ -914,6 +914,7 @@ class Game(object):
                 # keep track of valid attack coords (flipped for player two)
                 validAttackCoords.append(self.state.coordLookup(ant.coords, self.state.whoseTurn))
         if validAttackCoords != []:
+            print(validAttackCoords)
             theState = self.state.clone()
 
             if self.UI is not None:
@@ -1288,7 +1289,7 @@ class Game(object):
         diffY = abs(attackingAnt.coords[1] - attackCoord[1])
 
         # pythagoras would be proud
-        if range ** 2 >= diffX ** 2 + diffY ** 2:
+        if range >= diffX + diffY:
             # return True if within range
             return True
         else:
