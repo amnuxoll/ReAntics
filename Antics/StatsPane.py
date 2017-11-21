@@ -133,6 +133,8 @@ class StatsPane:
         for i in range(7):
             self.buttonFrame.rowconfigure(i, weight=1)
 
+        self.dummyStatLabel = None
+
 
     def UIbuttonPressed(self):
         self.handler.showFrame(2)
@@ -146,7 +148,12 @@ class StatsPane:
     def addLogItem ( self ) :
         b = PurpleBox(self.logTextFrame.interior)
         b.grid()
-        self.logTextFrame.set_scrollregion()
+        if self.dummyStatLabel is not None:
+            self.dummyStatLabel.destroy()
+        self.dummyStatLabel = tkinter.Label(self.logTextFrame.interior, bg = "white", text = "\n\n")
+        self.dummyStatLabel.grid(sticky=tkinter.W)
+        
+        self.logTextFrame.set_scrollregion(vertical_buff=500)
         self.parent.update()
 
         self.log.append(b)

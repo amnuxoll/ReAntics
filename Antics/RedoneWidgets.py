@@ -85,9 +85,11 @@ class ScrollableFrame ( tk.Frame ) :
 
         self.bind('<Configure>', self.set_scrollregion)
 
-    def set_scrollregion(self, event=None):
+    def set_scrollregion(self, event=None, vertical_buff = 0):
+        x = self.canvas.bbox('all')
+        new_bbox = (x[0], x[1], x[2], x[3]+vertical_buff)
         """ Set the scroll region on the canvas"""
-        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+        self.canvas.configure(scrollregion=new_bbox)
 
 # https://stackoverflow.com/questions/46287270/trying-to-grab-current-time-from-a-stopwatch-widget-when-i-hit-a-button-tkinte
 class StopWatch(tk.Frame):

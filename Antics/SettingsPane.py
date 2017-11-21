@@ -171,6 +171,8 @@ class GameSettingsFrame ( ) :
         self.addPauseConditionPlus.command = self.pauseConditionAdded
 
         #o_swap,o_gameBoard,o_verbose,o_timeout,o_timeoutText,o_layout
+        self.dummyPCLabel = None
+        self.dummyGameLabel = None
         
 
 
@@ -310,6 +312,13 @@ class GameSettingsFrame ( ) :
         new_game = GameGUIData ( t, n, p, b )
         if box_needed :
             new_game.gui_box.delButton.command = partial ( self.deleteSingleGame, new_game )
+
+        if self.dummyGameLabel is not None:
+            self.dummyGameLabel.destroy()
+        self.dummyGameLabel = tk.Label(self.gamesScrollFrame.interior, bg = "white", text = "\n\n")
+        self.dummyGameLabel.grid(sticky=tk.W)
+
+        self.gamesScrollFrame.set_scrollregion(vertical_buff=300)
         self.my_games.append ( new_game )
         self.parent.update()
 
@@ -362,14 +371,22 @@ class GameSettingsFrame ( ) :
                 message = "No pause condition added.\nError: Pause Condition missing value for: {}".format(k)
                 wgt.ShowError( title, message, self.handler.root )
                 return
-        
+
         b = BlueBox ( self.pcScrollFrame.interior )
-        b.grid (sticky=tk.W)
-        self.pcScrollFrame.set_scrollregion()
+        
         new_pc = PauseConditionGUIData ( c, p, b )
         new_pc.gui_box.delButton.command = partial ( self.deletePC, new_pc )
+
+        b.grid (sticky=tk.W)
+        if self.dummyPCLabel is not None:
+            self.dummyPCLabel.destroy()
+        self.dummyPCLabel = tk.Label(self.pcScrollFrame.interior, bg = "white", text = "\n\n")
+        self.dummyPCLabel.grid(sticky=tk.W)
+
+        self.pcScrollFrame.set_scrollregion(vertical_buff=300)
         self.my_pause_conditions.append (new_pc)
         self.parent.update()
+        print(len(self.my_pause_conditions))#sara - the last one gets cut off
 
 ######################################################################################
 # DATA/SETTINGS COLLECTION OBJECTS
@@ -617,7 +634,7 @@ class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
     # other frames can't access the others
     #####
     def newSelection ( self, value, idx ) :
-        
+        #print("changed selection: %s, %s" %(str(value), str(idx)))
         self.public_selected[idx] = self.selected[idx].get() if "Player" not in idx else True
         
         v = self.values[idx].get()
