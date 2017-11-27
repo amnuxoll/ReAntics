@@ -19,7 +19,7 @@ import argparse
 from functools import partial
 import copy
 
-timeout_limit = 0
+timeout_limit = 1
 
 class GameData:
     def __init__(self, p1: Player, p2: Player, numGames=1):
@@ -73,8 +73,6 @@ class Game(object):
         self.playerSwap = False   # additonal settings
         self.playersReversed = False   # whether the players are currently swapped
         self.timeoutOn = False # !!! TODO - not presently implemented
-        self.timeoutLimit = 1
-        timeout_limit = self.timeoutLimit    # !!! TODO - not presently implemented
         # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
 
         self.loadAIs()
@@ -489,7 +487,8 @@ class Game(object):
         print(self.randomSetup)
         self.timeoutOn = additional['timeout']
         if self.timeoutOn:
-            self.timeoutLimit = additional['timeout_limit']
+            global timeout_limit
+            timeout_limit = additional['timeout_limit']
 
         # set the game queue
         self.game_calls = []
