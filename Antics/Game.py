@@ -38,8 +38,6 @@ class Game(object):
     ##
     def __init__(self, testing=False):
         ### new game queue, this is a queue of function calls ( does not sub for the tournament vars )
-        global timeout_limit
-
         self.last_time = time.time()
         self.waitCond = threading.Condition()
         
