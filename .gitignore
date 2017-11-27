@@ -9,3 +9,6 @@
 
 # pytest coverage
 .coverage
+
+# saved files
+Antics/my-settings.json

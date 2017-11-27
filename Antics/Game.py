@@ -14,15 +14,57 @@ import threading
 import time
 import importlib
 import argparse
+from threading import Thread
+import functools
 
 from functools import partial
 import copy
+
+# default timeout
+timeout_limit = 2
+
+
+def timeout(sec):
+    def deco(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            global timeout_limit
+            sec = timeout_limit
+            res = [Exception('function [%s] timeout [%s seconds] exceeded!' % (func.__name__, sec))]
+
+            def newFunc():
+                try:
+                    res[0] = func(*args, **kwargs)
+                except Exception as e:
+                    res[0] = e
+
+            t = Thread(target=newFunc)
+            t.daemon = True
+            try:
+                t.start()
+                t.join(sec)
+                if t.isAlive():
+                    raise res[0]
+            except Exception as je:
+                print('error starting thread')
+                raise je
+            ret = res[0]
+            if isinstance(ret, BaseException):
+                raise ret
+            return ret
+
+        return wrapper
+
+    return deco
+
 
 class GameData:
     def __init__(self, p1: Player, p2: Player, numGames=1):
         self.p1 = p1
         self.p2 = p2
         self.n = numGames
+
+
 ##
 # Game
 # Description: Keeps track of game logic and manages the play loop.
@@ -37,7 +79,7 @@ class Game(object):
         ### new game queue, this is a queue of function calls ( does not sub for the tournament vars )
         self.last_time = time.time()
         self.waitCond = threading.Condition()
-        
+
         # Initialize the game variables
         self.players = []
         self.state = None
@@ -64,11 +106,11 @@ class Game(object):
         self.randomSetup = False  # overrides human setup only
         self.verbose = False
         # additional settings
-        self.timeoutOn = False 
-        self.playerSwap = False   # additonal settings
-        self.playersReversed = False   # whether the players are currently swapped
-        self.timeoutOn = False # !!! TODO - not presently implemented
-        self.timeoutLimit = -1    # !!! TODO - not presently implemented
+        self.timeoutOn = False
+        self.playerSwap = False  # additonal settings
+        self.playersReversed = False  # whether the players are currently swapped
+        self.timeoutOn = False
+        # self.timeout_limit = 1  # !!! TODO - not presently implemented
         # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
 
         self.loadAIs()
@@ -97,7 +139,6 @@ class Game(object):
         self.UI.settingsHandler.giveGame(self)
         self.UI.gameHandler.createFrames()
         self.UI.gameHandler.giveGame(self)
-
 
         self.gameThread = threading.Thread(target=self.start, daemon=True)
         self.gameThread.start()
@@ -140,7 +181,6 @@ class Game(object):
         self.waitCond.notify()
         self.waitCond.release()
 
-
     def submitHumanAttack(self, attack):
         if not self.waitCond.acquire(blocking=False):
             # we should be able to get the lock here
@@ -160,7 +200,6 @@ class Game(object):
         self.submittedSetup = locations
         self.waitCond.notify()
         self.waitCond.release()
-
 
     ##
     # startHumanVsAI
@@ -343,7 +382,8 @@ class Game(object):
             elif "human" == self.parser_args["players"][1].lower():
                 self.startHumanVsAI(self.parser_args["players"][0])
             else:
-                self.startAIvsAI(self.parser_args["numgames"], self.parser_args["players"][0], self.parser_args["players"][1])
+                self.startAIvsAI(self.parser_args["numgames"], self.parser_args["players"][0],
+                                 self.parser_args["players"][1])
         elif self.parser_args["RR"]:
             self.startRR(self.parser_args["numgames"], self.parser_args["players"])
         elif self.parser_args["RRall"]:
@@ -352,7 +392,8 @@ class Game(object):
             self.startAllOther(self.parser_args["numgames"], self.parser_args["players"])
         elif self.parser_args["self"]:
             self.startSelf(self.parser_args["numgames"], self.parser_args["players"][0])
-        if self.parser_args["RR"] or self.parser_args["RRall"] or self.parser_args["self"] or self.parser_args["all"] or self.parser_args["twoP"]:
+        if self.parser_args["RR"] or self.parser_args["RRall"] or self.parser_args["self"] or self.parser_args["all"] or \
+                self.parser_args["twoP"]:
             self.UI.showFrame(2)
             self.UI.statsHandler.timeLabel.Reset()
             self.UI.statsHandler.timeLabel.Start()
@@ -457,12 +498,12 @@ class Game(object):
                 parser.error('Human not allowed in play all others')
             if len(args.players) != 1:
                 parser.error('Only specify the Player you want to play its self')
-        # if args.RR or args.RRall or args.self or args.all or args.twoP:
-        #     self.UI.showFrame(2)
-        #     self.UI.statsHandler.timeLabel.Reset()
-        #     self.UI.statsHandler.timeLabel.Start()
+                # if args.RR or args.RRall or args.self or args.all or args.twoP:
+                #     self.UI.showFrame(2)
+                #     self.UI.statsHandler.timeLabel.Reset()
+                #     self.UI.statsHandler.timeLabel.Start()
 
-        # self.commandLineFinished = True
+                # self.commandLineFinished = True
 
     ##
     # process_settings
@@ -483,8 +524,8 @@ class Game(object):
         print(self.randomSetup)
         self.timeoutOn = additional['timeout']
         if self.timeoutOn:
-            self.timeoutLimit = additional['timeout_limit']
-        print(self.timeoutOn, self.timeoutLimit)
+            global timeout_limit
+            timeout_limit = float(additional['timeout_limit'])
 
         # set the game queue
         self.game_calls = []
@@ -495,7 +536,7 @@ class Game(object):
                 lower_p = [p.lower() for p in g.players]
                 human_loc = lower_p.index("human") if "human" in lower_p else -1
                 if human_loc != -1:
-                    self.game_calls.append(partial(self.startHumanVsAI, g.players[1-human_loc]))
+                    self.game_calls.append(partial(self.startHumanVsAI, g.players[1 - human_loc]))
                 else:
                     fx = self.startAIvsAI
                     self.game_calls.append(partial(fx, g.num_games, g.players[0], g.players[1]))
@@ -512,7 +553,6 @@ class Game(object):
                         self.game_calls.append(partial(self.startAIvsAI, g.num_games, g.players[0], player[0].author))
         self.UI.statsHandler.clearLog()
 
-                        
     ##
     # start
     # Description: Runs the main game loop, requesting turns for each player.
@@ -521,7 +561,7 @@ class Game(object):
     ##
     def start(self):
         self.UI.statsHandler.timeLabel.Start()
-        
+
         while True:
             # if we have nothing to do, wait
             while len(self.gamesToPlay) == 0:
@@ -725,8 +765,7 @@ class Game(object):
                     move = self.submittedMove
                     self.submittedMove = None
                 else:
-                    move = currentPlayer.getMove(theState)
-
+                    move = self.get_move(currentPlayer, theState)
 
                 if move != None and move.coordList != None:
                     for i in range(0, len(move.coordList)):
@@ -796,7 +835,8 @@ class Game(object):
                             constrUnderAnt = self.state.board[ant.coords[0]][ant.coords[1]].constr
                             if constrUnderAnt != None:
                                 # if constr is enemy's and ant hasnt moved, affect capture health of buildings
-                                if type(constrUnderAnt) is Building and not constrUnderAnt.player == self.state.whoseTurn:
+                                if type(
+                                        constrUnderAnt) is Building and not constrUnderAnt.player == self.state.whoseTurn:
                                     constrUnderAnt.captureHealth -= 1
                                     # TODO: This code is for tunnel claiming
                                     # if constrUnderAnt.captureHealth == 0 and constrUnderAnt.type != ANTHILL:
@@ -806,7 +846,8 @@ class Game(object):
                                 elif constrUnderAnt.type == FOOD and ant.type == WORKER:
                                     ant.carrying = True
                                 # deposit carried food (only workers carry)
-                                elif (constrUnderAnt.type == ANTHILL or constrUnderAnt.type == TUNNEL) and ant.carrying == True:
+                                elif (
+                                        constrUnderAnt.type == ANTHILL or constrUnderAnt.type == TUNNEL) and ant.carrying == True:
                                     self.state.inventories[self.state.whoseTurn].foodCount += 1
                                     ant.carrying = False
 
@@ -844,6 +885,10 @@ class Game(object):
 
             elif self.hasWon(PLAYER_TWO):
                 self.setWinner(PLAYER_TWO)
+
+    @timeout(timeout_limit)
+    def get_move(self, currentPlayer, theState):
+        return currentPlayer.getMove(theState)
 
     def resolveEndGame(self):
         if self.UI is not None:
@@ -1505,14 +1550,13 @@ class Game(object):
     # Description: prints the status of the tournament
     #
     ##
-    def tournamentStr(self, current = True):
+    def tournamentStr(self, current=True):
         if current:
             scores = self.currentPlayerScores
         else:
             scores = self.playerScores
         transposedList = list(map(list, zip(*scores)))
         strTransList = [[str(n) for n in i] for i in transposedList]
-        
 
         scoreAndTitle = [['Player', 'Wins', 'Losses']] + [['-------', '-------', '-------']] + scores
         scoreAndTitles = [[str(n) for n in i] for i in scoreAndTitle]
@@ -1521,15 +1565,14 @@ class Game(object):
         strTransList = [[str(n) for n in i] for i in transposedList]
 
         longest_len_0 = len(max(strTransList[0], key=len))
-        longest_len_1 = len(max(strTransList[1], key=len))+2
-        longest_len_2 = len(max(strTransList[2], key=len))+2
+        longest_len_1 = len(max(strTransList[1], key=len)) + 2
+        longest_len_2 = len(max(strTransList[2], key=len)) + 2
 
         s = []
         for row in scoreAndTitles:
-            s.append(row[0].rjust(longest_len_0) + row[1].rjust(longest_len_1) + row[2].rjust(longest_len_2) )
+            s.append(row[0].rjust(longest_len_0) + row[1].rjust(longest_len_1) + row[2].rjust(longest_len_2))
         s = "\n".join(s)
         return s
-
 
     ##
     # error
@@ -1588,5 +1631,3 @@ if __name__ == '__main__':
     # Create the game
     a = Game()
     # a.start()
-
-
