@@ -498,8 +498,33 @@ class GameSettingsFrame ( ) :
             n = str(g['num_games'])
             p = g['players']
             self.gameAdded ( t, n, p )
-        # check that the pause conditions are in the correct format
+            
         # check that all of the additional settings are present
+        # timeChanged, layoutChanged, clicked
+        more = data['additional_settings']
+        
+        try:
+            if more.keys() != {'timeout_limit', 'layout_chosen', 'swap', 'verbose', 'timeout'}:
+                print ( msg )
+                self.resetSettings()
+        except:
+            print ( msg )
+            self.resetSettings()
+
+        for k in list(more.keys()) :
+            if more[k] and k in {'swap', 'verbose', 'timeout'} :
+                self.additionalOptionsFrame.selected[k].set(1)
+                self.additionalOptionsFrame.clicked(k)
+            elif more['timeout'] and k == 'timeout_limit' :
+                self.additionalOptionsFrame.sv.set(more[k])
+                self.additionalOptionsFrame.timeChanged(self.additionalOptionsFrame.sv)
+                pass
+            elif k == 'layout_chosen' :
+                self.additionalOptionsFrame.layoutType.set(more[k])
+                self.additionalOptionsFrame.layoutChanged(more[k])
+                pass
+        
+        # check that the pause conditions are in the correct format???
         for pc in data['pause_conditions']:
             c = pc['conditions']
             p = pc['players']
@@ -676,6 +701,7 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         sv.trace("w", lambda name, index, mode, sv=sv: self.timeChanged(sv))
         self.o_timeoutText = tk.Entry ( self.interior, textvar = sv )
         self.o_timeoutText.grid ( row = 2, column = 1, sticky=tk.W )
+        self.sv = sv
         
         self.layoutText = tk.Label ( self.interior, text = "Layout Option: " , bg="white")
         self.layoutText.grid ( row = 3, sticky=tk.W )
