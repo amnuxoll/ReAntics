@@ -490,7 +490,7 @@ class Game(object):
         self.timeoutOn = additional['timeout']
         if self.timeoutOn:
             self.timeoutLimit = additional['timeout_limit']
-        
+
         # set the game queue
         self.game_calls = []
         for g in games:
@@ -516,6 +516,7 @@ class Game(object):
                     if player[0].author != g.players[0]:
                         self.game_calls.append(partial(self.startAIvsAI, g.num_games, g.players[0], player[0].author))
         self.UI.statsHandler.clearLog()
+
                         
     ##
     # start
