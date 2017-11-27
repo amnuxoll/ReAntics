@@ -214,14 +214,15 @@ class GameSettingsFrame ( ) :
             print(g.num_games)
         more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
         more_settings [ "timeout_limit" ] = self.additionalOptionsFrame.public_timeout
-        # convert n to integer
-        rgx_int = re.compile ( "^[0-9]+$" )
-        if not rgx_int.match(more_settings [ "timeout_limit" ]) :
-            title = "Error: Additional Settings"
-            message = "Games could not be started.\nError: Invalid timeout"
-            wgt.ShowError( title, message, self.handler.root )
-            return
-        more_settings [ "timeout_limit" ] = int(more_settings [ "timeout_limit" ])
+        if more_settings [ "timeout" ] :
+            # convert n to integer
+            rgx_int = re.compile ( "^[0-9]+$" )
+            if not rgx_int.match(more_settings [ "timeout_limit" ]) :
+                title = "Error: Additional Settings"
+                message = "Games could not be started.\nError: Invalid timeout"
+                wgt.ShowError( title, message, self.handler.root )
+                return
+            more_settings [ "timeout_limit" ] = int(more_settings [ "timeout_limit" ])
         more_settings [ "layout_chosen" ] = self.additionalOptionsFrame.public_layout
 
         if more_settings [ "timeout" ] and more_settings [ "timeout_limit" ] <= 0 :
@@ -512,7 +513,7 @@ class GameSettingsFrame ( ) :
         more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
         for m in list(more_settings.keys()):
             more_settings[m] = False
-        more_settings [ "timeout_limit" ] = -1 
+        more_settings [ "timeout_limit" ] = "0" 
         more_settings [ "layout_chosen" ] = "Player Invoked"
         data['additional_settings'] = more_settings
 
@@ -644,7 +645,7 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         # accessible by other classes
         self.public_selected = {}
         self.public_layout = LAYOUT_OPTIONS[0]
-        self.public_timeout = ERROR_CODE
+        self.public_timeout = str(ERROR_CODE)
 
         k = "swap"
         self.o_swap = tk.Checkbutton ( self.interior, text = "alternate player start", command = partial(self.clicked, opt = k), bg = "white" )
