@@ -516,13 +516,6 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         self.o_swap.config ( variable = self.selected[k] )
         self.public_selected[k] = False
 
-##        k = "stats_board"
-##        self.o_statsboard = tk.Checkbutton ( self.interior, text = "display stats board", command = partial(self.clicked, opt = k), bg = "white"  )
-##        self.o_statsboard.grid ( row = 1, sticky=tk.W )
-##        self.selected[k] = tk.BooleanVar()
-##        self.o_statsboard.config ( variable = self.selected[k] )
-##        self.public_selected[k] = False
-
         k = "verbose"
         self.o_verbose = tk.Checkbutton ( self.interior, text = "verbose (print W/L)", command = partial(self.clicked, opt = k), bg = "white" )
         self.o_verbose.grid ( row = 1, sticky=tk.W )
@@ -540,7 +533,7 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         sv = tk.StringVar()
         sv.trace("w", lambda name, index, mode, sv=sv: self.timeChanged(sv))
         self.o_timeoutText = tk.Entry ( self.interior, textvar = sv )
-        self.o_timeoutText.grid ( row = 3, column = 1, sticky=tk.W )
+        self.o_timeoutText.grid ( row = 2, column = 1, sticky=tk.W )
         
         self.layoutText = tk.Label ( self.interior, text = "Layout Option: " , bg="white")
         self.layoutText.grid ( row = 3, sticky=tk.W )
@@ -548,6 +541,13 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         self.layoutType.set(LAYOUT_OPTIONS[0])
         self.o_layout = tk.OptionMenu(self.interior, self.layoutType, *LAYOUT_OPTIONS, command = self.layoutChanged )
         self.o_layout.grid ( row = 3, column = 1, sticky=tk.W )
+
+##        k = "stats_board"
+##        self.o_statsboard = tk.Checkbutton ( self.interior, text = "display stats board", command = partial(self.clicked, opt = k), bg = "white"  )
+##        self.o_statsboard.grid ( row = 4, sticky=tk.W )
+##        self.selected[k] = tk.BooleanVar()
+##        self.o_statsboard.config ( variable = self.selected[k] )
+##        self.public_selected[k] = False
             
     def clicked ( self, opt ) :
         print(opt)
