@@ -213,10 +213,18 @@ class GameSettingsFrame ( ) :
         for g in games:
             print(g.num_games)
         more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
-        more_settings [ "timeout_limit" ] = self.additionalOptionsFrame.public_timeout 
+        more_settings [ "timeout_limit" ] = self.additionalOptionsFrame.public_timeout
+        # convert n to integer
+        rgx_int = re.compile ( "^[0-9]+$" )
+        if not rgx_int.match(more_settings [ "timeout_limit" ]) :
+            title = "Error: Additional Settings"
+            message = "Games could not be started.\nError: Invalid timeout"
+            wgt.ShowError( title, message, self.handler.root )
+            return
+        more_settings [ "timeout_limit" ] = int(more_settings [ "timeout_limit" ])
         more_settings [ "layout_chosen" ] = self.additionalOptionsFrame.public_layout
 
-        if more_settings [ "timeout" ] and float(more_settings [ "timeout_limit" ]) <= 0 :
+        if more_settings [ "timeout" ] and more_settings [ "timeout_limit" ] <= 0 :
             title = "Error: Additional Settings"
             message = "Games could not be started.\nError: Invalid timeout"
             wgt.ShowError( title, message, self.handler.root )
@@ -261,11 +269,19 @@ class GameSettingsFrame ( ) :
         
     def gameAdded ( self, t = None, n = None, p = None, box_needed = True ) :
 
-        if t is None or n is None or p is None:
+        if t is None and n is None and p is None:
             t = self.addGameType.get() 
             n = self.addGameOptionsWindow.get_num_games ()
             p = self.addGameOptionsWindow.get_players ()
             box_needed = self.addGameOptionsWindow.is_box_needed ()
+        elif t is None or n is None or p is None:
+            return
+        else :
+            # check the players
+            for i in p:
+                if i not in PLAYERS:
+                    print("bad game excluded:", t,n,p)
+                    return
 
         # adjust the game type for quickstart
         if t == "QuickStart" :
@@ -358,7 +374,7 @@ class GameSettingsFrame ( ) :
         self.my_pause_conditions.remove ( pauseConditionGUIDataObj )
 
     def pauseConditionAdded ( self, c = None, p = None ) :
-        if c is None or p is None:
+        if c is None and p is None:
             c = {}
             p = []
             
@@ -371,7 +387,22 @@ class GameSettingsFrame ( ) :
                         p.append ( self.addPauseOptionsFrame.public_values[k] )
                 else:
                     continue
-
+        elif c is None or p is None:
+            return
+        else:
+            # check the players
+            for i in p:
+                if i not in PLAYERS:
+                    print("bad pause condition excluded:", p, c)
+                    return
+            # check the pause conditions
+            valid_keys = self.addPauseOptionsFrame.public_selected.keys()
+            for i in list(c.keys()):
+                if i not in valid_keys:
+                    print("bad pause condition excluded:", p, c)
+                    return
+                # check for invalid selection
+            
         c_keys = list(c.keys()) 
         if len( c_keys ) < 1 :
             title = "Error: Pause Condition Addtion"
@@ -454,7 +485,11 @@ class GameSettingsFrame ( ) :
 
         # check that the games are in the correct format
         for g in data['games'] :
-            t = g['type']
+            t = g['type'] 
+            if t not in GAME_TYPES or t == "QuickStart":
+                print("bad game type", t)
+                self.resetSettings()
+                return
             n = str(g['num_games'])
             p = g['players']
             self.gameAdded ( t, n, p )
@@ -483,6 +518,9 @@ class GameSettingsFrame ( ) :
 
         # pause conditions
         data['pause_conditions'] = []
+
+        self.clearGameList()
+        self.clearPCList()
         
         with open(SETTINGS_FILE, 'w') as f:
             json.dump(data, f)

@@ -9,7 +9,6 @@ from Location import *
 from Ant import *
 from Move import *
 from Player import Player
-from Timeout import timeout
 from GUIHandler import *
 import threading
 import time
@@ -18,8 +17,6 @@ import argparse
 
 from functools import partial
 import copy
-
-timeout_limit = 1
 
 class GameData:
     def __init__(self, p1: Player, p2: Player, numGames=1):
@@ -71,6 +68,7 @@ class Game(object):
         self.playerSwap = False   # additonal settings
         self.playersReversed = False   # whether the players are currently swapped
         self.timeoutOn = False # !!! TODO - not presently implemented
+        self.timeoutLimit = -1    # !!! TODO - not presently implemented
         # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
 
         self.loadAIs()
@@ -485,8 +483,8 @@ class Game(object):
         print(self.randomSetup)
         self.timeoutOn = additional['timeout']
         if self.timeoutOn:
-            global timeout_limit
-            timeout_limit = additional['timeout_limit']
+            self.timeoutLimit = additional['timeout_limit']
+        print(self.timeoutOn, self.timeoutLimit)
 
         # set the game queue
         self.game_calls = []
@@ -727,7 +725,7 @@ class Game(object):
                     move = self.submittedMove
                     self.submittedMove = None
                 else:
-                    move = self.get_move(currentPlayer, theState)
+                    move = currentPlayer.getMove(theState)
 
 
                 if move != None and move.coordList != None:
@@ -846,10 +844,6 @@ class Game(object):
 
             elif self.hasWon(PLAYER_TWO):
                 self.setWinner(PLAYER_TWO)
-
-    @timeout(timeout_limit)
-    def get_move(self, currentPlayer, theState):
-        return currentPlayer.getMove(theState)
 
     def resolveEndGame(self):
         if self.UI is not None:
