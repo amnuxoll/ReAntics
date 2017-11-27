@@ -11,6 +11,7 @@ import copy
 import Constants as cnst
 import Ant as AntMod
 import Construction as ConstrMod
+import json
 
 PLAYERS = []
 for i in range(10):
@@ -40,6 +41,8 @@ BUTTON1_FONT = ( "Copperplate", 20, "bold")
 BUTTON2_FONT = ( "Copperplate", 15, "bold")
 
 ERROR_CODE = -1
+
+SETTINGS_FILE = "my-settings.json"
 
 class GameSettingsFrame ( ) :
     
@@ -173,6 +176,9 @@ class GameSettingsFrame ( ) :
         #o_swap,o_gameBoard,o_verbose,o_timeout,o_timeoutText,o_layout
         self.dummyPCLabel = None
         self.dummyGameLabel = None
+
+        # saved settings?
+        self.loadSavedSettings()
         
 
 
@@ -203,6 +209,8 @@ class GameSettingsFrame ( ) :
     def changeFrameStart ( self ) :
         print("start pressed")
         games = [ g.copy() for g in self.my_games ]
+        for g in games:
+            print(g.num_games)
         more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
         more_settings [ "timeout_limit" ] = self.additionalOptionsFrame.public_timeout 
         more_settings [ "layout_chosen" ] = self.additionalOptionsFrame.public_layout
@@ -217,7 +225,8 @@ class GameSettingsFrame ( ) :
             message = "Games could not be started.\nError: No Games in queue"
             wgt.ShowError( title, message, self.handler.root )
             return
-        
+
+        self.saveSettings()
         self.the_game.process_settings ( games, more_settings )
         self.the_game.gameStartRequested ()
         self.handler.showFrame(2)
@@ -244,15 +253,18 @@ class GameSettingsFrame ( ) :
                 message = "Games could not be started.\nError: Invalid timeout"
                 wgt.ShowError( title, message, self.handler.root )
                 return
+            self.saveSettings()
             self.the_game.process_settings ( [ g ], more_settings )
             self.the_game.gameStartRequested ()
             self.handler.showFrame(2)
         
-    def gameAdded ( self ) :
-        t = self.addGameType.get() 
-        n = self.addGameOptionsWindow.get_num_games ()
-        p = self.addGameOptionsWindow.get_players ()
-        box_needed = self.addGameOptionsWindow.is_box_needed ()
+    def gameAdded ( self, t = None, n = None, p = None, box_needed = True ) :
+
+        if t is None or n is None or p is None:
+            t = self.addGameType.get() 
+            n = self.addGameOptionsWindow.get_num_games ()
+            p = self.addGameOptionsWindow.get_players ()
+            box_needed = self.addGameOptionsWindow.is_box_needed ()
 
         # adjust the game type for quickstart
         if t == "QuickStart" :
@@ -344,19 +356,20 @@ class GameSettingsFrame ( ) :
         pauseConditionGUIDataObj.gui_box.destroy()
         self.my_pause_conditions.remove ( pauseConditionGUIDataObj )
 
-    def pauseConditionAdded ( self,  ) :
-        c = {}
-        p = []
-        
-        keys = sorted ( list (self.addPauseOptionsFrame.public_selected.keys()) )
-        for k in keys :
-            if self.addPauseOptionsFrame.public_selected[k] :
-                if "Player" not in k :
-                    c[k] = int (self.addPauseOptionsFrame.public_values[k])
-                else :
-                    p.append ( self.addPauseOptionsFrame.public_values[k] )
-            else:
-                continue
+    def pauseConditionAdded ( self, c = None, p = None ) :
+        if c is None or p is None:
+            c = {}
+            p = []
+            
+            keys = sorted ( list (self.addPauseOptionsFrame.public_selected.keys()) )
+            for k in keys :
+                if self.addPauseOptionsFrame.public_selected[k] :
+                    if "Player" not in k :
+                        c[k] = int (self.addPauseOptionsFrame.public_values[k])
+                    else :
+                        p.append ( self.addPauseOptionsFrame.public_values[k] )
+                else:
+                    continue
 
         c_keys = list(c.keys()) 
         if len( c_keys ) < 1 :
@@ -386,7 +399,89 @@ class GameSettingsFrame ( ) :
         self.pcScrollFrame.set_scrollregion(vertical_buff=300)
         self.my_pause_conditions.append (new_pc)
         self.parent.update()
-        print(len(self.my_pause_conditions))#sara - the last one gets cut off
+
+    ###
+    # saving game settings
+    def saveSettings ( self ):
+        data = {}
+        print("saving settings")
+        # games
+        data['games'] = []
+        for g in self.my_games:
+            game_data = {'type': g.game_type, 'num_games': g.num_games, 'players': copy.deepcopy(g.players)}
+            data['games'].append(game_data)    
+
+        # additional
+        more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
+        more_settings [ "timeout_limit" ] = self.additionalOptionsFrame.public_timeout 
+        more_settings [ "layout_chosen" ] = self.additionalOptionsFrame.public_layout
+        data['additional_settings'] = more_settings
+
+        # pause conditions
+        data['pause_conditions'] = []
+        for pc in self.my_pause_conditions:
+            pc_data = {'players': pc.players, 'conditions': copy.deepcopy(pc.conditions)}
+            data['pause_conditions'].append(pc_data)
+        
+        with open(SETTINGS_FILE, 'w') as f:
+            json.dump(data, f)
+
+    ###
+    # laod the settings
+    def loadSavedSettings ( self ) :
+        data = None
+
+        with open(SETTINGS_FILE, 'r') as f:
+            data = json.load(f)
+
+        msg = "bad settings file"
+        if data is None:
+            print (msg)
+            self.resetSettings()
+
+        # chack that all of the keys are present
+        try:
+            if data.keys() != {'games','additional_settings','pause_conditions'}:
+                print ( msg )
+                self.resetSettings()
+        except:
+            print ( msg )
+            self.resetSettings()
+
+        # check that the games are in the correct format
+        for g in data['games'] :
+            t = g['type']
+            n = str(g['num_games'])
+            p = g['players']
+            self.gameAdded ( t, n, p )
+        # check that the pause conditions are in the correct format
+        # check that all of the additional settings are present
+        for pc in data['pause_conditions']:
+            c = pc['conditions']
+            p = pc['players']
+            self.pauseConditionAdded ( c, p )
+
+            
+
+    def resetSettings ( self ):
+        data = {}
+        print("settings reset")
+        # games
+        data['games'] = []   
+
+        # additional
+        more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
+        for m in list(more_settings.keys()):
+            more_settings[m] = False
+        more_settings [ "timeout_limit" ] = -1 
+        more_settings [ "layout_chosen" ] = "Player Invoked"
+        data['additional_settings'] = more_settings
+
+        # pause conditions
+        data['pause_conditions'] = []
+        
+        with open(SETTINGS_FILE, 'w') as f:
+            json.dump(data, f)
 
 ######################################################################################
 # DATA/SETTINGS COLLECTION OBJECTS
