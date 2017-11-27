@@ -12,6 +12,7 @@ import Constants as cnst
 import Ant as AntMod
 import Construction as ConstrMod
 import json
+from os.path import exists
 
 PLAYERS = []
 for i in range(10):
@@ -430,6 +431,9 @@ class GameSettingsFrame ( ) :
     # laod the settings
     def loadSavedSettings ( self ) :
         data = None
+
+        if not exists(SETTINGS_FILE):
+            return
 
         with open(SETTINGS_FILE, 'r') as f:
             data = json.load(f)
