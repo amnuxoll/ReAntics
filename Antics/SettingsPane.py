@@ -216,13 +216,13 @@ class GameSettingsFrame ( ) :
         more_settings [ "timeout_limit" ] = self.additionalOptionsFrame.public_timeout
         if more_settings [ "timeout" ] :
             # convert n to integer
-            rgx_int = re.compile ( "^[0-9]+$" )
-            if not rgx_int.match(more_settings [ "timeout_limit" ]) :
+            rgx_float = re.compile ( "^[0-9]+(\.[0-9]+)?$" )
+            if not rgx_float.match(more_settings [ "timeout_limit" ]) :
                 title = "Error: Additional Settings"
                 message = "Games could not be started.\nError: Invalid timeout"
                 wgt.ShowError( title, message, self.handler.root )
                 return
-            more_settings [ "timeout_limit" ] = int(more_settings [ "timeout_limit" ])
+            more_settings [ "timeout_limit" ] = float(more_settings [ "timeout_limit" ])
         more_settings [ "layout_chosen" ] = self.additionalOptionsFrame.public_layout
 
         if more_settings [ "timeout" ] and more_settings [ "timeout_limit" ] <= 0 :
@@ -249,13 +249,17 @@ class GameSettingsFrame ( ) :
         new_len =  len ( self.my_games ) 
         if orig_len + 1 == new_len :
             g = self.my_games.pop ( new_len - 1 )
-##            more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
-##            for k in list ( more_settings.keys() ) :
-##                more_settings[k] = False
-##            more_settings [ "timeout_limit" ] = [ False, -1 ]
-##            more_settings [ "layout_chosen" ] = LAYOUT_OPTIONS[0]
             more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
-            more_settings [ "timeout_limit" ] = self.additionalOptionsFrame.public_timeout 
+            more_settings [ "timeout_limit" ] = self.additionalOptionsFrame.public_timeout
+            if more_settings [ "timeout" ] :
+                # convert n to integer
+                rgx_float = re.compile ( "^[0-9]+(\.[0-9]+)?$" )
+                if not rgx_float.match(more_settings [ "timeout_limit" ]) :
+                    title = "Error: Additional Settings"
+                    message = "Games could not be started.\nError: Invalid timeout"
+                    wgt.ShowError( title, message, self.handler.root )
+                    return
+                more_settings [ "timeout_limit" ] = float(more_settings [ "timeout_limit" ])
             more_settings [ "layout_chosen" ] = self.additionalOptionsFrame.public_layout
 
             if more_settings [ "timeout" ] and more_settings [ "timeout_limit" ] <= 0 :
