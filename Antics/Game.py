@@ -143,7 +143,7 @@ class Game(object):
 
         self.gameThread = threading.Thread(target=self.start, daemon=True)
         self.gameThread.start()
-        print("game thread started")
+        # print("game thread started")
 
         self.postProcessCommandLine()
         self.UI.root.mainloop()
@@ -522,7 +522,6 @@ class Game(object):
         self.playerSwap = additional['swap']
         self.playersReversed = False
         self.randomSetup = additional['layout_chosen'] == "Random Override"
-        print(self.randomSetup)
         self.timeoutOn = additional['timeout']
         if self.timeoutOn:
             global timeout_limit
