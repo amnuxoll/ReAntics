@@ -602,7 +602,6 @@ class Game(object):
         constrsToPlace += [Construction(None, GRASS) for i in range(0, 9)]
 
         while not self.gameOver:
-
             # create a copy of the state to share with the player
             theState = self.state.clone()
 
@@ -938,7 +937,6 @@ class Game(object):
                 # keep track of valid attack coords (flipped for player two)
                 validAttackCoords.append(self.state.coordLookup(ant.coords, self.state.whoseTurn))
         if validAttackCoords != []:
-            print(validAttackCoords)
             theState = self.state.clone()
 
             if self.UI is not None:
