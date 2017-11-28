@@ -31,6 +31,7 @@ class StatsPane:
         self.parent = parent
         self.handler = handler
 
+
         ## make GameLog display frame
         self.log = []
         self.cur_log = None
@@ -182,6 +183,7 @@ class StatsPane:
 
         self.log = []
         self.cur_log = None
+
 
 
 #####

@@ -4,7 +4,7 @@ from Constants import *
 #(movement cost, capture health, build cost)[type]
 CONSTR_STATS = []
 CONSTR_STATS.append((1,3,None)) #Anthill
-CONSTR_STATS.append((1,2,3)) #Tunnel
+CONSTR_STATS.append((1,2,None)) #Tunnel
 CONSTR_STATS.append((2,None,None)) #Grass
 CONSTR_STATS.append((1,None,None)) #Food
 

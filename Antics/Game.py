@@ -1121,7 +1121,7 @@ class Game(object):
 
                     # subtract cost of loc from movement points
                     constrAtLoc = self.state.board[coord[0]][coord[1]].constr
-                    if constrAtLoc == None or antToMove.type == DRONE:
+                    if constrAtLoc == None or antToMove.type == DRONE or antToMove.type == R_SOLDIER:
                         movePoints -= 1
                     else:
                         movePoints -= CONSTR_STATS[constrAtLoc.type][MOVE_COST]
@@ -1160,7 +1160,8 @@ class Game(object):
             buildCoord = move.coordList[0]
             # check valid start location
             if self.checkBuildStart(buildCoord):
-                # we're building either an ant or constr for sure
+                # we're building either an ant or constr for sure ->
+                # -> no longer able to build tunnels, so can only build ants.
 
                 if self.state.board[buildCoord[0]][buildCoord[1]].ant == None:
                     # we know we're building an ant
@@ -1189,31 +1190,38 @@ class Game(object):
                         self.errorReport("       Player has " + str(currFood) + " food but needs " + str(
                             buildCost) + " to build this ant")
                         return False
-                else:
-                    # we know we're building a construction
-                    adjacentCoords = []
-                    adjacentCoords.append(addCoords(buildCoord, (0, -1)))
-                    adjacentCoords.append(addCoords(buildCoord, (0, 1)))
-                    adjacentCoords.append(addCoords(buildCoord, (-1, 0)))
-                    adjacentCoords.append(addCoords(buildCoord, (1, 0)))
 
-                    # check that there's no food in adjacent locations
-                    for aCoord in adjacentCoords:
-                        if aCoord[0] >= 0 and aCoord[0] < 10 and aCoord[1] >= 0 and aCoord[1] < 10:
-                            if (self.state.board[aCoord[0]][aCoord[1]].constr != None and
-                                        self.state.board[aCoord[0]][aCoord[1]].constr.type == FOOD):
-                                self.errorReport("ERROR: Invalid Move: " + str(move))
-                                self.errorReport("       Cannot tunnel build next to food.")
-                                return False
 
-                    buildCost = CONSTR_STATS[TUNNEL][BUILD_COST]
-                    if self.state.inventories[self.state.whoseTurn].foodCount >= buildCost:
-                        # self.ui.notify("")
-                        return True
-                    else:
-                        self.errorReport("ERROR: Invalid Move: " + str(move))
-                        self.errorReport("       Must have at least " + str(buildCost) + " food to build a tunnel.")
-                        return False
+                # Below is the code that allows a player to build more tunnels during the course of a game,
+                # in case it is ever desired to be a part of the game again.
+
+                # else:
+                #     # we know we're building a construction
+                #     adjacentCoords = []
+                #     adjacentCoords.append(addCoords(buildCoord, (0, -1)))
+                #     adjacentCoords.append(addCoords(buildCoord, (0, 1)))
+                #     adjacentCoords.append(addCoords(buildCoord, (-1, 0)))
+                #     adjacentCoords.append(addCoords(buildCoord, (1, 0)))
+                #
+                #     # check that there's no food in adjacent locations
+                #     for aCoord in adjacentCoords:
+                #         if aCoord[0] >= 0 and aCoord[0] < 10 and aCoord[1] >= 0 and aCoord[1] < 10:
+                #             if (self.state.board[aCoord[0]][aCoord[1]].constr != None and
+                #                         self.state.board[aCoord[0]][aCoord[1]].constr.type == FOOD):
+                #                 self.errorReport("ERROR: Invalid Move: " + str(move))
+                #                 self.errorReport("       Cannot tunnel build next to food.")
+                #                 return False
+                #
+                #     buildCost = CONSTR_STATS[TUNNEL][BUILD_COST]
+                #     if self.state.inventories[self.state.whoseTurn].foodCount >= buildCost:
+                #         # self.ui.notify("")
+                #         return True
+                #     else:
+                #         self.errorReport("ERROR: Invalid Move: " + str(move))
+                #         self.errorReport("       Must have at least " + str(buildCost) + " food to build a tunnel.")
+                #         return False
+
+
             else:  # invalid build start
                 self.errorReport("ERROR: Invalid Move: " + str(move))
                 self.errorReport("       Build location invalid.  Possible cause:")
