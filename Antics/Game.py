@@ -580,7 +580,7 @@ class Game(object):
             self.running = True
 
             self.gamesToPlayLock.acquire()
-            game = self.gamesToPlay.pop()
+            game = self.gamesToPlay.pop(0)
             self.gamesToPlayLock.release()
 
             self.currentPlayerScores = []
