@@ -208,10 +208,7 @@ class GameSettingsFrame ( ) :
         self.addGameOptionsWindow.pack ( fill="both", side=tk.BOTTOM )
 
     def changeFrameStart ( self ) :
-        print("start pressed")
         games = [ g.copy() for g in self.my_games ]
-        for g in games:
-            print(g.num_games)
         more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
         more_settings [ "timeout_limit" ] = self.additionalOptionsFrame.public_timeout
         if more_settings [ "timeout" ] :
@@ -242,7 +239,6 @@ class GameSettingsFrame ( ) :
         self.handler.showFrame(2)
 
     def changeFrameQS ( self ) :
-        print("quickstart pressed")
         orig_len = len ( self.my_games )
         self.gameAdded()
         # make sure that game was added, if so, start
@@ -441,7 +437,6 @@ class GameSettingsFrame ( ) :
     # saving game settings
     def saveSettings ( self ):
         data = {}
-        print("saving settings")
         # games
         data['games'] = []
         for g in self.my_games:
@@ -534,7 +529,6 @@ class GameSettingsFrame ( ) :
 
     def resetSettings ( self ):
         data = {}
-        print("settings reset")
         # games
         data['games'] = []   
 
@@ -718,12 +712,10 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
 ##        self.public_selected[k] = False
             
     def clicked ( self, opt ) :
-        print(opt)
         self.public_selected[opt] = not self.public_selected[opt]
 
     def timeChanged ( self, sv  ) :
         self.public_timeout = sv.get()
-        print ( "timeout: ", sv.get() )
 
     def layoutChanged ( self, option ) :
         self.public_layout = option
