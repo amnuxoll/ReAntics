@@ -9,6 +9,7 @@ from Location import *
 from Ant import *
 from Move import *
 from Player import Player
+import traceback
 from GUIHandler import *
 import threading
 import time
@@ -19,43 +20,6 @@ import functools
 
 from functools import partial
 import copy
-
-# default timeout
-timeout_limit = 2
-
-
-def timeout(sec):
-    def deco(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            global timeout_limit
-            sec = timeout_limit
-            res = [Exception('function [%s] timeout [%s seconds] exceeded!' % (func.__name__, sec))]
-
-            def newFunc():
-                try:
-                    res[0] = func(*args, **kwargs)
-                except Exception as e:
-                    res[0] = e
-
-            t = Thread(target=newFunc)
-            t.daemon = True
-            try:
-                t.start()
-                t.join(sec)
-                if t.isAlive():
-                    raise res[0]
-            except Exception as je:
-                print('error starting thread')
-                raise je
-            ret = res[0]
-            if isinstance(ret, BaseException):
-                raise ret
-            return ret
-
-        return wrapper
-
-    return deco
 
 
 class GameData:
@@ -83,6 +47,7 @@ class Game(object):
         # Initialize the game variables
         self.players = []
         self.state = None
+        self.move = None
         self.currentPlayers = []
         self.currentPlayerScores = []
         self.gamesToPlay = []
@@ -111,7 +76,7 @@ class Game(object):
         self.playerSwap = False  # additonal settings
         self.playersReversed = False  # whether the players are currently swapped
         self.timeoutOn = False
-        # self.timeout_limit = 1  # !!! TODO - not presently implemented
+        self.timeout_limit = 1  # !!! TODO - not presently implemented
         # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
 
         self.loadAIs()
@@ -525,8 +490,7 @@ class Game(object):
         print(self.randomSetup)
         self.timeoutOn = additional['timeout']
         if self.timeoutOn:
-            global timeout_limit
-            timeout_limit = float(additional['timeout_limit'])
+            self.timeout_limit = float(additional['timeout_limit'])
 
         # set the game queue
         self.game_calls = []
@@ -580,7 +544,7 @@ class Game(object):
             self.running = True
 
             self.gamesToPlayLock.acquire()
-            game = self.gamesToPlay.pop()
+            game = self.gamesToPlay.pop(0)
             self.gamesToPlayLock.release()
 
             self.currentPlayerScores = []
@@ -763,25 +727,38 @@ class Game(object):
                     # alert the UI that we need a move, then wait until it gives one to us
                     self.UI.getHumanMove(theState.phase)
                     self.condWait()
-                    move = self.submittedMove
+                    self.move = self.submittedMove
                     self.submittedMove = None
                 else:
-                    move = self.get_move(currentPlayer, theState)
+                    if self.timeoutOn:
+                        t = Thread(target=self.get_move, args=(currentPlayer, theState))
+                        t.daemon = True
+                        try:
+                            t.start()
+                            t.join(self.timeout_limit)
+                            if t.isAlive():
+                                raise Exception('function [get_move] timeout [%s seconds] exceeded!' % self.timeout_limit)
+                        except Exception as je:
+                            traceback.print_exc()
+                            self.setWinner(1 - self.state.whoseTurn)
+                            return
+                    else:
+                        self.get_move(currentPlayer, theState)
 
-                if move != None and move.coordList != None:
-                    for i in range(0, len(move.coordList)):
+                if self.move != None and self.move.coordList != None:
+                    for i in range(0, len(self.move.coordList)):
                         # translate coords of move to match player
-                        move.coordList[i] = self.state.coordLookup(move.coordList[i], self.state.whoseTurn)
+                        self.move.coordList[i] = self.state.coordLookup(self.move.coordList[i], self.state.whoseTurn)
 
                 # make sure it's a valid move
-                validMove = self.isValidMove(move)
+                validMove = self.isValidMove(self.move)
 
                 # complete the move if valid
                 if validMove:
                     # check move type
-                    if move.moveType == MOVE_ANT:
-                        startCoord = move.coordList[0]
-                        endCoord = move.coordList[-1]
+                    if self.move.moveType == MOVE_ANT:
+                        startCoord = self.move.coordList[0]
+                        endCoord = self.move.coordList[-1]
 
                         # take ant from start coord
                         antToMove = self.state.board[startCoord[0]][startCoord[1]].ant
@@ -803,20 +780,20 @@ class Game(object):
                         if antToMove.type != WORKER:
                             self.resolveAttack(antToMove, currentPlayer)
 
-                    elif move.moveType == BUILD:
-                        coord = move.coordList[0]
+                    elif self.move.moveType == BUILD:
+                        coord = self.move.coordList[0]
                         currentPlayerInv = self.state.inventories[self.state.whoseTurn]
 
                         # subtract the cost of the item from the player's food count
-                        if move.buildType == TUNNEL:
-                            currentPlayerInv.foodCount -= CONSTR_STATS[move.buildType][BUILD_COST]
+                        if self.move.buildType == TUNNEL:
+                            currentPlayerInv.foodCount -= CONSTR_STATS[self.move.buildType][BUILD_COST]
 
                             tunnel = Building(coord, TUNNEL, self.state.whoseTurn)
                             self.state.board[coord[0]][coord[1]].constr = tunnel
                         else:
-                            currentPlayerInv.foodCount -= UNIT_STATS[move.buildType][COST]
+                            currentPlayerInv.foodCount -= UNIT_STATS[self.move.buildType][COST]
 
-                            ant = Ant(coord, move.buildType, self.state.whoseTurn)
+                            ant = Ant(coord, self.move.buildType, self.state.whoseTurn)
                             ant.hasMoved = True
                             self.state.board[coord[0]][coord[1]].ant = ant
                             self.state.inventories[self.state.whoseTurn].ants.append(ant)
@@ -830,7 +807,7 @@ class Game(object):
                             # clear all highlights after build
                             # self.ui.coordList = []
 
-                    elif move.moveType == END:
+                    elif self.move.moveType == END:
                         # take care of end of turn business for ants and contructions
                         for ant in self.state.inventories[self.state.whoseTurn].ants:
                             constrUnderAnt = self.state.board[ant.coords[0]][ant.coords[1]].constr
@@ -873,7 +850,7 @@ class Game(object):
                 else:
                     # human can give None move, AI can't
                     if not type(currentPlayer) is HumanPlayer.HumanPlayer:
-                        self.error(INVALID_MOVE, move)
+                        self.error(INVALID_MOVE, self.move)
                         break
                     elif validMove != None:
                         # if validMove is False and not None, clear move
@@ -887,9 +864,8 @@ class Game(object):
             elif self.hasWon(PLAYER_TWO):
                 self.setWinner(PLAYER_TWO)
 
-    @timeout(timeout_limit)
     def get_move(self, currentPlayer, theState):
-        return currentPlayer.getMove(theState)
+        self.move = currentPlayer.getMove(theState)
 
     def resolveEndGame(self):
         if self.UI is not None:
