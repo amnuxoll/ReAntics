@@ -67,6 +67,11 @@ class GamePane:
 
         # make player displays
         self.playerInfoFrame = tkinter.Frame(self.parent, relief = tkinter.GROOVE, borderwidth = 2)
+        # set up spacing for player names
+        for i in (0, 4):
+            self.playerInfoFrame.rowconfigure(i, weight = 1)
+        for i in (1, 2, 3):
+            self.playerInfoFrame.rowconfigure(i, weight = 0)
 
         # make tkinter variables with default values (should be overwritten before display)
         self.p1Name = tkinter.StringVar()
@@ -79,19 +84,24 @@ class GamePane:
         self.p2Food.set(0)
 
         # make labels Wraplength = 1 causes text to be displayed vertically
-        textFont = ("Times New Roman", 16)
+        font = ("Times New Roman", 16)
         self.p1Label = tkinter.Label(self.playerInfoFrame)
-        self.p1Label.config(textvar = self.p1Name, wraplength = 1, font = textFont, fg = 'BLUE')
-        self.p1Label.grid(column = 0, row = 0)
+        self.p1Label.config(textvar = self.p1Name, wraplength = 1, font = font, fg = 'BLUE')
+        self.p1Label.config(height = 11)
+        self.p1Label.grid(column = 0, row = 0, sticky = tkinter.N + tkinter.S)
+        self.foodLabel = tkinter.Label(self.playerInfoFrame)
+        self.foodLabel.config(text = "Food", fg = "BLACK", font = font)
+        self.foodLabel.grid(column = 0, row = 1)
         self.p1FoodLabel = tkinter.Label(self.playerInfoFrame)
-        self.p1FoodLabel.config(textvar = self.p1Food, font = textFont, fg = 'BLUE', width = 2)
-        self.p1FoodLabel.grid(column = 0, row = 1)
+        self.p1FoodLabel.config(textvar = self.p1Food, font = font, fg = 'BLUE', width = 2)
+        self.p1FoodLabel.grid(column = 0, row = 2)
         self.p2FoodLabel = tkinter.Label(self.playerInfoFrame)
-        self.p2FoodLabel.config(textvar = self.p2Food, font = textFont, fg = 'RED', width = 2)
-        self.p2FoodLabel.grid(column = 0, row = 2)
+        self.p2FoodLabel.config(textvar = self.p2Food, font = font, fg = 'RED', width = 2)
+        self.p2FoodLabel.grid(column = 0, row = 3)
         self.p2Label = tkinter.Label(self.playerInfoFrame)
-        self.p2Label.config(textvar = self.p2Name, wraplength = 1, font = textFont, fg = 'RED')
-        self.p2Label.grid(column = 0, row = 3)
+        self.p2Label.config(textvar = self.p2Name, wraplength = 1, font = font, fg = 'RED')
+        self.p2Label.config(height = 12)
+        self.p2Label.grid(column = 0, row = 4, sticky = tkinter.N + tkinter.S)
 
         # set weights so player labels are centered properly
         self.playerInfoFrame.rowconfigure(0, weight = 1)
@@ -101,10 +111,11 @@ class GamePane:
         self.parent.rowconfigure(0, weight = 1)
 
         # Make message pane
+        font = ("Times New Roman", 16)
         self.messageFrame = tkinter.Frame(self.parent, bg = "white", relief = tkinter.RIDGE, bd = 2)
         self.messageText = tkinter.StringVar()
         self.messageText.set("Please Win")
-        self.messageLabel = tkinter.Label(self.messageFrame, textvar = self.messageText, bg = "white")
+        self.messageLabel = tkinter.Label(self.messageFrame, textvar = self.messageText, bg = "white", font = font)
         self.messageLabel.grid()
         self.messageFrame.grid(column = 1, row = 1, sticky = tkinter.E + tkinter.W)
         self.messageFrame.columnconfigure(0, weight = 1)
@@ -245,6 +256,32 @@ class GamePane:
                     aType = None
 
                 self.boardIcons[row][col].setImage(cType, aType, antTeam, constTeam, moved, health, False, carrying)
+
+    ##
+    # showSetupConstructions
+    #
+    # this method re-shows the constructions if the board is swapped during a human's setup phase
+    def showSetupConstructions(self, phase):
+        # do nothing if the player hasn't placed anything
+        if self.setupsPlaced is None:
+            return
+
+        if phase == SETUP_PHASE_1:
+            for i in range(self.setupsPlaced):
+                loc = self.setupLocations[i]
+                if i == 0:
+                    self.boardIcons[loc[1]][loc[0]].setImage(construct=ANTHILL)
+                elif i == 1:
+                    self.boardIcons[loc[1]][loc[0]].setImage(construct=TUNNEL)
+                else:
+                    self.boardIcons[loc[1]][loc[0]].setImage(construct=GRASS)
+        elif phase == SETUP_PHASE_2:
+            for i in range(self.setupsPlaced):
+                loc = self.setupLocations[i]
+                self.boardIcons[loc[1]][loc[0]].setImage(construct=FOOD)
+
+
+
 
     ##
     # highlightValidMoves

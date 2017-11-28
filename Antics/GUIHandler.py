@@ -114,6 +114,8 @@ class GUIHandler:
             self.gameFrame.pack(fill="both")
             if self.currentState is not None:
                 self.gameHandler.setToGameState(self.currentState)
+                if self.waitingForHuman and self.phase in [SETUP_PHASE_1, SETUP_PHASE_2]:
+                    self.gameHandler.showSetupConstructions(self.phase)
 
     ##
     # showState
@@ -133,8 +135,8 @@ class GUIHandler:
     # sets the name of the current players
     #
     def setPlayers(self, p1, p2):
-        self.gameHandler.p1Name.set(p1[0:6] + '..' + p1[-3:] if len(p1) > 6 else p1[0:6])
-        self.gameHandler.p2Name.set(p2[0:6] + '..' + p2[-3:] if len(p2) > 6 else p2[0:6])
+        self.gameHandler.p1Name.set(p1[0:6] + '..' + p1[-3:] if len(p1) > 11 else p1)
+        self.gameHandler.p2Name.set(p2[0:6] + '..' + p2[-3:] if len(p2) > 11 else p2)
 
     ##
     # getHumanMove
