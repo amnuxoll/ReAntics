@@ -97,6 +97,7 @@ class Game(object):
         self.running = True
         self.flipped = False
         self.goToSettings = False
+        self.waitingOnAI = False
         self.commandLineFinished = False
         self.parser_args = {}
 
@@ -1513,7 +1514,9 @@ class Game(object):
 
         # pause using this wait condition
         # The GUI thread will wake
+        self.waitingOnAI = True
         self.condWait()
+        self.waitingOnAI = False
 
     def condWait(self):
         # python conditions require a lock hold to notify() for some reason

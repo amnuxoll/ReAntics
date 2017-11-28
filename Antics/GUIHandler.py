@@ -151,7 +151,7 @@ class GUIHandler:
         if phase == SETUP_PHASE_1:
             self.gameHandler.setInstructionText("Select where to build your anthill.")
         elif phase == SETUP_PHASE_2:
-            self.gameHandler.setInstructionText("Select where to place your enemy's food.")
+            self.gameHandler.setInstructionText("Select where to place your enemy's food. 2 remaining.")
         else:
             self.gameHandler.setInstructionText("Submit a move.")
 
@@ -215,9 +215,11 @@ class GUIHandler:
             self.pauseVar.set("Pause")
             self.gameHandler.pauseButton.config(bg = self.blue)
             self.statsHandler.pauseButton.config(bg = self.blue)
-            self.game.generalWake()
             self.statsHandler.startCurLogItem()
             self.statsHandler.timeLabel.Start()
+            # should only wake if the game is "paused" on an AI turn
+            if self.game.waitingOnAI:
+                self.game.generalWake()
         else:
             self.paused = True
             self.pauseVar.set("Play")
@@ -227,7 +229,9 @@ class GUIHandler:
             self.statsHandler.timeLabel.Stop()
 
     def stepPressed(self):
-        self.game.generalWake()
+        # should only wake if the game is "paused" on an AI turn
+        if self.game.waitingOnAI:
+            self.game.generalWake()
 
     def statsPressed(self):
         if self.stats:
@@ -248,6 +252,6 @@ class GUIHandler:
         self.killPressed()
         self.game.goToSettings = True
 
-        # don't break the game if it's waiting for a human move
-        if not self.waitingForHuman:
+        # only wake the game thread if it's not running games ATM
+        if not self.game.running:
             self.game.generalWake()

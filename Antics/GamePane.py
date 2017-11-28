@@ -361,7 +361,8 @@ class GamePane:
         self.handler.showFrame(1)
 
     def endTurnPressed(self):
-        if self.handler.waitingForHuman and self.handler.phase == PLAY_PHASE:
+        # ending turn is only allowed as a substitute for normal moves
+        if self.handler.waitingForHuman and self.handler.phase == PLAY_PHASE and not self.handler.waitingForAttack:
             self.handler.submitHumanMove(Move(END, None, None))
 
     def boardButtonPressed(self, x, y):
@@ -411,6 +412,7 @@ class GamePane:
             self.setupsPlaced += 1
 
             self.boardIcons[y][x].setImage(construct=FOOD)
+            self.setInstructionText("Select where to place your enemy's food. 1 remaining.")
 
             if self.setupsPlaced == 2:
                 # if we're player one, submit normally
@@ -455,9 +457,11 @@ class GamePane:
                 self.setInstructionText("Select where to place your tunnel.")
             elif self.setupsPlaced == 2:
                 self.boardIcons[y][x].setImage(construct=TUNNEL)
-                self.setInstructionText("Select where to place grass on your side.")
+                self.setInstructionText("Select where to place grass on your side. 9 Remaining.")
             else:
                 self.boardIcons[y][x].setImage(construct=GRASS)
+                self.setInstructionText("Select where to place grass on your side. %d Remaining." %
+                                        (11 - self.setupsPlaced))
 
             # if we've finished placing
             if self.setupsPlaced == 11:
