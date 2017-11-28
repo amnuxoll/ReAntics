@@ -341,7 +341,6 @@ class Game(object):
         self.generalWake()
 
     def postProcessCommandLine(self):
-        print(self.parser_args)
         if self.parser_args["twoP"]:
             if "human" == self.parser_args["players"][0].lower():
                 self.startHumanVsAI(self.parser_args["players"][1])
