@@ -35,7 +35,7 @@ FL_TEXT_COLOR = "white"
 FL_BD = 5
 FL_STYLE = "ridge"
 FL_FONT = ( "Harrington", 18, "bold")
-# Papyrus, Harrington, Herculanum, Desdemona, Wingdings
+# Papyrus, Harrington, Herculanum, Desdemona, Wingdings :)
 
 # button font
 BUTTON1_FONT = ( "Copperplate", 20, "bold")
@@ -233,10 +233,12 @@ class GameSettingsFrame ( ) :
             wgt.ShowError( title, message, self.handler.root )
             return
 
+        pcs = [ pc.copyDict() for pc in self.my_pause_conditions ]
+
         self.saveSettings()
-        self.the_game.process_settings ( games, more_settings )
+        self.the_game.process_settings ( games, more_settings, pcs )
         self.the_game.gameStartRequested ()
-        self.handler.showFrame(2)
+        self.handler.showFrame ( 2 )
 
     def changeFrameQS ( self ) :
         orig_len = len ( self.my_games )
@@ -263,8 +265,10 @@ class GameSettingsFrame ( ) :
                 message = "Games could not be started.\nError: Invalid timeout"
                 wgt.ShowError( title, message, self.handler.root )
                 return
+
+            pcs = [ pc.copyDict() for pc in self.my_pause_conditions ]
             self.saveSettings()
-            self.the_game.process_settings ( [ g ], more_settings )
+            self.the_game.process_settings ( [ g ], more_settings, pcs )
             self.the_game.gameStartRequested ()
             self.handler.showFrame(2)
         
@@ -393,8 +397,9 @@ class GameSettingsFrame ( ) :
         else:
             # check the players
             for i in p:
-                if i not in PLAYERS:
+                if i not in PLAYERS and i != "Any AI":
                     print("bad pause condition excluded:", p, c)
+                    print("uhoh", i)
                     return
             # check the pause conditions
             valid_keys = self.addPauseOptionsFrame.public_selected.keys()
@@ -590,6 +595,9 @@ class PauseConditionGUIData () :
         for k in list ( self.conditions.keys() ) :
             s.append ( k + ": " + str(self.conditions[k]) )
         return s
+
+    def copyDict ( self ) :
+        return { 'conditions':copy.deepcopy(self.conditions), 'players':copy.deepcopy(self.players) }
         
 ######################################################################################
 # SPECIAL SETTINGS WIDGETS

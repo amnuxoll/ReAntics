@@ -78,6 +78,7 @@ class Game(object):
         self.timeoutOn = False
         self.timeout_limit = 1  # !!! TODO - not presently implemented
         # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
+        self.pauseConditions = []
 
         self.loadAIs()
         self.processCommandLine()
@@ -128,6 +129,7 @@ class Game(object):
             g = self.game_calls.pop(0)
             self.UI.statsHandler.timeLabel.Reset()
             g()
+        print("game start request complete")
 
     def closeGUI(self):
         # Tried to make it close nicely, failed
@@ -207,6 +209,7 @@ class Game(object):
     #
     ##
     def startAIvsAI(self, numGames, player1, player2):
+        print("entered AI v AI")
 
         # AI names should be specified as next command line args
         # need exactly two AI names
@@ -224,9 +227,11 @@ class Game(object):
             return
 
         self.gamesToPlayLock.acquire()
+        print("lock acquired")
         self.gamesToPlay.append(GameData(ais[0], ais[1], numGames))
         self.gamesToPlayLock.release()
         self.generalWake()
+        print("exit AI v AI")
 
     ##
     # startRR
@@ -478,9 +483,11 @@ class Game(object):
     #
     # Parameters: games - GameGUIData Objects list
     #             additional - dictionary of additional settings
+    #             pauseConditions - list of dicts of players and conditions
     #
     ##
-    def process_settings(self, games, additional):
+    def process_settings(self, games, additional, pauseConditions):
+        print("processing settings")
         # set the additional settings
         self.verbose = additional['verbose']
         self.playerSwap = additional['swap']
@@ -489,6 +496,8 @@ class Game(object):
         self.timeoutOn = additional['timeout']
         if self.timeoutOn:
             self.timeout_limit = float(additional['timeout_limit'])
+
+        self.pauseConditions = pauseConditions
 
         # set the game queue
         self.game_calls = []
@@ -515,6 +524,7 @@ class Game(object):
                     if player[0].author != g.players[0]:
                         self.game_calls.append(partial(self.startAIvsAI, g.num_games, g.players[0], player[0].author))
         self.UI.statsHandler.clearLog()
+        print("exit process settings")
 
     ##
     # start
@@ -799,7 +809,7 @@ class Game(object):
                         self.pauseGame()
                         if self.state.phase == MENU_PHASE:
                             # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
-                            break
+                            break# is this possible??? TODO
 
                             # clear all highlights after build
                             # self.ui.coordList = []
@@ -841,7 +851,7 @@ class Game(object):
 
                         # if AI mode, pause to observe move until next or continue is clicked
                         self.pauseGame()
-                        if self.state.phase == MENU_PHASE:
+                        if self.state.phase == MENU_PHASE: # TODO is this possible?
                             # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
                             break
                 else:
@@ -853,7 +863,18 @@ class Game(object):
                         # if validMove is False and not None, clear move
                         currentPlayer.coordList = []
                         # self.ui.coordList = []
-
+                        
+##                # check for pause condition
+##                print("reached")
+##                if self.pauseConditionReached() : #self.state.phase == PLAY_PHASE and 
+##                    # print("hey there a pause condition has been reached")
+##                    # self.pauseGame() # not sure what this does???
+##                    print("HI")
+##                    if not self.UI.paused:
+##                        print("hey")
+##                        self.UI.pausePressed()
+##                        print("eee")
+                
             # determine if if someone is a winner.
             if self.hasWon(PLAYER_ONE):
                 self.setWinner(PLAYER_ONE)
@@ -1600,6 +1621,69 @@ class Game(object):
 
         print(errorMsg)
         self.setWinner((self.state.whoseTurn + 1) % 2)
+
+
+    ###
+    # pause conditions
+    def pauseConditionReached ( self ) :
+        print("inside pc")
+        # gather state data
+        data = {}
+
+        print(self.state)
+        # food
+        data["P0 Food"] = self.state.inventories[0].foodCount
+        data["P1 Food"] = self.state.inventories[1].foodCount
+
+        # anthill health
+        try:
+            data["P0 Anthill Health"] = self.state.inventories[0].getAnthill().captureHealth
+            data["P1 Anthill Health"] = self.state.inventories[1].getAnthill().captureHealth
+        except:
+            return False
+
+        # ant counts/queen health
+        for i in range(2):
+            i = str(i)
+            data["P"+i+" Queen Health"] = 0
+            data["P"+i+" Num Ants"] = 0
+            data["P"+i+" Num Workers"] = 0
+            data["P"+i+" Num Drones"] = 0
+            data["P"+i+" Num Soldiers"] = 0
+            data["P"+i+" Num Ranged Soldiers"] = 0
+
+            ants = self.state.inventories[int(i)].ants
+            for a in ants:
+                if a.type == QUEEN:
+                    data["P"+i+" Queen Health"] = a.health
+                elif a.type == WORKER:
+                    data["P"+i+" Num Workers"] += 1
+                elif a.type == DRONE:
+                    data["P"+i+" Num Drones"] += 1
+                elif a.type == SOLDIER:
+                    data["P"+i+" Num Soldiers"] += 1
+                elif a.type == R_SOLDIER:
+                    data["P"+i+" Num Ranged Soldiers"] += 1
+        
+        # check the pause conditions
+        for pc in self.pauseConditions:
+            if not self.relevantPlayers(pc['players']):
+                continue
+            pause = True
+            for k in list(pc['conditions'].keys()):
+                pause = pause and pc['conditions'][k] == data[k]
+                break
+            if pause : return True
+        return False
+
+    def relevantPlayers ( self, players ):
+        curPlayerNames = [ai.author for ai in self.currentPlayers]
+        if "Any AI" in players:
+            i = 1 - players.index("Any AI")
+            if players[i] == curPlayerNames[i]:
+                return True
+            return False
+        return curPlayerNames == players
 
 
 # Import all the python files in the AI folder so they can be serialized
