@@ -1121,7 +1121,7 @@ class Game(object):
 
                     # subtract cost of loc from movement points
                     constrAtLoc = self.state.board[coord[0]][coord[1]].constr
-                    if constrAtLoc == None or antToMove.type == DRONE or antToMove.type == R_SOLDIER:
+                    if constrAtLoc == None or UNIT_STATS[antToMove.type][IGNORES_GRASS]:
                         movePoints -= 1
                     else:
                         movePoints -= CONSTR_STATS[constrAtLoc.type][MOVE_COST]

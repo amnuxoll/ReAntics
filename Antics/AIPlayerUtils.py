@@ -53,7 +53,7 @@ def legalCoord(coord):
 #
 def getAntList(currentState,
                pid = None,
-               types = (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER) ):
+               types = (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER)):
 
     #start with a list of all ants that belong to the indicated player(s)
     allAnts = []
@@ -171,10 +171,8 @@ def listAdjacent(coord):
         newY = delta[1] + coord[1]
 
         #skip illegal moves
-        if (not legalCoord((newX, newY))):
-            continue
-
-        result.append((newX, newY))
+        if legalCoord((newX, newY)):
+            result.append((newX, newY))
 
     return result
 
@@ -190,7 +188,7 @@ def listAdjacent(coord):
 #    movement     - movement points the ant has
 #
 # Return:  a list of coords (tuples)   
-def listReachableAdjacent(state, coords, movement):
+def listReachableAdjacent(state, coords, movement, ignoresGrass = False):
     #build a list of all adjacent cells
     oneStep = listAdjacent(coords)
 
@@ -200,7 +198,7 @@ def listReachableAdjacent(state, coords, movement):
         ant = getAntAt(state, cell)
         constr = getConstrAt(state, cell)
         moveCost = 1  #default cost
-        if (constr != None):
+        if constr != None and not ignoresGrass:
             moveCost = CONSTR_STATS[constr.type][MOVE_COST]
         if (ant == None) and (moveCost <= movement):
             candMoves.append(cell)
@@ -313,6 +311,7 @@ def stepsToReach(currentState, src, dst):
     #we should never reach this point
     return -1
 
+
 ##
 # approxDist
 #
@@ -325,7 +324,8 @@ def stepsToReach(currentState, src, dst):
 #
 # Return: the approximate distance (an integer)
 def approxDist(sourceCoords, targetCoords):
-	return abs(sourceCoords[0]-targetCoords[0]) + abs(sourceCoords[1]-targetCoords[1])
+    return abs(sourceCoords[0]-targetCoords[0]) + abs(sourceCoords[1]-targetCoords[1])
+
 
 ##
 # createPathToward
@@ -342,37 +342,53 @@ def approxDist(sourceCoords, targetCoords):
 # Return the required path
 #
 def createPathToward(currentState, sourceCoords, targetCoords, movement):
-    distToTarget = approxDist(sourceCoords, targetCoords)
-    path = [sourceCoords]
-    curr = sourceCoords
+    ant = getAntAt(currentState, sourceCoords)
+    # paths may be requested with no ant for planning purposes
+    if ant is None:
+        ignoresGrass = False
+    else:
+        ignoresGrass = UNIT_STATS[ant.type][IGNORES_GRASS]
+    return findPathRecursive(currentState, sourceCoords, targetCoords, movement, ignoresGrass)[0]
 
-    #keep adding steps to the path until movement runs out 
-    while (movement > 0):
-        found = False  #was a new step found to add to the path
-        for coord in listReachableAdjacent(currentState, sourceCoords, movement):
-            #is this a step headed in the right direction?
-            if (approxDist(coord, targetCoords) < distToTarget):
 
-                #how much movement does it cost to get there?
-                constr = getConstrAt(currentState, coord)
-                moveCost = 1  #default cost
-                if (constr != None):
-                    moveCost = CONSTR_STATS[constr.type][MOVE_COST]
-                #if I have enough movement left then add it to the path
-                if (moveCost <= movement):
-                    #add the step to the path
-                    found = True
-                    path.append(coord)
+##
+# findPathRecursive
+#
+# finds the best path from a given source, target, and movement and returns it and the end distance to target
+# To save on computation time, this path is not necessarily optimal if there's not enough movement to reach the target.
+# In most cases it will still be optimal.
+#
+# state - the state to find the path in: GameState
+# source - the start location of the path: (x: int, y: int)
+# target - the target location for the path: (x: int, y:int)
+# movement - amount of movement left to spend on path: int
+# ignoresGrass - if the path should respect grass movement penalty: bool
+#
+def findPathRecursive(state, source, target, movement, ignoresGrass):
+    dist = approxDist(source, target)
+    if dist == 0:
+        return ([source], 0)
+    if movement == 0:
+        return ([source], dist)
 
-                    #restart the search from the new coordinate
-                    movement = movement - moveCost
-                    sourceCoords = coord
-                    distToTarget = approxDist(sourceCoords, targetCoords)
-                    break
-        if (not found): break #no usable steps found
+    bestPath = ([source], dist)
+    for coord in listReachableAdjacent(state, source, movement, ignoresGrass):
+        # find movement cost to go here
+        cost = 1
+        if not ignoresGrass:
+            const = getConstrAt(state, coord)
+            if const is not None:
+                cost = const.movementCost
 
-    return path
-        
+        # find best path
+        path = findPathRecursive(state, coord, target, movement - cost, ignoresGrass)
+
+        # if this path is better than we've found, use it
+        if path[1] < bestPath[1]:
+            bestPath = ([source] + path[0], path[1])
+    return bestPath
+
+
 ##
 # listAllBuildMoves
 #

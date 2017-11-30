@@ -132,6 +132,48 @@ class testBoardHighlight(unittest.TestCase):
                                      "%d, %d: was highlighted when it shouldn't have been in the under grass 2 test."
                                      % (x, y))
 
+    def testIgnoreGrass(self):
+        grass = Construction((2, 2), GRASS)
+        state = GameState.getBlankState()
+        state.inventories[2].constrs.append(grass)
+        state.board[2][2].constr = grass
+        self.handler.showState(state)
+        self.handler.gameHandler.clearHighlights()
+        self.handler.gameHandler.highlightValidMoves((2, 3), 1, ignoresGrass=True)
+
+        locs = [        (2, 2),
+                (1, 3), (2, 3), (3, 3),
+                        (2, 4)]
+        for y in range(10):
+            for x in range(10):
+                if (x, y) in locs:
+                    self.assertEqual(self.handler.gameHandler.boardIcons[y][x].highlight, True,
+                                     "%d, %d: was not highlighted when it should have been in the ignore grass test."
+                                     % (x, y))
+                else:
+                    self.assertEqual(self.handler.gameHandler.boardIcons[y][x].highlight, False,
+                                     "%d, %d: was highlighted when it shouldn't have been in the ignore grass test."
+                                     % (x, y))
+
+    def testQueen(self):
+        state = GameState.getBlankState()
+        self.handler.showState(state)
+        self.handler.gameHandler.clearHighlights()
+        self.handler.gameHandler.highlightValidMoves((2, 3), 1, queen=True)
+
+        locs = [        (2, 2),
+                (1, 3), (2, 3), (3, 3)]
+        for y in range(10):
+            for x in range(10):
+                if (x, y) in locs:
+                    self.assertEqual(self.handler.gameHandler.boardIcons[y][x].highlight, True,
+                                     "%d, %d: was not highlighted when it should have been in the queen test."
+                                     % (x, y))
+                else:
+                    self.assertEqual(self.handler.gameHandler.boardIcons[y][x].highlight, False,
+                                     "%d, %d: was highlighted when it shouldn't have been in the queen test."
+                                     % (x, y))
+
 
 class testAttackHighlight(unittest.TestCase):
     def setUp(self):

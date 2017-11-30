@@ -1,13 +1,13 @@
 from Constants import *
 
 #Unit stats array [ant type][stat]
-#(movement, health, attack, range, cost)
+#(movement, health, attack, range, cost, ignoresGrass)
 UNIT_STATS = []
-UNIT_STATS.append((2, 8, 2, 1, None)) #Queen
-UNIT_STATS.append((2, 1, 1, 1, 1)) #Worker
-UNIT_STATS.append((3, 2, 1, 1, 2)) #Drone 
-UNIT_STATS.append((2, 4, 2, 1, 3)) #Soldier
-UNIT_STATS.append((1, 1, 2, 3, 2)) #Ranged soldier
+UNIT_STATS.append((2, 8, 2, 1, None, False)) #Queen
+UNIT_STATS.append((2, 1, 0, 1, 1, False)) #Worker
+UNIT_STATS.append((3, 2, 1, 1, 2, True)) #Drone
+UNIT_STATS.append((2, 4, 2, 1, 3, False)) #Soldier
+UNIT_STATS.append((1, 1, 2, 3, 2, True)) #Ranged soldier
 
 ##
 #Ant

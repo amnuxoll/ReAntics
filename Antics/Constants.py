@@ -51,6 +51,7 @@ HEALTH = 1
 ATTACK = 2
 RANGE = 3
 COST = 4
+IGNORES_GRASS = 5
 
 #Indices into construction stats
 MOVE_COST = 0

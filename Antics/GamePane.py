@@ -291,7 +291,7 @@ class GamePane:
     #
     # location - a 2 tuple of integers representing a board coordinate
     #
-    def highlightValidMoves(self, location, moveLeft, queen = False):
+    def highlightValidMoves(self, location, moveLeft, queen = False, ignoresGrass = False):
         self.boardIcons[location[1]][location[0]].setImage(highlight=True)
 
         # if we're out of movement, then we're done
@@ -319,12 +319,15 @@ class GamePane:
                     continue
 
                 # if we don't have enough movement, we can't move there
-                remainder = moveLeft - loc.getMoveCost()
+                if ignoresGrass:
+                    remainder = moveLeft - 1
+                else:
+                    remainder = moveLeft - loc.getMoveCost()
                 if remainder < 0:
                     continue
 
                 # if there's no ant and we can move there, highlight it
-                self.highlightValidMoves(to, remainder, queen)
+                self.highlightValidMoves(to, remainder, queen, ignoresGrass)
 
     ##
     # clearHighlights
@@ -563,10 +566,11 @@ class GamePane:
 
             # because queens can't go outside their start area, their movement needs special handling
             isQueen = ant.type == QUEEN
+            ignoresGrass = UNIT_STATS[ant.type][IGNORES_GRASS]
 
             # assume player wants to move this ant
             # highlight all squares the ant can move to
-            self.highlightValidMoves(ant.coords, UNIT_STATS[ant.type][0], isQueen)
+            self.highlightValidMoves(ant.coords, UNIT_STATS[ant.type][0], isQueen, ignoresGrass)
             self.movesHighlighted = True
             self.baseLocation = (x, y)
             return
