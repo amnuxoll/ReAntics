@@ -386,6 +386,9 @@ def findPathRecursive(state, source, target, movement, ignoresGrass):
         # if this path is better than we've found, use it
         if path[1] < bestPath[1]:
             bestPath = ([source] + path[0], path[1])
+            # computation time decrease
+            if bestPath[1] == 0 or bestPath[1] == dist - movement:
+                return bestPath
     return bestPath
 
 

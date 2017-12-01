@@ -213,13 +213,16 @@ class Game(object):
 
         # AI names should be specified as next command line args
         # need exactly two AI names
-        ais = []
+        p1, p2 = None, None
         for player in self.players:
-            if player1 == player[0].author or player2 == player[0].author:
+            if player1 == player[0].author:
                 # append the name of the indices for the tournament
-                ais.append(player[0])
+                p1 = player[0]
 
-        if len(ais) != 2:
+            if player2 == player[0].author:
+                p2 = player[0]
+
+        if p1 is None or p2 is None:
             print("ERROR:  AI '" + player1 + "' OR AI '" + player2 + "' not found.")
             print("Please specify one of the following:")
             for player in self.players:
@@ -228,7 +231,7 @@ class Game(object):
 
         self.gamesToPlayLock.acquire()
         print("lock acquired")
-        self.gamesToPlay.append(GameData(ais[0], ais[1], numGames))
+        self.gamesToPlay.append(GameData(p1, p2, numGames))
         self.gamesToPlayLock.release()
         self.generalWake()
         print("exit AI v AI")
@@ -902,19 +905,22 @@ class Game(object):
 
             self.UI.gameHandler.setInstructionText("%s has won!" % winnerName)
 
+        self.pauseGame()
+
         # adjust the wins and losses of players
         # because of how human and copies are handled currently, problems
-        try:
-            self.playerScores[self.winner][1] += 1
-        except:
-            # TODO: deal with this
-            pass
-        try:
-            self.playerScores[self.loser][2] += 1
-        except:
-            pass
 
-        self.pauseGame()
+        if self.winner >= 0:
+            try:
+                self.playerScores[self.winner][1] += 1
+            except:
+                # TODO: deal with this
+                pass
+        if self.loser >= 0:
+            try:
+                self.playerScores[self.loser][2] += 1
+            except:
+                pass
 
     ##
     # setWinner
