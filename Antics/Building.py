@@ -22,10 +22,13 @@ class Building(Construction):
     #   inputCoords - The location to place the new Building (int[])
     #   inputPlayer - The playerId of the Player that owns the Building (int)
     ##
-    def __init__(self,inputCoords, inputType, inputPlayer):
+    def __init__(self, inputCoords, inputType, inputPlayer, captureHealth=None):
         super(Building, self).__init__(inputCoords, inputType)
         self.player = inputPlayer
-        self.captureHealth = CONSTR_STATS[inputType][CAP_HEALTH]
+        if captureHealth is not None:
+            self.captureHealth = captureHealth
+        else:
+            self.captureHealth = CONSTR_STATS[inputType][CAP_HEALTH]
     
     def clone(self):
-        return Building(self.coords, self.type, self.player)
+        return Building(self.coords, self.type, self.player, self.captureHealth)

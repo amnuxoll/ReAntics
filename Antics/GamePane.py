@@ -215,8 +215,12 @@ class GamePane:
                 r2 = random.randint(1, r)
                 health = (r, r2)
 
+                r = random.randint(1, 8)
+                r2 = random.randint(1, r)
+                healthConst = (r, r2)
+
                 self.boardIcons[y][x].setImage(construct = cons, ant = ant, antTeam = team, moved = moved,
-                                               highlight = highlight, carrying = carrying, health = health)
+                                               highlight = highlight, carrying = carrying, health = health, healthConst = healthConst)
 
     ##
     # setToGameState
@@ -238,8 +242,16 @@ class GamePane:
                     cType = construction.type
                     if isinstance(construction, Building):
                         constTeam = construction.player
+
+                    if type(construction) is Building and cType == ANTHILL:
+                        cCurHP = construction.captureHealth
+                        cMaxHP = CONSTR_STATS[cType][1]
+                        healthConst = (cMaxHP, cCurHP)
+                    else:
+                        healthConst = None
                 else:
                     cType = None
+                    healthConst = None
 
                 if ant is not None:
                     curHP = ant.health
@@ -255,7 +267,7 @@ class GamePane:
                     carrying = False
                     aType = None
 
-                self.boardIcons[row][col].setImage(cType, aType, antTeam, constTeam, moved, health, False, carrying)
+                self.boardIcons[row][col].setImage(cType, aType, antTeam, constTeam, moved, health, False, carrying, healthConst)
 
     ##
     # showSetupConstructions
@@ -663,6 +675,7 @@ class BoardButton:
         self.constTeam = PLAYER_ONE
         self.moved = False
         self.health = None
+        self.healthConst = None
         self.highlight = False
         self.carrying = False
 
@@ -689,7 +702,7 @@ class BoardButton:
     #
     # all parameters may be set to None to remove that element from the draw list or replace it with a default
     #
-    def setImage(self, construct = -9, ant = -9, antTeam = -9, constTeam = -9, moved = -9, health = -9, highlight = -9, carrying = -9):
+    def setImage(self, construct = -9, ant = -9, antTeam = -9, constTeam = -9, moved = -9, health = -9, highlight = -9, carrying = -9, healthConst = -9):
         changed = False
 
         if construct != -9 and construct != self.construct:
@@ -715,6 +728,9 @@ class BoardButton:
             changed = True
         if carrying != -9 and carrying != self.carrying:
             self.carrying = carrying
+            changed = True
+        if healthConst != -9 and healthConst != self.healthConst:
+            self.healthConst = healthConst
             changed = True
 
         if changed:
@@ -784,12 +800,21 @@ class BoardButton:
 
         # draw health
         if self.health:
-            for i in range(self.health[0]):
-                if i < self.health[1]:
-                    self.label.create_image((loc[0] + 3, loc[1] + i * 8), anchor=tkinter.N + tkinter.W,
+            for j in range(self.health[0]):
+                if j < self.health[1]:
+                    self.label.create_image((loc[0] + 3, loc[1] + j * 8), anchor=tkinter.N + tkinter.W,
                                             image=self.handler.textures["healthFull"])
                 else:
-                    self.label.create_image((loc[0] + 3, loc[1] + i * 8), anchor=tkinter.N + tkinter.W,
+                    self.label.create_image((loc[0] + 3, loc[1] + j * 8), anchor=tkinter.N + tkinter.W,
+                                            image=self.handler.textures["healthEmpty"])
+
+        if self.healthConst:
+            for k in range(self.healthConst[0]):
+                if k < self.healthConst[1]:
+                    self.label.create_image((loc[0] + 55, loc[1] + k * 8), anchor=tkinter.N + tkinter.W,
+                                            image=self.handler.textures["healthFull"])
+                else:
+                    self.label.create_image((loc[0] + 55, loc[1] + k * 8), anchor=tkinter.N + tkinter.W,
                                             image=self.handler.textures["healthEmpty"])
 
 
