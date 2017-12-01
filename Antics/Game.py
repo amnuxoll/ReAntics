@@ -746,7 +746,7 @@ class Game(object):
                             if t.isAlive():
                                 raise Exception('function [get_move] timeout [%s seconds] exceeded!' % self.timeout_limit)
                         except Exception as je:
-                            traceback.print_exc()
+                            traceback.print_exc(limit=0)
                             self.setWinner(1 - self.state.whoseTurn)
                             return
                     else:
