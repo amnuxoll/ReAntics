@@ -76,7 +76,7 @@ class Game(object):
         self.playerSwap = False  # additonal settings
         self.playersReversed = False  # whether the players are currently swapped
         self.timeoutOn = False
-        self.timeout_limit = 1  # !!! TODO - not presently implemented
+        self.timeout_limit = 1  
         # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
         self.pauseConditions = []
 
@@ -564,6 +564,7 @@ class Game(object):
             for j in range(game.n):
                 self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
                 self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
+                if self.verbose: print(self.tournamentStr(False),"\n")
                 self.setup(game, j)
                 self.UI.setPlayers(self.currentPlayers[0].author, self.currentPlayers[1].author)
                 self.runGame()
@@ -571,6 +572,7 @@ class Game(object):
 
             self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
             self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
+            if self.verbose: print(self.tournamentStr(False),"\n")
 
             self.UI.statsHandler.stopCurLogItem(True)
 
