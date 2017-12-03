@@ -1660,7 +1660,7 @@ class Game(object):
                     data["P"+i+" Num Soldiers"] += 1
                 elif a.type == R_SOLDIER:
                     data["P"+i+" Num Ranged Soldiers"] += 1
-        
+
         # check the pause conditions
         for pc in self.pauseConditions:
             if not self.relevantPlayers(pc['players']):

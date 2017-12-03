@@ -16,6 +16,8 @@ from Construction import Construction
 from Ant import Ant
 from Constants import *
 from Player import Player
+from Building import Building
+from Inventory import Inventory
 
 
 class testGame(unittest.TestCase):
@@ -95,6 +97,31 @@ class testGame(unittest.TestCase):
 
     def testPauseConditionReached(self):
         pauseConditions = [{"players":["Random", "Booger"], "conditions":{"P0 Food":3}}]
+        ants1 = [Ant((3,3), QUEEN, PLAYER_ONE), Ant((5,2), WORKER, PLAYER_ONE)]
+        constr1 = [Building((7,1),ANTHILL, PLAYER_ONE),Building((2,1),TUNNEL, PLAYER_ONE)]
+        inv1 = Inventory(PLAYER_ONE, ants1, constr1, 5)
+
+        ants2 = [Ant((5,7), QUEEN, PLAYER_TWO), Ant((7,9), WORKER, PLAYER_TWO)]
+        constr2 = [Building((4,8),ANTHILL, PLAYER_TWO),Building((6,7),TUNNEL, PLAYER_TWO)]
+        inv2 = Inventory(PLAYER_TWO, ants2, constr2, 1)
+
+        constr = [Construction((1,1),FOOD),\
+                  Construction((3,1),FOOD),\
+                  Construction((0,6),FOOD),\
+                  Construction((9,6),FOOD)]
+        invConstr = Inventory(NEUTRAL, [], constr, 0)
+        state = GameState(None, (inv1, inv2, invConstr), PLAY_PHASE, PLAYER_ONE)
+
+        self.gameTest.currentPlayers = [Player(0,"Random"), Player(1,"Booger")]
+        self.gameTest.pauseConditions = pauseConditions
+        self.gameTest.state = state
+        self.gameTest.state.inventories[0].foodCount = 3
+
+        self.assertEqual(self.gameTest.pauseConditionReached(), True)
+        self.gameTest.state.inventories[0].foodCount = 5
+        self.assertEqual(self.gameTest.pauseConditionReached(), False)
+        self.gameTest.state.inventories[1].foodCount = 3
+        self.assertEqual(self.gameTest.pauseConditionReached(), False)
 
 
     def testRelevantPlayers(self):
