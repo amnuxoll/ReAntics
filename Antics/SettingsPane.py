@@ -377,7 +377,7 @@ class GameSettingsFrame ( ) :
         for g in self.my_pause_conditions :
             g.gui_box.destroy()
 
-        self.my_games = []
+        self.my_pause_conditions = []
 
     def deletePC ( self, pauseConditionGUIDataObj ) :
         pauseConditionGUIDataObj.gui_box.destroy()
