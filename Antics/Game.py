@@ -109,7 +109,7 @@ class Game(object):
 
         self.gameThread = threading.Thread(target=self.start, daemon=True)
         self.gameThread.start()
-        # print("game thread started")
+        self.delayWait = 0
 
         self.postProcessCommandLine()
         self.UI.root.mainloop()
@@ -129,7 +129,6 @@ class Game(object):
             g = self.game_calls.pop(0)
             self.UI.statsHandler.timeLabel.Reset()
             g()
-        print("game start request complete")
 
     def closeGUI(self):
         # Tried to make it close nicely, failed
@@ -209,8 +208,6 @@ class Game(object):
     #
     ##
     def startAIvsAI(self, numGames, player1, player2):
-        print("entered AI v AI")
-
         # AI names should be specified as next command line args
         # need exactly two AI names
         p1, p2 = None, None
@@ -230,11 +227,9 @@ class Game(object):
             return
 
         self.gamesToPlayLock.acquire()
-        print("lock acquired")
         self.gamesToPlay.append(GameData(p1, p2, numGames))
         self.gamesToPlayLock.release()
         self.generalWake()
-        print("exit AI v AI")
 
     ##
     # startRR
@@ -489,8 +484,7 @@ class Game(object):
     #             pauseConditions - list of dicts of players and conditions
     #
     ##
-    def process_settings(self, games, additional, pauseConditions):
-        print("processing settings")
+    def process_settings(self, games, additional, pauseConditions, testing = False):
         # set the additional settings
         self.verbose = additional['verbose']
         self.playerSwap = additional['swap']
@@ -526,8 +520,7 @@ class Game(object):
                 for player in self.players:
                     if player[0].author != g.players[0]:
                         self.game_calls.append(partial(self.startAIvsAI, g.num_games, g.players[0], player[0].author))
-        self.UI.statsHandler.clearLog()
-        print("exit process settings")
+        if not testing: self.UI.statsHandler.clearLog()
 
     ##
     # start
@@ -548,7 +541,11 @@ class Game(object):
                     self.UI.showFrame(0)
                 self.UI.statsHandler.timeLabel.Stop()
                 self.UI.statsHandler.timeLabel.PermanentlyStop()
-                self.condWait()
+                # rough fix for mac race condition - that caused it not to start
+                if self.delayWait == 4:
+                    self.condWait()
+                else :
+                    self.delayWait = (self.delayWait + 1) % 5
 
             self.UI.statsHandler.timeLabel.Start()
 
@@ -867,16 +864,9 @@ class Game(object):
                         currentPlayer.coordList = []
                         # self.ui.coordList = []
                         
-##                # check for pause condition
-##                print("reached")
-##                if self.pauseConditionReached() : #self.state.phase == PLAY_PHASE and 
-##                    # print("hey there a pause condition has been reached")
-##                    # self.pauseGame() # not sure what this does???
-##                    print("HI")
-##                    if not self.UI.paused:
-##                        print("hey")
-##                        self.UI.pausePressed()
-##                        print("eee")
+                # check for pause condition
+                if self.pauseConditionReached() and not self.UI.paused:
+                    self.UI.pausePressed()
                 
             # determine if if someone is a winner.
             if self.hasWon(PLAYER_ONE):
@@ -1630,13 +1620,12 @@ class Game(object):
 
 
     ###
-    # pause conditions
-    def pauseConditionReached ( self ) :
-        print("inside pc")
+    # pauseConditionReached
+    # returns True if a pause condition has been reached
+    def pauseConditionReached(self):
         # gather state data
         data = {}
 
-        print(self.state)
         # food
         data["P0 Food"] = self.state.inventories[0].foodCount
         data["P1 Food"] = self.state.inventories[1].foodCount
@@ -1651,14 +1640,15 @@ class Game(object):
         # ant counts/queen health
         for i in range(2):
             i = str(i)
+            ants = self.state.inventories[int(i)].ants
+            
             data["P"+i+" Queen Health"] = 0
-            data["P"+i+" Num Ants"] = 0
+            data["P"+i+" Num Ants"] = len(ants)
             data["P"+i+" Num Workers"] = 0
             data["P"+i+" Num Drones"] = 0
             data["P"+i+" Num Soldiers"] = 0
             data["P"+i+" Num Ranged Soldiers"] = 0
 
-            ants = self.state.inventories[int(i)].ants
             for a in ants:
                 if a.type == QUEEN:
                     data["P"+i+" Queen Health"] = a.health
@@ -1682,7 +1672,11 @@ class Game(object):
             if pause : return True
         return False
 
-    def relevantPlayers ( self, players ):
+    ###
+    # relevantPlayers
+    # returns True if the current players match the given players
+    # "Any AI" is reserved
+    def relevantPlayers(self, players):
         curPlayerNames = [ai.author for ai in self.currentPlayers]
         if "Any AI" in players:
             i = 1 - players.index("Any AI")

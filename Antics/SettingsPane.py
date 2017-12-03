@@ -58,7 +58,8 @@ class GameSettingsFrame ( ) :
         self.my_games = [] # store all of the GameGUIData objects here
         self.my_pause_conditions = []
         ##################################
-        
+
+        self.the_game = None
         
 
     def changePlayers ( self, plyrs ) :
@@ -181,7 +182,7 @@ class GameSettingsFrame ( ) :
         # saved settings?
         self.loadSavedSettings()
         
-
+        
 
     #####
     # addGameChanged
@@ -208,6 +209,8 @@ class GameSettingsFrame ( ) :
         self.addGameOptionsWindow.pack ( fill="both", side=tk.BOTTOM )
 
     def changeFrameStart ( self ) :
+        if self.the_game is None: return
+        
         games = [ g.copy() for g in self.my_games ]
         more_settings = copy.deepcopy ( self.additionalOptionsFrame.public_selected )
         more_settings [ "timeout_limit" ] = self.additionalOptionsFrame.public_timeout
@@ -241,6 +244,8 @@ class GameSettingsFrame ( ) :
         self.handler.showFrame ( 2 )
 
     def changeFrameQS ( self ) :
+        if self.the_game is None: return
+        
         orig_len = len ( self.my_games )
         self.gameAdded()
         # make sure that game was added, if so, start
