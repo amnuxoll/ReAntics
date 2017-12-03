@@ -848,7 +848,7 @@ class Game(object):
                         self.state.whoseTurn = (self.state.whoseTurn + 1) % 2
 
                         # notify player which AI is acting
-                        nextPlayerName = self.players[self.state.whoseTurn][0].author
+                        nextPlayerName = self.currentPlayers[self.state.whoseTurn].author
                         self.UI.gameHandler.setInstructionText(nextPlayerName + "'s turn.")
 
                         # if AI mode, pause to observe move until next or continue is clicked
