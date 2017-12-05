@@ -727,7 +727,7 @@ class Game(object):
                     if not type(currentPlayer) is HumanPlayer.HumanPlayer:
                         # cause current player to lose game because AIs aren't allowed to make mistakes.
                         self.error(INVALID_PLACEMENT, targets)
-                        break
+                        self.setWinner(1 - self.state.whoseTurn)
 
             elif self.state.phase == PLAY_PHASE:
                 currentPlayer = self.currentPlayers[self.state.whoseTurn]
@@ -811,7 +811,9 @@ class Game(object):
                         self.pauseGame()
                         if self.state.phase == MENU_PHASE:
                             # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
-                            break# is this possible??? TODO
+                            # break# is this possible??? TODO
+                            self.setWinner(1 - self.state.whoseTurn)
+
 
                             # clear all highlights after build
                             # self.ui.coordList = []
@@ -855,12 +857,13 @@ class Game(object):
                         self.pauseGame()
                         if self.state.phase == MENU_PHASE: # TODO is this possible?
                             # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
-                            break
+                            # break TODO
+                            self.setWinner(1 - self.state.whoseTurn)
                 else:
                     # human can give None move, AI can't
                     if not type(currentPlayer) is HumanPlayer.HumanPlayer:
                         self.error(INVALID_MOVE, self.move)
-                        break
+                        self.setWinner(1 - self.state.whoseTurn)
                     elif validMove != None:
                         # if validMove is False and not None, clear move
                         currentPlayer.coordList = []

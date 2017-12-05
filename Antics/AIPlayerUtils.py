@@ -29,11 +29,11 @@ def legalCoord(coord):
 
     #make sure we have a tuple or list with two elements in it
     try:
-        if (len(coord) != 2):
+        if len(coord) != 2:
             return False
     except TypeError:
         print("ERROR:  parameter to legalCoord was not a tuple or list")
-        raise
+        return False
 
     x = coord[0]
     y = coord[1]
