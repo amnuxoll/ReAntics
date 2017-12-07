@@ -240,6 +240,12 @@ class testAllLegalMoves(unittest.TestCase):
         state.inventories[0].ants.append(ant)
         state.board[3][3].ant = ant
 
+        # move queen off anthill to catch possible errors building ants
+        queen = getAntAt(state, (0, 0))
+        queen.coords = (0, 1)
+        state.board[0][0].ant = None
+        state.board[1][0].ant = queen
+
 
         move = None
         moves = listAllBuildMoves(state)
