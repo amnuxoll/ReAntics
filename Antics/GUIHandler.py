@@ -6,6 +6,7 @@ from GamePane import *
 from SettingsPane import *
 from StatsPane import *
 from Constants import *
+import RedoneWidgets
 
 #########################################################
 # Class GUIHandler
@@ -138,6 +139,26 @@ class GUIHandler:
         self.gameHandler.p1Name.set(p1[0:6] + '..' + p1[-3:] if len(p1) > 11 else p1)
         self.gameHandler.p2Name.set(p2[0:6] + '..' + p2[-3:] if len(p2) > 11 else p2)
 
+        self.enableAllButtons()
+        if p1 == "Human" or p2 == "Human":
+            self.disableHumanButtons()
+
+    def enableAllButtons(self):
+        self.gameHandler.UIbutton.enable()
+        self.gameHandler.stepButton.enable()
+
+        self.gameHandler.killButton.enable()
+        self.gameHandler.restartButton.enable()
+        self.gameHandler.settingsButton.enable()
+
+        self.statsHandler.killButton.enable()
+        self.statsHandler.restartButton.enable()
+        self.statsHandler.settingsButton.enable()
+
+    def disableHumanButtons(self):
+        self.gameHandler.UIbutton.disable()
+        self.gameHandler.stepButton.disable()
+
     ##
     # getHumanMove
     #
@@ -244,15 +265,59 @@ class GUIHandler:
             self.statsText.set("Print Stats Off")
 
     def killPressed(self):
-        print("Kill")
+        # only kill if there's something to kill and game is not already killed
+        if not self.game.running or self.game.killed:
+            return
+
+        if not self.game.safeKilled:
+            res = RedoneWidgets.askQuestion("Kill Game", "Do you want to end now or after current game?", self.root)
+        else:
+            res = "yes"
+
+        if res == "yes":
+            res = RedoneWidgets.askOKCancel("Kill Game", "Stopping running games of Antics may damage AIs."
+                                                         " Are you sure you want to continue?", self.root)
+
+            if res:
+
+                self.gameHandler.killButton.disable()
+                self.statsHandler.killButton.disable()
+
+                self.game.kill()
+                self.gameHandler.setInstructionText("Game Killed")
+                if self.paused:
+                    self.pausePressed()
+
+        elif not self.game.safeKilled:
+            self.game.killNice()
 
     def restartPressed(self):
+        if self.game.restarted:
+            return
+
+        pause = False
+        if not self.paused:
+            self.pausePressed()
+            pause = True
+
+        if self.game.running:
+            self.game.restart()
+        else:
+            self.game.restartFromEnd()
         self.killPressed()
-        print("Restart")
+
+        self.gameHandler.restartButton.disable()
+        self.statsHandler.restartButton.disable()
+
+        if pause and self.paused:
+            self.pausePressed()
 
     def settingsPressed(self):
         self.killPressed()
         self.game.goToSettings = True
+
+        self.gameHandler.settingsButton.disable()
+        self.statsHandler.settingsButton.disable()
 
         # only wake the game thread if it's not running games ATM
         if not self.game.running:

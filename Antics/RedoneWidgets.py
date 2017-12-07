@@ -32,6 +32,8 @@ class ColoredButton(tk.Label):
         tk.Label.__init__(self, parent)
         # store event handler to close later
         self.parent = parent
+        self.disabled = False
+        self.bg = backgroundcolor
 
         self.command = command
         self.flash = flash # no longer needed, before needed for mac compatibility issues
@@ -41,16 +43,26 @@ class ColoredButton(tk.Label):
         self.bind("<Button-1>", self.pressed)
 
     def pressed(self, thing):
+        if self.disabled:
+            return
         self.flashButton()
             
         if self.command:
             self.command()
 
-    def flashButton (self):
+    def flashButton(self):
         self.config(state = "active")
         self.update_idletasks()
         time.sleep(FLASH_TIME)
-        self.config(state = "normal")       
+        self.config(state = "normal")
+
+    def disable(self):
+        self.config(bg = "gray")
+        self.disabled = True
+
+    def enable(self):
+        self.config(bg = self.bg)
+        self.disabled = False
 
 
 #####
@@ -180,3 +192,14 @@ def ShowError(title='Title', message='your message here.', root = None):
         root.update_idletasks()
         messagebox.showerror( title, message )
     return
+
+def askOKCancel(title='Title', message='your message here.', root = None):
+    if root is not None:
+        root.update_idletasks()
+        return messagebox.askokcancel( title, message )
+
+def askQuestion(title='Title', message='your message here.', root = None):
+    if root is not None:
+        root.update_idletasks()
+        return messagebox.askquestion( title, message )
+

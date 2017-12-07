@@ -126,21 +126,21 @@ class GamePane:
         self.buttonFrame = tkinter.Frame(self.parent)
         self.buttonFrame.grid(column = 2, row = 0, rowspan = 2, sticky = tkinter.N + tkinter.S)
 
-        self.UIbutton = wgt.ColoredButton(self.buttonFrame, text = "Close UI", command = self.UIbuttonPressed)
-        self.UIbutton.config(bg = 'red', fg = 'white', font = font, width = 12, pady = 3)
+        self.UIbutton = wgt.ColoredButton(self.buttonFrame, text = "Close UI", command = self.UIbuttonPressed, backgroundcolor = self.handler.blue)
+        self.UIbutton.config(bg = self.handler.blue, fg = 'white', font = font, width = 12, pady = 3)
         self.UIbutton.grid()
 
         self.endTurnButton = wgt.ColoredButton(self.buttonFrame, text = "End Turn", command = self.endTurnPressed)
         self.endTurnButton.config(bg = self.handler.blue, fg = 'white', font = font, width = 12, pady = 3)
         self.endTurnButton.grid(row = 1)
 
-        self.pauseButton = wgt.ColoredButton(self.buttonFrame, command = self.handler.pausePressed)
+        self.pauseButton = wgt.ColoredButton(self.buttonFrame, command = self.handler.pausePressed, backgroundcolor = self.handler.blue)
         self.pauseButton.config(textvar = self.handler.pauseVar)
         self.pauseButton.config(bg = self.handler.blue, fg = 'white', font = font, width = 12, pady = 3)
         self.pauseButton.grid(row = 2)
         self.paused = True
 
-        self.stepButton = wgt.ColoredButton(self.buttonFrame, text = "Step", command = self.handler.stepPressed)
+        self.stepButton = wgt.ColoredButton(self.buttonFrame, text = "Step", command = self.handler.stepPressed, backgroundcolor = self.handler.blue)
         self.stepButton.config(bg = self.handler.blue, fg = 'white', font = font, width = 12, pady = 3)
         self.stepButton.grid(row = 3)
 
@@ -150,15 +150,15 @@ class GamePane:
         self.statsButton.grid(row = 4)
         self.stats = False
 
-        self.killButton = wgt.ColoredButton(self.buttonFrame, text = "Kill Game", command = self.handler.killPressed)
+        self.killButton = wgt.ColoredButton(self.buttonFrame, text = "Kill Game", command = self.handler.killPressed, backgroundcolor = 'red')
         self.killButton.config(bg = 'red', fg = 'white', font = font, width = 12, pady = 3)
         self.killButton.grid(row = 5)
 
-        self.restartButton = wgt.ColoredButton(self.buttonFrame, text = "Restart All", command = self.handler.restartPressed)
+        self.restartButton = wgt.ColoredButton(self.buttonFrame, text = "Restart All", command = self.handler.restartPressed, backgroundcolor = 'red')
         self.restartButton.config(bg = 'red', fg = 'white', font = font, width = 12, pady = 3)
         self.restartButton.grid(row = 6)
 
-        self.settingsButton = wgt.ColoredButton(self.buttonFrame, text = "Settings", command = self.handler.settingsPressed)
+        self.settingsButton = wgt.ColoredButton(self.buttonFrame, text = "Settings", command = self.handler.settingsPressed, backgroundcolor = 'red')
         self.settingsButton.config(bg = 'red', fg = 'white', font = font, width = 12, pady = 3)
         self.settingsButton.grid(row =7)
 

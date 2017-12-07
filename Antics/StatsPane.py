@@ -118,15 +118,15 @@ class StatsPane:
         self.statsButton.grid(row=3)
         self.stats = False
 
-        self.killButton = wgt.ColoredButton(self.buttonFrame, text="Kill Game", command=self.handler.killPressed)
+        self.killButton = wgt.ColoredButton(self.buttonFrame, text="Kill Game", command=self.handler.killPressed, backgroundcolor = 'red')
         self.killButton.config(bg='red', fg='white', font=font, width=12, pady=3)
         self.killButton.grid(row=4)
 
-        self.restartButton = wgt.ColoredButton(self.buttonFrame, text="Restart All", command=self.handler.restartPressed)
+        self.restartButton = wgt.ColoredButton(self.buttonFrame, text="Restart All", command=self.handler.restartPressed, backgroundcolor = 'red')
         self.restartButton.config(bg='red', fg='white', font=font, width=12, pady=3)
         self.restartButton.grid(row=5)
 
-        self.settingsButton = wgt.ColoredButton(self.buttonFrame, text="Settings", command=self.handler.settingsPressed)
+        self.settingsButton = wgt.ColoredButton(self.buttonFrame, text="Settings", command=self.handler.settingsPressed, backgroundcolor = 'red')
         self.settingsButton.config(bg='red', fg='white', font=font, width=12, pady=3)
         self.settingsButton.grid(row=6)
 

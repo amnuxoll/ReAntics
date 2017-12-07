@@ -436,7 +436,7 @@ def listAllBuildMoves(currentState):
     myInv = getCurrPlayerInventory(currentState)
     hill = myInv.getAnthill()
     if (getAntAt(currentState, hill.coords)  == None):
-        for type in range(len(UNIT_STATS)):
+        for type in range(1, len(UNIT_STATS)):
             cost = UNIT_STATS[type][COST]
             if (cost <= myInv.foodCount):
                 result.append(Move(BUILD, [hill.coords], type))

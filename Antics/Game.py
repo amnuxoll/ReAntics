@@ -64,6 +64,10 @@ class Game(object):
         self.goToSettings = False
         self.waitingOnAI = False
         self.commandLineFinished = False
+        self.killed = False
+        self.safeKilled = False
+        self.restarted = False
+        self.restartGameList = None
         self.parser_args = {}
 
         # Initializes tournament mode variables
@@ -486,6 +490,7 @@ class Game(object):
     ##
     def process_settings(self, games, additional, pauseConditions, testing = False):
         # set the additional settings
+        self.restartGameList = None
         self.verbose = additional['verbose']
         self.playerSwap = additional['swap']
         self.playersReversed = False
@@ -534,7 +539,6 @@ class Game(object):
         while True:
             # if we have nothing to do, wait
             while len(self.gamesToPlay) == 0:
-                print("Waiting for game")
                 self.running = False
                 if self.goToSettings:
                     self.goToSettings = False
@@ -544,11 +548,15 @@ class Game(object):
                 # rough fix for mac race condition - that caused it not to start
                 if self.delayWait == 4:
                     self.condWait()
-                else :
+                else:
                     self.delayWait = (self.delayWait + 1) % 5
 
-            self.UI.statsHandler.timeLabel.Start()
+            if self.restartGameList is None:
+                self.restartGameList = list(self.gamesToPlay)
 
+            self.UI.statsHandler.timeLabel.Start()
+            if self.UI.paused:
+                self.UI.pausePressed()
             self.running = True
 
             self.gamesToPlayLock.acquire()
@@ -564,17 +572,31 @@ class Game(object):
             for j in range(game.n):
                 self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
                 self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
-                if self.verbose: print(self.tournamentStr(False),"\n")
+                if self.verbose: print(self.tournamentStr(False), "\n")
                 self.setup(game, j)
                 self.UI.setPlayers(self.currentPlayers[0].author, self.currentPlayers[1].author)
                 self.runGame()
+
+                if self.killed:
+                    self.killed = False
+                    break
                 self.resolveEndGame()
+                if self.safeKilled:
+                    self.safeKilled = False
+                    break
 
             self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
             self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
-            if self.verbose: print(self.tournamentStr(False),"\n")
+            if self.verbose: print(self.tournamentStr(False), "\n")
 
             self.UI.statsHandler.stopCurLogItem(True)
+
+            if self.restarted:
+                self.restarted = False
+                self.gamesToPlay = self.restartGameList
+                self.restartGameList = None
+                self.UI.statsHandler.clearLog()
+                self.UI.statsHandler.timeLabel.Reset()
 
     def setup(self, game: GameData, count: int):
         self.state = GameState.getBlankState()
@@ -596,6 +618,43 @@ class Game(object):
         self.loser = None
 
     ##
+    # kill
+    #
+    # take whatever actions are necessary to kill the currently running game
+    def kill(self):
+        self.killed = True
+        self.safeKilled = False
+        self.gamesToPlay = []
+        self.generalWake()
+
+    ##
+    # killNice
+    #
+    # end the current tournament and game sequence after the current game
+    def killNice(self):
+        self.gamesToPlay = []
+        self.safeKilled = True
+        pass
+
+    ##
+    # restart
+    #
+    # restart the currently running game.
+    def restart(self):
+        self.restarted = True
+
+    ##
+    # restartFromEnd
+    #
+    # restarts the game set
+    def restartFromEnd(self):
+        self.gamesToPlay = self.restartGameList
+        self.generalWake()
+
+        self.UI.statsHandler.clearLog()
+        self.UI.statsHandler.timeLabel.Reset()
+
+    ##
     # runGame
     #
     # Description: the main game loop
@@ -604,6 +663,7 @@ class Game(object):
     #
     ##
     def runGame(self):
+        self.pauseGame()
         # build a list of things to place for player 1 in setup phase 1
         # 1 anthill/queen, 1 tunnel/worker, 9 obstacles
         constrsToPlace = []
@@ -612,6 +672,8 @@ class Game(object):
         constrsToPlace += [Construction(None, GRASS) for i in range(0, 9)]
 
         while not self.gameOver:
+            if self.killed:
+                return
             # create a copy of the state to share with the player
             theState = self.state.clone()
 
@@ -647,6 +709,8 @@ class Game(object):
                 if isinstance(currentPlayer, HumanPlayer.HumanPlayer) and not self.randomSetup:
                     self.UI.getHumanMove(theState.phase)
                     self.condWait()
+                    if self.killed:
+                        return
                     targets += self.submittedSetup
                     self.submittedSetup = None
                 else:
@@ -736,6 +800,8 @@ class Game(object):
                     # alert the UI that we need a move, then wait until it gives one to us
                     self.UI.getHumanMove(theState.phase)
                     self.condWait()
+                    if self.killed:
+                        return
                     self.move = self.submittedMove
                     self.submittedMove = None
                 else:
@@ -900,8 +966,6 @@ class Game(object):
 
             self.UI.gameHandler.setInstructionText("%s has won!" % winnerName)
 
-        self.pauseGame()
-
         # adjust the wins and losses of players
         # because of how human and copies are handled currently, problems
 
@@ -969,6 +1033,8 @@ class Game(object):
                 # have to swap ant back for the GUI if its player 2
                 self.UI.getHumanAttack(self.state.coordLookup(attackingAnt.coords, theState.whoseTurn))
                 self.condWait()
+                if self.killed:
+                    return
 
                 attackCoord = self.submittedAttack
                 self.submittedAttack = None
