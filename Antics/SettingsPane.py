@@ -289,7 +289,8 @@ class GameSettingsFrame ( ) :
         else :
             # check the players
             for i in p:
-                if i not in PLAYERS:
+                if i not in PLAYERS and \
+                    not (t == "Two Player" and i == "Human" and i == p[0] ):
                     print("bad game excluded:", t,n,p)
                     return
 
