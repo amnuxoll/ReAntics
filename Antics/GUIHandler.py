@@ -269,6 +269,8 @@ class GUIHandler:
         if not self.game.running or self.game.killed:
             return
 
+        if not self.paused: self.pausePressed()
+
         if not self.game.safeKilled:
             res = RedoneWidgets.askQuestion("Kill Game", "Do you want to end now or after current game?", self.root)
         else:
