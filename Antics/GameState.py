@@ -3,6 +3,7 @@ from Constants import *
 from Inventory import Inventory
 from Building import Building
 from Location import *
+from Ant import Ant
 
 def addCoords(tuple1, tuple2):
     if len(tuple1) != len(tuple2):
@@ -34,7 +35,7 @@ class GameState(object):
     #Description: Creates a new GameState
     #
     #Parameters:
-    #   inputBoard - The Board to be used by the GameState (Board)
+    #   inputBoard - The Board to be used by the GameState (Board) access tiles by board.[y][x]
     #   inputInventories - A tuple containing the Inventory for each player as
     #    well as a third inventory for grass and food: (Inventory, Inventory, Inventory)
     #   inputPhase - The phase of the game (int)
@@ -92,7 +93,7 @@ class GameState(object):
     ##
     # getBlankState
     #
-    # returns a game board with nothing on it
+    # returns a game state with nothing on it
     #
     @staticmethod
     def getBlankState():
@@ -107,6 +108,39 @@ class GameState(object):
                    Inventory(PLAYER_TWO, [], [], 0),
                    Inventory(NEUTRAL, [], [], 0)]
         return GameState(board, invents, SETUP_PHASE_1, PLAYER_ONE)
+
+    ##
+    # getBasicState
+    #
+    # returns a game state with initial setups (tunnels, anthill, queens) in default positions
+    # to use for testing
+    @staticmethod
+    def getBasicState():
+        state = GameState.getBlankState()
+
+        # player 1
+        p1Queen = Ant((0, 0), QUEEN, 0)
+        state.board[0][0].ant = p1Queen
+        state.inventories[0].ants.append(p1Queen)
+
+        p1Hill = Building((0, 0), ANTHILL, 0)
+        p1Tunnel = Building((9, 0), TUNNEL, 0)
+        state.board[0][0].constr = p1Hill
+        state.board[0][9].contrs = p1Tunnel
+        state.inventories[0].constrs += [p1Hill, p1Tunnel]
+
+        #player 2
+        p2Queen = Ant((9, 9), QUEEN, 1)
+        state.board[9][9].ant = p2Queen
+        state.inventories[1].ants.append(p2Queen)
+
+        p1Hill = Building((9, 9), ANTHILL, 1)
+        p1Tunnel = Building((0, 9), TUNNEL, 1)
+        state.board[9][9].constr = p1Hill
+        state.board[9][0].contrs = p1Tunnel
+        state.inventories[1].constrs += [p1Hill, p1Tunnel]
+
+        return state
 
 
     ##

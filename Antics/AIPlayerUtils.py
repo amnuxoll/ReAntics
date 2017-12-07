@@ -86,7 +86,7 @@ def getAntList(currentState,
 #
 def getConstrList(currentState,
                   pid = None,
-                  types = (ANTHILL, TUNNEL, GRASS, FOOD) ):
+                  types = (ANTHILL, TUNNEL, GRASS, FOOD)):
 
     #start with a list of all constrs that belong to the indicated player(s)
     allConstrs = []
@@ -176,6 +176,31 @@ def listAdjacent(coord):
 
     return result
 
+##
+# listAttackable
+#
+# lists the attackable coordinates from a start coordinate and attack range
+# coordinates from a taxicab square around start
+#
+# coord - the coordinate of the attacking ant
+# dist - the attack range of the attacking ant
+def listAttackable(coord, dist = 1):
+    res = []
+
+    # goes L-R across board, offset by 1 for range()
+    for i in range(-dist, dist + 1):
+        # get allowed y variance given x variance
+        # offset by 1 for range()
+        yLen = dist - abs(i)
+        for j in range(-yLen, yLen + 1):
+            newCord = (coord[0] + i, coord[1] + j)
+            if legalCoord(newCord) and newCord != coord:
+                res.append(newCord)
+
+    return res
+
+
+
 
 ##
 # listReachableAdjacent
@@ -220,12 +245,13 @@ def listReachableAdjacent(state, coords, movement, ignoresGrass = False):
 #
 # Return: a list of lists of coords (tuples). Each sub-list of tuples is an
 # acceptable set of coords for a Move object
-def listAllMovementPaths(currentState, coords, movement):
+# TODO: I think this method could be sped up to improve computation time
+def listAllMovementPaths(currentState, coords, movement, ignoresGrass = False):
     #base case: ant can't move any further
     if (movement <= 0): return []
 
     #construct a list of all valid one-step moves
-    adjCells = listReachableAdjacent(currentState, coords, movement)
+    adjCells = listReachableAdjacent(currentState, coords, movement, ignoresGrass)
     oneStepMoves = []
     for cell in adjCells:
         oneStepMoves.append([coords, cell])
@@ -239,11 +265,11 @@ def listAllMovementPaths(currentState, coords, movement):
         moveCoords = move[-1]
         constrAtDest = getConstrAt(currentState, moveCoords)
         cost = 1   #default
-        if constrAtDest != None:
+        if constrAtDest != None and not ignoresGrass:
             cost = CONSTR_STATS[constrAtDest.type][MOVE_COST]
 
         #get a list of all moves that will extend this one
-        extensions = listAllMovementPaths(currentState, moveCoords, movement - cost)
+        extensions = listAllMovementPaths(currentState, moveCoords, movement - cost, ignoresGrass)
 
         #create new moves by adding each extension to the base move
         for ext in extensions:
@@ -410,36 +436,10 @@ def listAllBuildMoves(currentState):
     myInv = getCurrPlayerInventory(currentState)
     hill = myInv.getAnthill()
     if (getAntAt(currentState, hill.coords)  == None):
-        for type in range(WORKER, R_SOLDIER + 1):
+        for type in range(len(UNIT_STATS)):
             cost = UNIT_STATS[type][COST]
             if (cost <= myInv.foodCount):
                 result.append(Move(BUILD, [hill.coords], type))
-
-    #if we don't have 3 food to build a tunnel then we're done
-    if (myInv.foodCount < 3):
-        return result
-                
-    #for each worker ant that is a legal position, you could build
-    #a tunnel
-    for ant in myInv.ants:
-        if (ant.type != WORKER): continue   #only workers can build tunnels
-        if (ant.hasMoved): continue         #this worker has already moved
-        if (getConstrAt(currentState, ant.coords) == None):
-            #see if there is adj food
-            inTheClear = True   #assume ok to build until proven otherwise
-            for coord in listAdjacent(ant.coords):
-                if (not legalCoord((coord[0],coord[1]))):
-                    continue
-
-                #is there food here?
-                constrHere = getConstrAt(currentState, coord)
-                if (constrHere != None) and (constrHere.type == FOOD):
-                    inTheClear = False
-                    break
-
-            #if no food was found then building a tunnel is valid
-            if inTheClear:
-                result.append(Move(BUILD, [ant.coords], TUNNEL))
 
     return result
 
@@ -484,7 +484,8 @@ def listAllMovementMoves(currentState):
         #create a Move object for each valid movement path
         allPaths = listAllMovementPaths(currentState,
                                         ant.coords,
-                                        UNIT_STATS[ant.type][MOVEMENT])
+                                        UNIT_STATS[ant.type][MOVEMENT],
+                                        UNIT_STATS[ant.type][IGNORES_GRASS])
 
         #remove moves that take the queen out of her territory
         if (ant.type == QUEEN):
@@ -547,7 +548,7 @@ def getCurrPlayerQueen(currentState):
 ##
 # Return: a list of the food objects on my side of the board
 def getCurrPlayerFood(self, currentState):
-    food = getConstrList(currentState, None, (FOOD,))
+    food = getConstrList(currentState, 2, (FOOD,))
     myFood = []
     if (currentState.inventories[0].player == currentState.whoseTurn):
         myFood.append(food[2])
@@ -593,20 +594,13 @@ def getNextState(currentState, move):
     myInv = getCurrPlayerInventory(myGameState)
     me = myGameState.whoseTurn
     myAnts = myInv.ants
-
-    # If enemy ant is on my anthill or tunnel update capture health
     myTunnels = myInv.getTunnels()
     myAntHill = myInv.getAnthill()
-    for myTunnel in myTunnels:
-        ant = getAntAt(myGameState, myTunnel.coords)
-        if ant is not None:
-            opponentsAnts = myGameState.inventories[not me].ants
-            if ant in opponentsAnts:
-                myTunnel.captureHealth -= 1
-    if getAntAt(myGameState, myAntHill.coords) is not None:
-        ant = getAntAt(myGameState, myAntHill.coords)
-        opponentsAnts = myGameState.inventories[not me].ants
-        if ant in opponentsAnts:
+
+    # If enemy ant is on my anthill or tunnel update capture health
+    ant = getAntAt(myGameState, myAntHill.coords)
+    if ant is not None:
+        if ant.player != me:
             myAntHill.captureHealth -= 1
 
     # If an ant is built update list of ants
@@ -622,21 +616,19 @@ def getNextState(currentState, move):
                 myInv.foodCount -= 2
             elif move.buildType == SOLDIER:
                 myInv.foodCount -= 3
-
-    # If a building is built update list of buildings and the update food count
-    if move.moveType == BUILD:
-        if move.buildType == TUNNEL:
-            building = Construction(move.coordList[0], move.buildType)
-            myInv.constrs.append(building)
-            myInv.foodCount -= 3
+        # ants are no longer allowed to build tunnels, so this is an error
+        elif move.buildType == TUNNEL:
+            print("Attempted tunnel build in getNextState()")
+            return currentState
 
     # If an ant is moved update their coordinates and has moved
-    if move.moveType == MOVE_ANT:
-        newCoord = move.coordList[len(move.coordList) - 1]
+    elif move.moveType == MOVE_ANT:
+        newCoord = move.coordList[-1]
         startingCoord = move.coordList[0]
         for ant in myAnts:
             if ant.coords == startingCoord:
                 ant.coords = newCoord
+                # TODO: should this be set true? Design decision
                 ant.hasMoved = False
                 # If an ant is carrying food and ends on the anthill or tunnel drop the food
                 if ant.carrying and ant.coords == myInv.getAnthill().coords:
@@ -647,25 +639,22 @@ def getNextState(currentState, move):
                         myInv.foodCount += 1
                         ant.carrying = False
                 # If an ant doesn't have food and ends on the food grab food
-                if not ant.carrying:
-                    foods = getConstrList(myGameState, None, (FOOD,))
+                if not ant.carrying and ant.type == WORKER:
+                    foods = getConstrList(myGameState, 2, [FOOD])
                     for food in foods:
                         if food.coords == ant.coords:
                             ant.carrying = True
                 # If my ant is close to an enemy ant attack it
-                adjacentTiles = listAdjacent(ant.coords)
-                for adj in adjacentTiles:
-                    if getAntAt(myGameState, adj) is not None:  # If ant is adjacent my ant
-                        closeAnt = getAntAt(myGameState, adj)
-                        if closeAnt.player != me:  # if the ant is not me
-                            closeAnt.health = closeAnt.health - UNIT_STATS[ant.type][ATTACK]  # attack
+                attackable = listAttackable(ant.coords, UNIT_STATS[ant.type][RANGE])
+                for coord in attackable:
+                    foundAnt = getAntAt(myGameState, coord)
+                    if foundAnt is not None:  # If ant is adjacent my ant
+                        if foundAnt.player != me:  # if the ant is not me
+                            foundAnt.health = foundAnt.health - UNIT_STATS[ant.type][ATTACK]  # attack
                             # If an enemy is attacked and looses all its health remove it from the other players
                             # inventory
-                            if closeAnt.health <= 0:
-                                enemyAnts = myGameState.inventories[not me].ants
-                                for enemy in enemyAnts:
-                                    if closeAnt.coords == enemy.coords:
-                                        myGameState.inventories[not me].ants.remove(enemy)
+                            if foundAnt.health <= 0:
+                                myGameState.inventories[1 - me].ants.remove(foundAnt)
                             # If attacked an ant already don't attack any more
                             break
     return myGameState
@@ -697,7 +686,7 @@ def getNextStateAdversarial(currentState, move):
     elif move.moveType == END:
         for ant in myAnts:
             ant.hasMoved = False
-        nextState.whoseTurn = 1 - currentState.whoseTurn;
+        nextState.whoseTurn = 1 - currentState.whoseTurn
     return nextState
 
     

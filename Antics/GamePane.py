@@ -364,29 +364,20 @@ class GamePane:
 
         antR = UNIT_STATS[ant.type][3]
         locations = []
+        attacks = listAttackable(ant.coords, antR)
         # generate list of possible ants to attack
         # these will exist in a subset of the square with radius ant attack range
-        for x in range(-antR, antR + 1):
-            for y in range(-antR, antR + 1):
-                # the actual area forms a taxicab circle inside this square
-                if abs(x) + abs(y) > antR:
-                    continue
+        for loc in attacks:
+            # we have to have an enemy ant to attack
+            target = getAntAt(self.handler.currentState, loc)
+            if target is None:
+                continue
 
-                loc = (ant.coords[0] + x, ant.coords[1] + y)
-                # make sure the coordinate is in the game board
-                if not (0 <= loc[0] <= 9 and 0 <= loc[1] <= 9):
-                    continue
+            if target.player == ant.player:
+                continue
 
-                # we have to have an enemy ant to attack
-                target = getAntAt(self.handler.currentState, loc)
-                if target is None:
-                    continue
-
-                if target.player == ant.player:
-                    continue
-
-                # if we got here, this coordinate has a valid ant to attack
-                locations.append(loc)
+            # if we got here, this coordinate has a valid ant to attack
+            locations.append(loc)
 
         # this shouldn't happen
         if len(locations) == 0:
