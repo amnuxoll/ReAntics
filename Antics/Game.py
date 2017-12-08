@@ -555,6 +555,7 @@ class Game(object):
                 self.restartGameList = list(self.gamesToPlay)
 
             self.UI.statsHandler.timeLabel.Start()
+            self.UI.statsHandler.addLogItem()
             if self.UI.paused:
                 self.UI.pausePressed()
             self.running = True
@@ -566,8 +567,6 @@ class Game(object):
             self.currentPlayerScores = []
             self.currentPlayerScores.append([game.p1.author, 0, 0])
             self.currentPlayerScores.append([game.p2.author, 0, 0])
-
-            self.UI.statsHandler.addLogItem()
 
             for j in range(game.n):
                 self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
@@ -583,6 +582,8 @@ class Game(object):
                 self.resolveEndGame()
                 if self.safeKilled:
                     self.safeKilled = False
+                    self.UI.gameHandler.killButton.disable()
+                    self.UI.statsHandler.killButton.disable()
                     break
 
             self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
@@ -649,10 +650,10 @@ class Game(object):
     # restarts the game set
     def restartFromEnd(self):
         self.gamesToPlay = self.restartGameList
-        self.generalWake()
-
+        self.restartGameList = None
         self.UI.statsHandler.clearLog()
         self.UI.statsHandler.timeLabel.Reset()
+        self.generalWake()
 
     ##
     # runGame

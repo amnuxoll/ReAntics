@@ -269,48 +269,51 @@ class GUIHandler:
         if not self.game.running or self.game.killed:
             return
 
-        if not self.paused: self.pausePressed()
-
-        if not self.game.safeKilled:
-            res = RedoneWidgets.askQuestion("Kill Game", "Do you want to end now or after current game?", self.root)
-        else:
-            res = "yes"
-
-        if res == "yes":
-            res = RedoneWidgets.askOKCancel("Kill Game", "Stopping running games of Antics may damage AIs."
-                                                         " Are you sure you want to continue?", self.root)
-
-            if res:
-
-                self.gameHandler.killButton.disable()
-                self.statsHandler.killButton.disable()
-
-                self.game.kill()
-                self.gameHandler.setInstructionText("Game Killed")
-                if self.paused:
-                    self.pausePressed()
-
-        elif not self.game.safeKilled:
-            self.game.killNice()
-
-    def restartPressed(self):
-        if self.game.restarted:
-            return
-
+        # pause the game during the resolution of the kill button
         pause = False
         if not self.paused:
             self.pausePressed()
             pause = True
 
+        res = RedoneWidgets.askQuestion("Kill Game", "Do you want to kill the game immediately?\n"
+                                                     "Note that ending running games may damage AIs.", self.root)
+
+        if res == "yes":
+            self.gameHandler.killButton.disable()
+            self.statsHandler.killButton.disable()
+
+            self.game.kill()
+            self.gameHandler.setInstructionText("Game Killed")
+            if self.paused:
+                self.pausePressed()
+
+        elif not self.game.safeKilled:
+            self.game.killNice()
+
+        # unpause the game if we paused it
+        if self.paused and pause:
+            self.pausePressed()
+
+    def restartPressed(self):
+        if self.game.restarted:
+            return
+
+        # pause the game during the resolution of the restart button
+        pause = False
+        if not self.paused and self.game.running:
+            self.pausePressed()
+            pause = True
+
         if self.game.running:
             self.game.restart()
+            self.killPressed()
         else:
             self.game.restartFromEnd()
-        self.killPressed()
 
         self.gameHandler.restartButton.disable()
         self.statsHandler.restartButton.disable()
 
+        # unpause the game if we paused it
         if pause and self.paused:
             self.pausePressed()
 
