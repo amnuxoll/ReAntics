@@ -119,7 +119,7 @@ def getConstrAt(state, coords):
 
     #search for one at the given coord
     for constr in allConstrs:
-        if (constr.coords == coords):
+        if constr.coords == coords:
             return constr
 
     return None  #not found
@@ -134,13 +134,13 @@ def getConstrAt(state, coords):
 #    coords - a valid coordinate (code does not check for invalid!)
 #
 # Return:  the ant at the coordinate or None if there is none
-def getAntAt(state, coords):
+def getAntAt(state, coords) -> Ant:
     #get a list of all constructs
     allAnts = getAntList(state)
 
     #search for one at the given coord
     for ant in allAnts:
-        if (ant.coords == coords):
+        if ant.coords == coords:
             return ant
 
     return None  #not found
@@ -156,8 +156,8 @@ def getAntAt(state, coords):
 #
 def listAdjacent(coord):
     #catch invalid inputs
-    if (not legalCoord(coord)):
-        return [];
+    if not legalCoord(coord):
+        return []
 
     #this set of coord deltas represent movement in each cardinal direction
     deltas = [ (-1, 0), (1, 0), (0, -1), (0, 1) ]

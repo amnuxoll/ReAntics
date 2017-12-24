@@ -16,12 +16,14 @@ from AIPlayerUtils import *
 ##
 # a path is a support data structure that hold arrangements of ants, food pickup,
 # and food dropoff locations
-class AntPathCycle():
+class AntPathCycle:
 
     def __init__(self, foodCoords, depositCoords):
+        #liat of coordinates that contain ants
         self.antList = []
         self.food = foodCoords
         self.deposit = depositCoords
+        self.dist = approxDist(foodCoords, depositCoords)
         self.state = None
 
     ## adds a new ant to the list this path interacts with
@@ -35,14 +37,29 @@ class AntPathCycle():
             currentAnt = getAntAt(self.state, ant)
             if currentAnt is not None:
                 if not currentAnt.hasMoved:
+                    #workers with food go towards deposit location
+                    #workers without go towards food
                     if currentAnt.carrying:
-                        path = createPathToward(self.state, ant, self.deposit, UNIT_STATS[WORKER][MOVEMENT])
-                        self.antList.append(path[len(path) - 1])
-                        return Move(MOVE_ANT, path, None)
+                        goal = self.deposit
                     else:
-                        path = createPathToward(self.state, ant, self.food, UNIT_STATS[WORKER][MOVEMENT])
-                        self.antList.append(path[len(path) - 1])
-                        return Move(MOVE_ANT, path, None)
+                        goal = self.food
+
+
+                    path = createPathToward(self.state, ant, goal, UNIT_STATS[WORKER][MOVEMENT])
+
+                    if len(path) == 1:
+                        #workers trying to move past each other can get stuck because the diagonal movement
+                        #does not get them closer to their goal. This gets around that.
+                        tmp = createPathToward(self.state, ant, goal, UNIT_STATS[WORKER][MOVEMENT] + 1)
+
+                        #if adding 1 movement didn't help, give up
+                        #else, chop off last square and go
+                        if len(tmp) > 2:
+                            path = tmp[:-1]
+
+                    self.antList.remove(path[0])
+                    self.antList.append(path[-1])
+                    return Move(MOVE_ANT, path, None)
         return None
 
     ## gets a new gamestate and clears out ants that are no longer present (killed or moved)
@@ -77,7 +94,7 @@ class AIPlayer(Player):
     #   inputPlayerId - The id to give the new player (int)
     ##
     def __init__(self, inputPlayerId):
-        super(AIPlayer, self).__init__(inputPlayerId, "Complex Food Gatherer")
+        super(AIPlayer, self).__init__(inputPlayerId, "Very Complex Food Gatherer")
         self.foods = None
         self.distances = [0 for i in range(2)]
         self.hill = None
@@ -136,12 +153,7 @@ class AIPlayer(Player):
                             dist1 = stepsToReach(currentState, (j, k), enemyHill.coords)
                             dist2 = stepsToReach(currentState, (j, k), enemyTunnel.coords)
 
-                            if min(dist1, dist2) > maxDist and i == 0:
-                                    maxDist = min(dist1, dist2)
-                                    move = (j, k)
-
-                            if min(dist1, dist2) > maxDist and i == 1:
-                                if not moves[0] == (j, k):
+                            if min(dist1, dist2) > maxDist and (j, k) not in moves:
                                     maxDist = min(dist1, dist2)
                                     move = (j, k)
                 moves.append(move)
@@ -184,6 +196,9 @@ class AIPlayer(Player):
             self.paths = [0 for i in range(2)]
 
             foods = getConstrList(currentState, None, (FOOD,))
+
+            #find foods for hill and tunnel
+            #in the case of equal, prioritize tunnel because anthill has to build ants
             dist = 999
             bestForTunnel = None
             for food in foods:
@@ -196,18 +211,9 @@ class AIPlayer(Player):
             bestForHill = None
             for food in foods:
                 testDist = stepsToReach(currentState, self.hill.coords, food.coords)
-                if testDist < dist:
+                if testDist < dist and food.coords != bestForTunnel:
                     dist = testDist
                     bestForHill = food.coords
-
-            if bestForTunnel == bestForHill:
-                dist = 999
-                for food in foods:
-                    testDist = stepsToReach(currentState, self.hill.coords, food.coords)
-                    if testDist < dist:
-                        if food.coords != bestForTunnel:
-                            dist = testDist
-                            bestForHill = food.coords
 
 
 
@@ -274,7 +280,7 @@ class AIPlayer(Player):
         if myInv.foodCount > 0:
             if getAntAt(currentState, self.hill.coords) is None:
                 for path in self.paths:
-                    if len(path.antList) == 0:
+                    if len(path.antList) == 0 or len(path.antList) < path.dist / 2:
                         path.addAnt(self.hill.coords)
                         return Move(BUILD, [self.hill.coords], WORKER)
 
