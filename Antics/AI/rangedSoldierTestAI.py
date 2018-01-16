@@ -91,10 +91,10 @@ class AIPlayer(Player):
         if (not myQueen.hasMoved):
             return Move(MOVE_ANT, [myQueen.coords], None)
 
-        # if I have the food and the anthill is unoccupied then
-        # make another tunnel
+        # # if I have the food and the anthill is unoccupied then
+        # # make another tunnel
         # if (playerInv.foodCount > 2):
-        #     return Move(BUILD, [], TUNNEL)
+        #     return Move(BUILD, [4,5], TUNNEL)
 
         # if I have the food and the anthill is unoccupied then
         # make a ranged soldier
