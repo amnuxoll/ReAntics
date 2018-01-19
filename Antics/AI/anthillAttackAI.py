@@ -231,7 +231,6 @@ class AIPlayer(Player):
                                     (0, 0), UNIT_STATS[QUEEN][MOVEMENT])
             return Move(MOVE_ANT, path, None)
 
-        ##Update on above method: We need to start making drones
 
         # drones if I have only worker ants, rangers if I have one drone
         if myInv.foodCount > 1:
