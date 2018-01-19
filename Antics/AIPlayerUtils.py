@@ -144,6 +144,29 @@ def getAntAt(state, coords) -> Ant:
             return ant
 
     return None  #not found
+
+def getWinner(currentState):
+    myId = currentState.whoseTurn
+    enemyId = 1 - myId
+
+    myInv = currentState.inventories[myId]
+    enemyInv = currentState.inventories[enemyId]
+
+    myQueen = myInv.getQueen()
+    myAntHill = myInv.getAnthill()
+    myFoodCount = myInv.foodCount
+
+    enemyQueen = enemyInv.getQueen()
+    enemyAntHill = enemyInv.getAnthill()
+    enemyFoodCount = enemyInv.foodCount
+
+    if enemyAntHill.captureHealth <= 0 or myFoodCount >= FOOD_GOAL or enemyQueen is None:
+        return 1.0
+
+    if myAntHill.captureHealth <= 0 or enemyFoodCount >= FOOD_GOAL or myQueen is None:
+        return 0.0
+
+    return None
     
 
 ##

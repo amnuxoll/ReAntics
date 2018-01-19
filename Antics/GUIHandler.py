@@ -321,6 +321,11 @@ class GUIHandler:
         self.killPressed()
         self.game.goToSettings = True
 
+        if not self.game.gameThread.is_alive():
+            self.game.gameThread = threading.Thread(target=self.game.start, daemon=True)
+            self.game.gameThread.start()
+            self.showFrame(0)
+
         self.gameHandler.settingsButton.disable()
         self.statsHandler.settingsButton.disable()
 
