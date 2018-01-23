@@ -10,7 +10,7 @@ from Move import Move
 from GameState import addCoords
 from AIPlayerUtils import *
 
-## Author : Brendan Thomas and Abhinav Mulagada
+## Author : Brendan Thomas
 ## Version: 1/29/2017
 
 ##
