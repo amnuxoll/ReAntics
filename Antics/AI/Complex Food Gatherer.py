@@ -241,15 +241,6 @@ class AIPlayer(Player):
                 if len(myAnts) < numAttacking:
                     return Move(BUILD, [self.hill.coords], DRONE)
 
-        ## move drone towards center if it's newly spawned
-        drone = getAntAt(currentState, self.hill.coords)
-        if drone is not None:
-            if drone.type == DRONE:
-                if not drone.hasMoved:
-                    path = createPathToward(currentState, drone.coords, (5, 3),
-                                            UNIT_STATS[DRONE][MOVEMENT])
-                    return Move(MOVE_ANT, path, None)
-
 
 
         ##update drone

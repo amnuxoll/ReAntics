@@ -1688,7 +1688,6 @@ class Game(object):
             errorMsg += "(" + str(info[0]) + ", " + str(info[1]) + ")"
 
         print(errorMsg)
-        self.setWinner((self.state.whoseTurn + 1) % 2)
 
 
     ###

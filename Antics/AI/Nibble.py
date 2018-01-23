@@ -231,15 +231,6 @@ class AIPlayer(Player):
             if getAntAt(currentState, self.hill.coords) is None and len(drones) == 0:
                 return Move(BUILD, [self.hill.coords], DRONE)
 
-        ## move drone towards center if it's newly spawned
-        drone = getAntAt(currentState, self.hill.coords)
-        if drone is not None:
-            if drone.type == DRONE:
-                if not drone.hasMoved:
-                    path = createPathToward(currentState, drone.coords, (5, 3),
-                                            UNIT_STATS[DRONE][MOVEMENT])
-                    return Move(MOVE_ANT, path, None)
-
         ##update drone
         ##simply send the drone on a mission towards nearest enemy worker
         for drone in drones:
@@ -248,8 +239,6 @@ class AIPlayer(Player):
                 map = [[-approxDist((x, y), drone.coords) for x in range(10)] for y in range(10)]
                 enemyWorkers = getAntList(currentState, enemy, [WORKER])
                 enemyFighters = getAntList(currentState, enemy, [QUEEN, SOLDIER, R_SOLDIER, DRONE])
-                bestLoc = None
-                bestScore = 0
                 for ant in enemyFighters:
                     rng = UNIT_STATS[ant.type][RANGE] + UNIT_STATS[ant.type][MOVEMENT]
                     attackable = listAttackable(ant.coords, rng)
@@ -263,10 +252,16 @@ class AIPlayer(Player):
                     near = listAttackable(ant.coords, 4)
                     for coord in near:
                         dist = approxDist(coord, ant.coords)
-                        map[coord[0]][coord[1]] += 5 - dist if dist != 1 else 5
-                        if map[coord[0]][coord[1]] > bestScore:
-                            bestScore = map[coord[0]][coord[1]]
-                            bestLoc = coord
+                        map[coord[0]][coord[1]] += 2 * (5 - dist if dist != 1 else 5)
+
+
+                bestLoc = None
+                bestScore = -999
+                moveable = listAttackable(drone.coords, UNIT_STATS[DRONE][MOVEMENT])
+                for loc in moveable:
+                    if map[loc[0]][loc[1]] > bestScore:
+                        bestScore = map[loc[0]][loc[1]]
+                        bestLoc = loc
 
                 if bestLoc is not None:
                     return Move(MOVE_ANT, createPathToward(currentState, drone.coords, bestLoc,
