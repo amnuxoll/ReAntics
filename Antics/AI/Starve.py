@@ -10,8 +10,8 @@ from Move import Move
 from GameState import addCoords
 from AIPlayerUtils import *
 
-## Author : Brendan Thomas and Abhinav Mulagada
-## Version: 1/29/2017
+## Author : Sara Perkins, Brendan Thomas
+## Version: 1/23/2018
 
 ##
 # a path is a support data structure that hold arrangements of ants, food pickup,
@@ -232,7 +232,7 @@ class AIPlayer(Player):
             enemyAnts = getAntList(currentState, 1-me, (DRONE, SOLDIER, R_SOLDIER))
             enemy_locs = [ a.coords for a  in enemyAnts ]
 
-            if len(enemy_locs) < 1:
+            if len(enemy_locs) < 1 or len(getAntList(currentState, me, (WORKER,))) == 0:
                 path = createPathToward(currentState, myQueen.coords,
                                     (4,3), UNIT_STATS[QUEEN][MOVEMENT])
                 return Move(MOVE_ANT, path, None)
@@ -253,7 +253,7 @@ class AIPlayer(Player):
                     dest_scores[d].append(stepsToReach(currentState, src, dests[d]) )
             dest_scores = [ min(d) for d in dest_scores ]
             
-            path = moves[ dest_scores.index( max(dest_scores) ) ] 
+            path = moves[ dest_scores.index( max(dest_scores) ) ] if 1 not in dest_scores else moves[ dest_scores.index( 1 ) ] 
             return Move(MOVE_ANT, path, None)
 
 
@@ -279,16 +279,17 @@ class AIPlayer(Player):
                             break
                     return Move(BUILD, [self.hill.coords], O_ANT)
 
-        ## move drone towards center if it's newly spawned
-        r_soldier = getAntAt(currentState, self.hill.coords)
-        if r_soldier is not None:
-            if r_soldier.type == O_ANT:
-                if not r_soldier.hasMoved:
-                    path = createPathToward(currentState, r_soldier.coords, self.o_food[0],
-                                            UNIT_STATS[O_ANT][MOVEMENT])
-                    i = self.occupants.index(r_soldier.coords)
-                    self.occupants[i] = path[-1]
-                    return Move(MOVE_ANT, path, None)
+##        ## move drone towards center if it's newly spawned ##### might want to get rid of this
+##        ## causes a dance sometimes
+##        r_soldier = getAntAt(currentState, self.hill.coords)
+##        if r_soldier is not None:
+##            if r_soldier.type == O_ANT:
+##                if not r_soldier.hasMoved:
+##                    path = createPathToward(currentState, r_soldier.coords, self.o_food[0],
+##                                            UNIT_STATS[O_ANT][MOVEMENT])
+##                    i = self.occupants.index(r_soldier.coords)
+##                    self.occupants[i] = path[-1]
+##                    return Move(MOVE_ANT, path, None)
 
 
 
@@ -312,6 +313,7 @@ class AIPlayer(Player):
                     path = createPathToward(currentState, r_soldier.coords, target, UNIT_STATS[O_ANT][MOVEMENT])
                     
                     self.occupants[i] = path[-1]
+##                    print ( self.occupants[i], target, path )
                     return Move(MOVE_ANT, path, None)
 
         ##make a worker if there aren't enough and anthill is empty
