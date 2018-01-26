@@ -154,7 +154,7 @@ class StatsPane:
         self.dummyStatLabel = tkinter.Label(self.logTextFrame.interior, bg = "white", text = "\n\n")
         self.dummyStatLabel.grid(sticky=tkinter.W)
         
-        self.logTextFrame.set_scrollregion(vertical_buff=0) #can change amount of white space beneath game log records
+        self.logTextFrame.set_scrollregion(vertical_buff=300) #can change amount of white space beneath game log records
         self.parent.update()
 
         self.log.append(b)

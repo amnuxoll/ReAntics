@@ -189,7 +189,12 @@ class AIPlayer(Player):
             #find shortest paths from tunnel to fruit and anthill to fruit
             self.paths = [0 for i in range(2)]
 
-            foods = getConstrList(currentState, None, (FOOD,))
+            temp_foods = getConstrList(currentState, None, (FOOD,))
+            foods = []
+            for f in temp_foods:
+                if isPathOkForQueen ( [f.coords] ) :
+                    foods.append(f)
+            
             dist = 999
             bestForTunnel = None
             for food in foods:
