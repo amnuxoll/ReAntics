@@ -194,7 +194,7 @@ class AIPlayer(Player):
             for f in temp_foods:
                 if isPathOkForQueen ( [f.coords] ) :
                     foods.append(f)
-            
+            self.foods = foods
             dist = 999
             bestForTunnel = None
             for food in foods:
@@ -238,14 +238,15 @@ class AIPlayer(Player):
             enemy_locs = [ a.coords for a  in enemyAnts ]
 
             if len(enemy_locs) < 1 or len(getAntList(currentState, me, (WORKER,))) == 0:
+                q_dst = [(4,3), (5,3)][random.randint(0,1)]
                 path = createPathToward(currentState, myQueen.coords,
-                                    (4,3), UNIT_STATS[QUEEN][MOVEMENT])
+                                    q_dst, UNIT_STATS[QUEEN][MOVEMENT])
                 return Move(MOVE_ANT, path, None)
             
             moves_temp = listAllMovementPaths(currentState, myQueen.coords, UNIT_STATS[QUEEN][MOVEMENT], ignoresGrass = False)
             moves = [ ]
             for m in moves_temp:
-                if isPathOkForQueen(m):
+                if isPathOkForQueen(m) and m[-1] not in [x.coords for x in self.foods]:
                     moves.append(m)
 
             dests = [ m[-1] for m in moves ]
@@ -271,32 +272,35 @@ class AIPlayer(Player):
                 enemy = 1 - me
                 enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
                 numAttacking = 0
+                hill_in_range = False 
                 for ant in enemyAnts:
                     if ant.coords[1] < 6:
                         numAttacking += 1
+                    if stepsToReach(currentState, ant.coords, self.hill.coords) <=  UNIT_STATS[ant.type][RANGE] +  UNIT_STATS[ant.type][MOVEMENT] + 1:
+                        hill_in_range = True
+                        break
                 myAnts = getAntList(currentState, me, (O_ANT,))
                 myAnts_coords = [ a.coords for a in myAnts ]
-                if len(myAnts) < 2: #len(myAnts) < numAttacking:
+                if len(myAnts) < 2 and not hill_in_range: #len(myAnts) < numAttacking:
+                    successful_placement = False
                     for i in range(len(self.occupants)):
                         a = self.occupants[i]
                         if a is None or a not in myAnts_coords :
                             self.occupants[i] = self.hill.coords
+                            successful_placement = True
                             break
+                    if not successful_placement:
+                        for i in range(len(self.occupants)):
+                            a = self.occupants[i]
+                            if self.occupants[0] == self.occupants[1] :
+                                self.occupants = [self.hill.coords, self.occupants[1]]
+                            elif len(myAnts_coords) == 0:
+                                self.occupants = [self.hill.coords, None]
+                            elif len(myAnts_coords) == 1:
+                                [myAnts_coords[0], None]
+                            elif len(myAnts_coords) == 2:
+                                self.occupants = myAnts_coords
                     return Move(BUILD, [self.hill.coords], O_ANT)
-
-##        ## move drone towards center if it's newly spawned ##### might want to get rid of this
-##        ## causes a dance sometimes
-##        r_soldier = getAntAt(currentState, self.hill.coords)
-##        if r_soldier is not None:
-##            if r_soldier.type == O_ANT:
-##                if not r_soldier.hasMoved:
-##                    path = createPathToward(currentState, r_soldier.coords, self.o_food[0],
-##                                            UNIT_STATS[O_ANT][MOVEMENT])
-##                    i = self.occupants.index(r_soldier.coords)
-##                    self.occupants[i] = path[-1]
-##                    return Move(MOVE_ANT, path, None)
-
-
 
         ##update drone
         ##simply send the drone on a mission towards nearest enemy ant
@@ -307,23 +311,47 @@ class AIPlayer(Player):
                 enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
                 dist = 999
                 target = None
+                enemy_atHome = None
                 for ant in enemyAnts:
                     newDist = stepsToReach(currentState, ant.coords, r_soldier.coords)
                     if newDist < dist:
                         dist = newDist
                         target = ant
+                    if ant.type != WORKER and \
+                       stepsToReach(currentState, (ant.coords[0], self.hill.coords[1]), ant.coords) <= 2:
+                        enemy_atHome = ant.coords
                 i = self.occupants.index(r_soldier.coords)
                 target = self.o_food[i] #.coords
+                enemy_workers = getAntList(currentState, enemy, (WORKER,))
+                # kill the last worker -- head up first, at least into no man's land
+                if len(enemy_workers) == 1 and not isPathOkForQueen([r_soldier.coords]):
+                    target = enemy_workers[0].coords
+                # kill the queen
+                elif len(enemy_workers) == 0 or \
+                     len(getAntList(currentState, me, (WORKER,))) == 0 and myInv.foodCount < 1 :
+                    target = getAntList(currentState, enemy, (QUEEN,))[0].coords
+                # defend at home
+                elif enemy_atHome :
+                    target = enemy_atHome
+                # defend from home
+                elif len(enemyAnts) - len(enemy_workers) > 1 :
+                    target = (r_soldier.coords[0], 3) if r_soldier.coords[1] != 3 else (random.randint(0,9), 3)                                          
                 if target is not None:
                     path = createPathToward(currentState, r_soldier.coords, target, UNIT_STATS[O_ANT][MOVEMENT])
                     
                     self.occupants[i] = path[-1]
-##                    print ( self.occupants[i], target, path )
                     return Move(MOVE_ANT, path, None)
 
         ##make a worker if there aren't enough and anthill is empty
         if myInv.foodCount > 0:
-            if getAntAt(currentState, self.hill.coords) is None:
+            enemy = 1 - me
+            enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
+            hill_in_range = False 
+            for ant in enemyAnts:
+                if stepsToReach(currentState, ant.coords, self.hill.coords) <=  UNIT_STATS[ant.type][RANGE] +  UNIT_STATS[ant.type][MOVEMENT] + 1:
+                    hill_in_range = True
+                    break
+            if not hill_in_range and getAntAt(currentState, self.hill.coords) is None:
                 for path in self.paths:
                     if len(path.antList) == 0:
                         path.addAnt(self.hill.coords)
