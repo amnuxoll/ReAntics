@@ -246,15 +246,20 @@ class AIPlayer(Player):
         for ant in enemyAnts:
             antCoords = list(ant.coords)
             if antCoords[1] < 5:
-                if myInv.foodCount > 2:
-                    if len(soldier) < 1:
-                        if getAntAt(currentState, self.hill.coords) is None:
-                            return Move(BUILD, [self.hill.coords], SOLDIER)
-                    else:
-                        for sol in soldier:
-                            if not sol.hasMoved:
-                                path = createPathToward(currentState, sol.coords, ant.coords, UNIT_STATS[SOLDIER][MOVEMENT])
-                                return Move(MOVE_ANT, path, None)
+                # if myInv.foodCount > 2:
+                #     if len(soldier) < 1:
+                #         if getAntAt(currentState, self.hill.coords) is None:
+                #             return Move(BUILD, [self.hill.coords], SOLDIER)
+                #     else:
+                #         for sol in soldier:
+                #             if not sol.hasMoved:
+                #                 path = createPathToward(currentState, sol.coords, ant.coords, UNIT_STATS[SOLDIER][MOVEMENT])
+                #                 return Move(MOVE_ANT, path, None)
+                for drone in drones:
+                    if not drone.hasMoved:
+                        path = createPathToward(currentState, drone.coords, ant.coords,
+                                                UNIT_STATS[DRONE][MOVEMENT])
+                        return Move(MOVE_ANT, path, None)
 
 
         # Assuming there is no invasion yet, check food and proceed with necessary
