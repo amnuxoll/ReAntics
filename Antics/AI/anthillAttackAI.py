@@ -213,7 +213,6 @@ class AIPlayer(Player):
                             bestForHill = food.coords
 
 
-
             self.paths[0] = AntPathCycle(bestForHill, self.hill.coords)
             self.paths[1] = AntPathCycle(bestForTunnel, self.tunnel.coords)
 
