@@ -48,7 +48,10 @@ class StatsPane:
 
         self.logTextFrame = wgt.ScrollableFrame ( self.gLFrame )
         self.logTextFrame.config( padx = 2, pady=2 )
-        self.logTextFrame.canvas.config(height=450)
+        self.logTextFrame.canvas.config(height=600)
+
+
+
 
         self.gLFrame.columnconfigure(0, weight=1)
         self.logTextFrame.pack ( fill="both" )
@@ -154,7 +157,7 @@ class StatsPane:
         self.dummyStatLabel = tkinter.Label(self.logTextFrame.interior, bg = "white", text = "\n\n")
         self.dummyStatLabel.grid(sticky=tkinter.W)
         
-        self.logTextFrame.set_scrollregion(vertical_buff=0) #can change amount of white space beneath game log records
+        self.logTextFrame.set_scrollregion(vertical_buff=5) #can change amount of white space beneath game log records
         self.parent.update()
 
         self.log.append(b)

@@ -12,8 +12,8 @@ from GameState import addCoords
 from AIPlayerUtils import *
 
 
-## Author : Brendan Thomas and Abhinav Mulagada
-## Version: 1/29/2017
+## Author : Logan Orndorf
+## Version: 1/23/2018
 
 ##
 # a path is a support data structure that hold arrangements of ants, food pickup,
@@ -228,33 +228,57 @@ class AIPlayer(Player):
         myQueen = myInv.getQueen()
         if not myQueen.hasMoved:
             path = createPathToward(currentState, myQueen.coords,
-                                    (0, 0), UNIT_STATS[QUEEN][MOVEMENT])
+                                    (2, 0), UNIT_STATS[QUEEN][MOVEMENT])
             return Move(MOVE_ANT, path, None)
 
 
-        # drones if I have only worker ants, rangers if I have one drone
+
+
+        # Get list of drones, list of rangers, list of soldiers and store them
+        drones = getAntList(currentState, me, (DRONE,))
+        r_soldiers = getAntList(currentState, me, (R_SOLDIER,))
+        soldier = getAntList(currentState, me, (SOLDIER,))
+
+        # Get list of my enemies ants
+        enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
+
+        # Firstly: Make a check for any ants entering my own territory: this takes first priority
+        # Secondly: If there is a threat, create a soldier if there isn't already one
+        # Thirdly: If there is a soldier, send it to attack enemy infiltrator
+        for ant in enemyAnts:
+            antCoords = list(ant.coords)
+            if antCoords[1] < 5:
+                if myInv.foodCount > 2:
+                    if len(soldier) < 1:
+                        if getAntAt(currentState, self.hill.coords) is None:
+                            return Move(BUILD, [self.hill.coords], SOLDIER)
+                    else:
+                        for sol in soldier:
+                            if not sol.hasMoved:
+                                path = createPathToward(currentState, sol.coords, ant.coords, UNIT_STATS[SOLDIER][MOVEMENT])
+                                return Move(MOVE_ANT, path, None)
+
+
+        # Assuming there is no invasion yet, check food and proceed with necessary
+        # processes for making a drone to send to enemy anthill provided there is enough food
         if myInv.foodCount > 1:
             if getAntAt(currentState, self.hill.coords) is None:
                 myDrones = getAntList(currentState, me, (DRONE,))
                 myWorkers = getAntList(currentState, me, (WORKER,))
                 if len(myWorkers) >= 2:
-                    if len(myDrones) < 1:
+                    if len(myDrones) < 3:
                         return Move(BUILD, [self.hill.coords], DRONE)
-                    else:
-                        if myInv.foodCount > 3:
-                            return Move(BUILD, [self.hill.coords], R_SOLDIER)
+                        # else:
+                        #     if myInv.foodCount > 2:
+                        #         return Move(BUILD, [self.hill.coords], SOLDIER)
 
-
-        ##update drone and r_soldiers
-        ##send the drone on a mission towards the anthill
-        drones = getAntList(currentState, me, (DRONE,))
-        r_soldiers = getAntList(currentState, me, (R_SOLDIER,))
-
+        # Movement for drones
         for drone in drones:
             if not drone.hasMoved:
                 path = createPathToward(currentState, drone.coords, enemyHill.coords, UNIT_STATS[DRONE][MOVEMENT])
                 return Move(MOVE_ANT, path, None)
 
+        # Movement for r_soldiers if there ever ends up being a need for them
         for ranger in r_soldiers:
             if not ranger.hasMoved:
                 path = createPathToward(currentState, ranger.coords, enemyHill.coords, UNIT_STATS[R_SOLDIER][MOVEMENT])
