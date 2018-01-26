@@ -234,17 +234,17 @@ class AIPlayer(Player):
 
         # move range soldier off of the anthill
         rangeSoldier = getAntAt(currentState, self.hill.coords)
-        if rangeSoldier is not None:
+        if rangeSoldier is not None and rangeSoldier.player == currentState.whoseTurn:
             if rangeSoldier.type == R_SOLDIER:
                 if not rangeSoldier.hasMoved:
                     path = createPathToward(currentState, rangeSoldier.coords, (6, 3), UNIT_STATS[R_SOLDIER][MOVEMENT])
                     return Move(MOVE_ANT, path, None)
 
-        # move range soldier off of the food
+        # move range soldiers off of the food
         foods = getConstrList(currentState, None, (FOOD,))
         rangeSoldier = [getAntAt(currentState, x.coords) for x in foods]
         for soldier in rangeSoldier:
-            if soldier is not None:
+            if soldier is not None and soldier.player == currentState.whoseTurn:
                 if soldier.type == R_SOLDIER:
                     if not soldier.hasMoved:
                         path = createPathToward(currentState, soldier.coords, (7, 3), UNIT_STATS[R_SOLDIER][MOVEMENT])
