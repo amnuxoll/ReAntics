@@ -631,8 +631,8 @@ class BlueBox ( tk.Frame ) :
         self.topLabel = tk.Label ( self, textvar = self.myTopText, anchor=tk.W, justify=tk.LEFT, bg = bc, font = fnt )
         self.topLabel.grid ( row = 0, column = 0, columnspan = 8, sticky = tk.W )
         
-        self.delButton = wgt.ColoredButton ( self, "x", "white", wgt.RED, flash = True )
-        self.delButton.config ( font = BUTTON1_FONT )
+        self.delButton = wgt.ColoredButton ( self, "x", wgt.LIGHT_BLUE, wgt.RED, flash = True )
+        self.delButton.config ( font = BUTTON1_FONT, relief="flat", borderwidth=2 )
         self.delButton.grid ( row = 0, column = 8 )
 
         self.textLines = []
