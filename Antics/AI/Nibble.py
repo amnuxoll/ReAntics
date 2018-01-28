@@ -214,6 +214,8 @@ class AIPlayer(Player):
 
             self.paths[1].addAnt(self.tunnel.coords)
 
+        enemy = 1 - me
+
         ## give every path a new gamestate to work with
         for path in self.paths:
             path.updateState(currentState)
@@ -228,45 +230,52 @@ class AIPlayer(Player):
         ##generate drones if needed
         drones = getAntList(currentState, me, [DRONE])
         if myInv.foodCount > 1:
-            if getAntAt(currentState, self.hill.coords) is None and len(drones) == 0:
+            if getAntAt(currentState, self.hill.coords) is None and len(drones) < 1:
                 return Move(BUILD, [self.hill.coords], DRONE)
 
         ##update drone
         ##simply send the drone on a mission towards nearest enemy worker
         for drone in drones:
             if not drone.hasMoved:
-                enemy = 1 - me
-                map = [[-approxDist((x, y), drone.coords) for x in range(10)] for y in range(10)]
+                moveable = listAttackable(drone.coords, UNIT_STATS[DRONE][MOVEMENT])
                 enemyWorkers = getAntList(currentState, enemy, [WORKER])
                 enemyFighters = getAntList(currentState, enemy, [QUEEN, SOLDIER, R_SOLDIER, DRONE])
-                for ant in enemyFighters:
-                    rng = UNIT_STATS[ant.type][RANGE] + UNIT_STATS[ant.type][MOVEMENT]
-                    attackable = listAttackable(ant.coords, rng)
-                    for coord in attackable:
-                        # reduce quality of moves near enemy ants by inverse distance from ant
-                        map[coord[0]][coord[1]] -= rng - approxDist(coord, ant.coords)
-
-                for ant in enemyWorkers:
-                    # increase quality for moving near workers by inverse distance from worker
-                    # with bonus for killing worker
-                    near = listAttackable(ant.coords, 4)
-                    for coord in near:
-                        dist = approxDist(coord, ant.coords)
-                        map[coord[0]][coord[1]] += 2 * (5 - dist if dist != 1 else 5)
-
-
                 bestLoc = None
                 bestScore = -999
-                moveable = listAttackable(drone.coords, UNIT_STATS[DRONE][MOVEMENT])
                 for loc in moveable:
-                    if map[loc[0]][loc[1]] > bestScore:
-                        bestScore = map[loc[0]][loc[1]]
+                    score = 0
+                    dead = False
+                    kill = False
+                    for ant in enemyFighters:
+                        tmp = approxDist(loc, ant.coords) - UNIT_STATS[ant.type][MOVEMENT] +\
+                              UNIT_STATS[ant.type][RANGE]
+                        if tmp < 0:
+                            dead = True
+                            break
+                    dist = 99
+                    for ant in enemyWorkers:
+                        tmp = approxDist(loc, ant.coords)
+                        if tmp == 0:
+                            continue
+                        elif tmp == 1:
+                            kill = True
+                            dist = 0
+                            break
+                        elif tmp < dist:
+                            dist = tmp
+                    score -= dist
+
+                    if dead:
+                        score -= 20
+                    if kill:
+                        score += 10
+                    if score > bestScore:
+                        bestScore = score
                         bestLoc = loc
 
                 if bestLoc is not None:
                     return Move(MOVE_ANT, createPathToward(currentState, drone.coords, bestLoc,
                                                            UNIT_STATS[DRONE][MOVEMENT]), None)
-
 
 
         ##make a worker if there aren't enough and anthill is empty
