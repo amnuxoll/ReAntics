@@ -264,7 +264,7 @@ class AIPlayer(Player):
 
 
         O_ANT = R_SOLDIER
-        O_ANT_COST = 2
+        O_ANT_COST = UNIT_STATS[O_ANT][COST]
         ##generate ranged soldiers
         if myInv.foodCount >= O_ANT_COST :
             if getAntAt(currentState, self.hill.coords) is None:

@@ -400,7 +400,6 @@ class GamePane:
     # some of these should be replaced by references to the GUI handler
     #
     def UIbuttonPressed(self):
-        #if(self.the_game.game_type == )
         self.handler.showFrame(1)
 
     def endTurnPressed(self):
@@ -791,13 +790,28 @@ class BoardButton:
 
         # draw health
         if self.health:
-            for j in range(self.health[0]):
-                if j < self.health[1]:
-                    self.label.create_image((loc[0] + 3, loc[1] + j * 8), anchor=tkinter.N + tkinter.W,
-                                            image=self.handler.textures["healthFull"])
-                else:
-                    self.label.create_image((loc[0] + 3, loc[1] + j * 8), anchor=tkinter.N + tkinter.W,
-                                            image=self.handler.textures["healthEmpty"])
+            if self.health[0] <= 8 or self.health[1] <= 8:
+                blue = 0
+                green = self.health[1]
+                red = min(self.health[0], 8) - self.health[1]
+            else:
+                blue = self.health[1] - 8
+                green = 8 - blue
+                red = 0
+
+            count = 0
+            for j in range(blue):
+                self.label.create_image((loc[0] + 3, loc[1] + count * 8), anchor=tkinter.N + tkinter.W,
+                                        image=self.handler.textures["healthDouble"])
+                count += 1
+            for j in range(green):
+                self.label.create_image((loc[0] + 3, loc[1] + count * 8), anchor=tkinter.N + tkinter.W,
+                                        image=self.handler.textures["healthFull"])
+                count += 1
+            for j in range(red):
+                self.label.create_image((loc[0] + 3, loc[1] + count * 8), anchor=tkinter.N + tkinter.W,
+                                        image=self.handler.textures["healthEmpty"])
+                count += 1
 
         if self.healthConst:
             for k in range(self.healthConst[0]):

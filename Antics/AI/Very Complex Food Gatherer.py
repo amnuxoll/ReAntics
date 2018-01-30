@@ -229,46 +229,44 @@ class AIPlayer(Player):
         #move queen to basic defensive position
         myQueen = myInv.getQueen()
         if not myQueen.hasMoved:
-            path = createPathToward(currentState, myQueen.coords,
-                                    (4,3), UNIT_STATS[QUEEN][MOVEMENT])
-            return Move(MOVE_ANT, path, None)
+            return self.getQueenMove(currentState)
         
         ##generate drones if needed
-        if myInv.foodCount > 1:
-            if getAntAt(currentState, self.hill.coords) is None:
-                ##check if we need one
-                enemy = 1 - me
-                enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
-                numAttacking = 0
-                for ant in enemyAnts:
-                    if ant.coords[1] < 6:
-                        numAttacking += 1
-                myAnts = getAntList(currentState, me, (DRONE,))
-                if len(myAnts) < numAttacking:
-                    return Move(BUILD, [self.hill.coords], DRONE)
+        # if myInv.foodCount > 1:
+        #     if getAntAt(currentState, self.hill.coords) is None:
+        #         ##check if we need one
+        #         enemy = 1 - me
+        #         enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
+        #         numAttacking = 0
+        #         for ant in enemyAnts:
+        #             if ant.coords[1] < 6:
+        #                 numAttacking += 1
+        #         myAnts = getAntList(currentState, me, (DRONE,))
+        #         if len(myAnts) < numAttacking:
+        #             return Move(BUILD, [self.hill.coords], DRONE)
 
 
 
         ##update drone
         ##simply send the drone on a mission towards nearest enemy ant
-        drones = getAntList(currentState, me, (DRONE,))
-        for drone in drones:
-            if not drone.hasMoved:
-                enemy = 1 - me
-                enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
-                dist = 999
-                target = None
-                for ant in enemyAnts:
-                    newDist = stepsToReach(currentState, ant.coords, drone.coords)
-                    if newDist < dist:
-                        dist = newDist
-                        target = ant
-                if target is not None:
-                    path = createPathToward(currentState, drone.coords, target.coords, UNIT_STATS[DRONE][MOVEMENT])
-                    return Move(MOVE_ANT, path, None)
+        # drones = getAntList(currentState, me, (DRONE,))
+        # for drone in drones:
+        #     if not drone.hasMoved:
+        #         enemy = 1 - me
+        #         enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
+        #         dist = 999
+        #         target = None
+        #         for ant in enemyAnts:
+        #             newDist = stepsToReach(currentState, ant.coords, drone.coords)
+        #             if newDist < dist:
+        #                 dist = newDist
+        #                 target = ant
+        #         if target is not None:
+        #             path = createPathToward(currentState, drone.coords, target.coords, UNIT_STATS[DRONE][MOVEMENT])
+        #             return Move(MOVE_ANT, path, None)
 
-        ##make a worker if there aren't enough and anthill is empty
-        if myInv.foodCount > 0:
+        # make a worker if there aren't enough and anthill is empty
+        if 11 - len(getAntList(currentState, me, [WORKER])) > myInv.foodCount > 0:
             if getAntAt(currentState, self.hill.coords) is None:
                 for path in self.paths:
                     if len(path.antList) == 0 or len(path.antList) < path.dist / 2:
@@ -282,6 +280,43 @@ class AIPlayer(Player):
                 return result
 
         return Move(END, None, None)
+
+    ##
+    # getQueenMove
+    #
+    # Takes a gameState and returns the proper move for the queen. In this case
+    # the queen is to aggressively defend against melee ants and hide from ranged ants.
+    #
+    def getQueenMove(self, state):
+        myInv = getCurrPlayerInventory(state)
+        me = state.whoseTurn
+        queen = myInv.getQueen()
+        enemy = 1 - me
+        attackers = getAntList(state, enemy, [SOLDIER, R_SOLDIER, DRONE])
+
+        # if there are no attackers move to a default location
+        if len(attackers) == 0:
+            return Move(MOVE_ANT, createPathToward(state, queen.coords, (4, 3), UNIT_STATS[QUEEN][MOVEMENT]), None)
+
+        # find the most worrying attacker
+        dist = 99
+        closest = None
+        for ant in attackers:
+            tmp = (ant.coords[1] - 3) / UNIT_STATS[ant.type][MOVEMENT]
+            if tmp < dist:
+                dist = tmp
+                closest = ant
+
+        if closest.coords[1] <= 4:
+            path = createPathToward(state, queen.coords, (closest.coords[0], min(3, closest.coords[1])), UNIT_STATS[QUEEN][MOVEMENT])
+        elif closest.type == R_SOLDIER:
+            path = createPathToward(state, queen.coords, (closest.coords[0], 0), UNIT_STATS[QUEEN][MOVEMENT])
+        else:
+            path = createPathToward(state, queen.coords, (closest.coords[0], 2), UNIT_STATS[QUEEN][MOVEMENT])
+
+        return Move(MOVE_ANT, path, None)
+
+
 
 
     ##
