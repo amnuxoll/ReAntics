@@ -66,8 +66,9 @@ class testGame(unittest.TestCase):
 
         # self.assertEqual(len(self.gameTest.gamesToPlay), 15)
 
-        self.assertEqual(self.gameTest.gamesToPlay[0].n, 15)
-        self.assertNotEqual(self.gameTest.gamesToPlay[0].p1.author, self.gameTest.gamesToPlay[0].p2.author)
+        for i in self.gameTest.gamesToPlay:
+            self.assertEqual(i.n, 15)
+            self.assertNotEqual(i.p1.author, i.p2.author)
 
     def testStartSelf(self):
         self.gameTest.startSelf(27, "Random")
