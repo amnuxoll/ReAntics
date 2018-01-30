@@ -225,9 +225,10 @@ class AIPlayer(Player):
         # move queen to basic defensive position
         myQueen = myInv.getQueen()
         if not myQueen.hasMoved:
-            path = createPathToward(currentState, myQueen.coords,
-                                    (2, 0), UNIT_STATS[QUEEN][MOVEMENT])
-            return Move(MOVE_ANT, path, None)
+            return self.getQueenMove(currentState)
+            # path = createPathToward(currentState, myQueen.coords,
+            #                         (2, 0), UNIT_STATS[QUEEN][MOVEMENT])
+            # return Move(MOVE_ANT, path, None)
 
 
 
@@ -302,6 +303,45 @@ class AIPlayer(Player):
                 return result
 
         return Move(END, None, None)
+
+
+
+    ##
+    # getQueenMove
+    #
+    # Takes a gameState and returns the proper move for the queen. In this case
+    # the queen is to aggressively defend against melee ants and hide from ranged ants.
+    #
+    def getQueenMove(self, state):
+        myInv = getCurrPlayerInventory(state)
+        me = state.whoseTurn
+        queen = myInv.getQueen()
+        enemy = 1 - me
+        attackers = getAntList(state, enemy, [SOLDIER, R_SOLDIER, DRONE])
+
+        # if there are no attackers move to a default location
+        if len(attackers) == 0:
+            return Move(MOVE_ANT, createPathToward(state, queen.coords, (4, 3), UNIT_STATS[QUEEN][MOVEMENT]), None)
+
+        # find the most worrying attacker
+        dist = 99
+        closest = None
+        for ant in attackers:
+            tmp = (ant.coords[1] - 3) / UNIT_STATS[ant.type][MOVEMENT]
+            if tmp < dist:
+                dist = tmp
+                closest = ant
+
+        if closest.coords[1] <= 4:
+            path = createPathToward(state, queen.coords, (closest.coords[0], min(3, closest.coords[1])), UNIT_STATS[QUEEN][MOVEMENT])
+        elif closest.type == R_SOLDIER:
+            path = createPathToward(state, queen.coords, (closest.coords[0], 0), UNIT_STATS[QUEEN][MOVEMENT])
+        else:
+            path = createPathToward(state, queen.coords, (closest.coords[0], 2), UNIT_STATS[QUEEN][MOVEMENT])
+
+        return Move(MOVE_ANT, path, None)
+
+
 
     ##
     # getAttack
