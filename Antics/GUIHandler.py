@@ -287,9 +287,6 @@ class GUIHandler:
             if self.paused:
                 self.pausePressed()
 
-        elif not self.game.safeKilled:
-            self.game.killNice()
-
         # unpause the game if we paused it
         if self.paused and pause:
             self.pausePressed()
@@ -318,8 +315,9 @@ class GUIHandler:
             self.pausePressed()
 
     def settingsPressed(self):
-        self.killPressed()
+        self.game.gamesToPlay = []
         self.game.goToSettings = True
+        self.killPressed()
 
         if not self.game.gameThread.is_alive():
             self.game.gameThread = threading.Thread(target=self.game.start, daemon=True)

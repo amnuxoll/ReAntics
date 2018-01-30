@@ -576,15 +576,14 @@ class Game(object):
                 self.UI.setPlayers(self.currentPlayers[0].author, self.currentPlayers[1].author)
                 self.runGame()
 
-                if self.killed:
+                if self.goToSettings:
                     self.killed = False
                     break
+
+                if self.killed:
+                    self.killed = False
+                    continue
                 self.resolveEndGame()
-                if self.safeKilled:
-                    self.safeKilled = False
-                    self.UI.gameHandler.killButton.disable()
-                    self.UI.statsHandler.killButton.disable()
-                    break
 
             self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
             self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
@@ -625,17 +624,7 @@ class Game(object):
     def kill(self):
         self.killed = True
         self.safeKilled = False
-        self.gamesToPlay = []
         self.generalWake()
-
-    ##
-    # killNice
-    #
-    # end the current tournament and game sequence after the current game
-    def killNice(self):
-        self.gamesToPlay = []
-        self.safeKilled = True
-        pass
 
     ##
     # restart
