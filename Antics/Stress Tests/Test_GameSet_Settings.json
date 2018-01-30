@@ -1,0 +1,1 @@
+{"games": [{"type": "Single Player", "num_games": 1, "players": ["Steve"]}], "additional_settings": {"swap": false, "verbose": false, "timeout": false, "timeout_limit": "-1", "layout_chosen": "Player Invoked"}, "pause_conditions": []}
