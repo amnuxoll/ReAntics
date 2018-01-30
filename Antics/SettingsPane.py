@@ -477,6 +477,8 @@ class GameSettingsFrame ( ) :
         if not exists(SETTINGS_FILE):
             return
 
+        self.startButton.disable()
+
         with open(SETTINGS_FILE, 'r') as f:
             data = json.load(f)
 
@@ -535,6 +537,9 @@ class GameSettingsFrame ( ) :
             c = pc['conditions']
             p = pc['players']
             self.pauseConditionAdded ( c, p )
+
+
+        self.startButton.enable()
 
             
 
