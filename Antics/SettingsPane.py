@@ -478,6 +478,7 @@ class GameSettingsFrame ( ) :
             return
 
         self.startButton.disable()
+        self.addGameOptionsWindow.startButton.disable()
 
         with open(SETTINGS_FILE, 'r') as f:
             data = json.load(f)
@@ -540,6 +541,7 @@ class GameSettingsFrame ( ) :
 
 
         self.startButton.enable()
+        self.addGameOptionsWindow.startButton.enable()
 
             
 
