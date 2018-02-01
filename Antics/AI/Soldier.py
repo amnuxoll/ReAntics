@@ -77,7 +77,7 @@ class AIPlayer(Player):
     #   inputPlayerId - The id to give the new player (int)
     ##
     def __init__(self, inputPlayerId):
-        super(AIPlayer, self).__init__(inputPlayerId, "Steve")
+        super(AIPlayer, self).__init__(inputPlayerId, "Ralph")
         self.foods = None
         self.distances = [0 for i in range(2)]
         self.hill = None
@@ -263,7 +263,7 @@ class AIPlayer(Player):
             return Move(MOVE_ANT, path, None)
 
 
-        O_ANT = R_SOLDIER
+        O_ANT = SOLDIER
         O_ANT_COST = UNIT_STATS[O_ANT][COST]
         ##generate ranged soldiers
         if myInv.foodCount >= O_ANT_COST :
@@ -304,32 +304,32 @@ class AIPlayer(Player):
 
         ##update drone
         ##simply send the drone on a mission towards nearest enemy ant
-        r_soldiers = getAntList(currentState, me, (O_ANT,))
-        for r_soldier in r_soldiers:
-            if not r_soldier.hasMoved:
+        soldiers = getAntList(currentState, me, (O_ANT,))
+        for soldier in soldiers:
+            if not soldier.hasMoved:
                 enemy = 1 - me
                 enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
                 dist = 999
                 target = None
                 enemy_atHome = None
                 for ant in enemyAnts:
-                    newDist = stepsToReach(currentState, ant.coords, r_soldier.coords)
+                    newDist = stepsToReach(currentState, ant.coords, soldier.coords)
                     if newDist < dist:
                         dist = newDist
                         target = ant
                     if ant.type != WORKER and \
                        stepsToReach(currentState, (ant.coords[0], self.hill.coords[1]), ant.coords) <= 2:
                         enemy_atHome = ant.coords
-                i = self.occupants.index(r_soldier.coords)
+                i = self.occupants.index(soldier.coords)
                 target = self.o_food[i] #.coords
                 enemy_workers = getAntList(currentState, enemy, (WORKER,))
                 enemy_queen  = getAntList(currentState, enemy, (QUEEN,))[0].coords
-                x = stepsToReach(currentState, r_soldier.coords, enemy_queen)
-                # hey look the queen is here 
-                if x <= UNIT_STATS[O_ANT][RANGE] + 1: ### umm why
-                    target = r_soldier.coords
+                x = stepsToReach(currentState, soldier.coords, enemy_queen)
+##                # hey look the queen is here 
+##                if x <= UNIT_STATS[O_ANT][RANGE] + 1: ### umm why
+##                    target = soldier.coords
                 # kill the last worker -- head up first, at least into no man's land
-                elif len(enemy_workers) == 1 and not isPathOkForQueen([r_soldier.coords]):
+                if len(enemy_workers) == 1 and not isPathOkForQueen([soldier.coords]):
                     target = enemy_workers[0].coords
                 # kill the queen
                 elif len(enemy_workers) == 0 or \
@@ -338,12 +338,19 @@ class AIPlayer(Player):
                 # defend at home
                 elif enemy_atHome :
                     target = enemy_atHome
-                # defend from home
-                elif len(enemyAnts) - len(enemy_workers) > 1 :
-                    target = (r_soldier.coords[0], 3) if r_soldier.coords[1] != 3 else (random.randint(0,9), 3)                                          
+##                # defend from home
+##                elif len(enemyAnts) - len(enemy_workers) > 1 :
+##                    target = (soldier.coords[0], 3) if soldier.coords[1] != 3 else (random.randint(0,9), 3)
+                else :
+                    target = enemy_queen
                 if target is not None:
-                    path = createPathToward(currentState, r_soldier.coords, target, UNIT_STATS[O_ANT][MOVEMENT])
-                    
+                    path = createPathToward(currentState, soldier.coords, target, UNIT_STATS[O_ANT][MOVEMENT])
+
+                    y = stepsToReach(currentState, path[-1], enemy_queen)
+                    if y <= UNIT_STATS[QUEEN][RANGE]:
+                        temp = list(path)
+                        temp = temp[:len(temp)-1]
+                        path = temp
                     self.occupants[i] = path[-1]
                     return Move(MOVE_ANT, path, None)
 
