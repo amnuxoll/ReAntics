@@ -323,13 +323,18 @@ class AIPlayer(Player):
                 i = self.occupants.index(r_soldier.coords)
                 target = self.o_food[i] #.coords
                 enemy_workers = getAntList(currentState, enemy, (WORKER,))
+                enemy_queen  = getAntList(currentState, enemy, (QUEEN,))[0].coords
+                x = stepsToReach(currentState, r_soldier.coords, enemy_queen)
+                # hey look the queen is here 
+                if x <= UNIT_STATS[R_SOLDIER][RANGE] + 1: ### umm why
+                    target = r_soldier.coords
                 # kill the last worker -- head up first, at least into no man's land
-                if len(enemy_workers) == 1 and not isPathOkForQueen([r_soldier.coords]):
+                elif len(enemy_workers) == 1 and not isPathOkForQueen([r_soldier.coords]):
                     target = enemy_workers[0].coords
                 # kill the queen
                 elif len(enemy_workers) == 0 or \
                      len(getAntList(currentState, me, (WORKER,))) == 0 and myInv.foodCount < 1 :
-                    target = getAntList(currentState, enemy, (QUEEN,))[0].coords
+                    target = enemy_queen                
                 # defend at home
                 elif enemy_atHome :
                     target = enemy_atHome

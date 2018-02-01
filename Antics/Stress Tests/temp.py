@@ -18,17 +18,25 @@ from Constants import *
 from SettingsPane import SETTINGS_FILE
 import json
 
-data = None
-
 def overWriteSettings ( filename ) :
+    data = None
+    
     with open("Stress Tests/" + filename, 'r') as f:
-                data = json.load(f)
+        data = json.load(f)
+
+    with open(SETTINGS_FILE, 'r') as f:
+        old_data = json.load(f)
                 
     with open(SETTINGS_FILE, 'w') as f:
-                json.dump(data, f)
+        json.dump(data, f)
 
-overWriteSettings ( "Test_GameSet_Settings.json " )           
+    return old_data
+
+overWriteSettings ( "Test_GameSet_Settings.json" )
+
 g = Game()
+print("hey")
 
-
+g.UI.settingsHandler.startButton.invoke()
+#g.UI.settingsHandler.changeFrameStart()
 
