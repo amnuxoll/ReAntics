@@ -856,23 +856,22 @@ def aStarSearchPath(currentState, start, goal):
     current = start
 
     while open_list:
-
         if current == goal:
             return construct_path(current, antMovement)
 
         current = open_list.pop(open_list.index(min(open_list, key=lambda x: x.f)))
 
-        for neighbor in neighbors(currentState, current, goal):
+        if current in closed_list:
+            continue
 
+        for neighbor in neighbors(currentState, current, goal):
             if neighbor == goal:
                 return construct_path(current, antMovement)
-
             if neighbor in open_list:
                 other = next((x for x in open_list if x.coords == neighbor.coords), None)
                 if next((x for x in open_list if x.coords == neighbor.coords), None) is not None:
                     if other.f < neighbor.f:
                         continue
-
             if neighbor in closed_list:
                 other = next((x for x in open_list if x.coords == neighbor.coords), None)
                 if next((x for x in open_list if x.coords == neighbor.coords), None) is not None:
