@@ -82,6 +82,7 @@ class Game(object):
         self.timeoutOn       = False
         self.timeout_limit   = 1
         self.autorestart     = False
+        self.soft_restart    = False  # to restart the games, but not reset the stats
         self.pauseOnStart    = False
         # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
         self.pauseConditions = []
@@ -565,6 +566,11 @@ class Game(object):
                 self.UI.pausePressed()
             self.running = True
 
+            # pause on start -- only for the first game
+            if self.pauseOnStart:
+                self.UI.pausePressed()
+                self.pauseOnStart = False
+
             self.gamesToPlayLock.acquire()
             game = self.gamesToPlay.pop(0)
             self.gamesToPlayLock.release()
@@ -579,10 +585,6 @@ class Game(object):
                 if self.verbose: print(self.tournamentStr(False), "\n")
                 self.setup(game, j)
                 self.UI.setPlayers(self.currentPlayers[0].author, self.currentPlayers[1].author)
-                # pause on start -- only for the first game
-                if self.pauseOnStart:
-                    self.UI.pausePressed()
-                    self.pauseOnStart = False
                 self.runGame()
 
                 if self.goToSettings:
@@ -600,12 +602,22 @@ class Game(object):
 
             self.UI.statsHandler.stopCurLogItem(True)
 
+            if len(self.gamesToPlay) == 0 and self.autorestart :
+                #self.UI.restartPressed()
+                self.restarted = True
+                self.soft_restart = True
+                
             if self.restarted:
                 self.restarted = False
                 self.gamesToPlay = self.restartGameList
                 self.restartGameList = None
-                self.UI.statsHandler.clearLog()
-                self.UI.statsHandler.timeLabel.Reset()
+                if not self.soft_restart :
+                    self.UI.statsHandler.clearLog()
+                    self.UI.statsHandler.timeLabel.Reset()
+                else :
+                    self.soft_restart = False
+
+            
 
     def setup(self, game: GameData, count: int):
         self.state = GameState.getBlankState()

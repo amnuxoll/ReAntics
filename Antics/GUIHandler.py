@@ -327,6 +327,9 @@ class GUIHandler:
         self.gameHandler.settingsButton.disable()
         self.statsHandler.settingsButton.disable()
 
+        # needs to be reset so that it does not restart when cleared
+        self.game.autorestart = False 
+
         # only wake the game thread if it's not running games ATM
         if not self.game.running:
             self.game.generalWake()
