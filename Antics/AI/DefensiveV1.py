@@ -73,7 +73,7 @@ class AIPlayer(Player):
     #   inputPlayerId - The id to give the new player (int)
     ##
     def __init__(self, inputPlayerId):
-        super(AIPlayer, self).__init__(inputPlayerId, "DefensiveV1")
+        super(AIPlayer, self).__init__(inputPlayerId, "Defensive W/ A-STAR")
         self.foods = None
         self.distances = [0 for i in range(2)]
         self.hill = None
@@ -265,7 +265,12 @@ class AIPlayer(Player):
                         dist = newDist
                         target = ant
                 if target is not None:
-                    path = createPathToward(currentState, soldier.coords, target.coords, UNIT_STATS[antTodBuild][MOVEMENT])
+                    aStar = aStarSearchPath(currentState, soldier.coords, target.coords)
+                    if aStar != False:
+                        path = aStar
+                    else:
+                        path = createPathToward(currentState, soldier.coords, target.coords, UNIT_STATS[antTodBuild][MOVEMENT])
+
                     return Move(MOVE_ANT, path, None)
 
         # make a worker if there aren't enough and anthill is empty

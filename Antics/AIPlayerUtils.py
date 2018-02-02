@@ -124,6 +124,7 @@ def getConstrAt(state, coords):
 
     return None  #not found
 
+
 ##
 # getAntAt
 #
@@ -144,6 +145,7 @@ def getAntAt(state, coords) -> Ant:
             return ant
 
     return None  #not found
+
 
 def getWinner(currentState):
     myId = currentState.whoseTurn
@@ -804,3 +806,126 @@ def asciiPrintState(state):
     p1Food = state.inventories[0].foodCount
     p2Food = state.inventories[1].foodCount
     print(" food: " + str(p1Food) + "/" + str(p2Food))
+
+
+class GraphNode:
+
+    def __init__(self, parent=None, coords=None, f=0.0, g=0.0, h=0.0):
+        self.parent = parent
+        self.coords = coords
+        self.f = f
+        self.g = g
+        self.h = h
+
+    def __hash__(self):
+        return hash(self.coords)
+
+    def __eq__(self, other):
+        if self.coords == other.coords:
+            return True
+        return False
+
+    def __str__(self):
+        return str(self.coords)
+
+
+##
+# aStarSearchPath
+#
+# Create a path towards from start to goal
+# CAVEAT: THIS DOES NOT TAKE INTO ACCOUNT GRASS RIGHT NOW
+# CAVEAT: A-STAR SEARCH IS SLOWER THAN createPathToward() BECAUSE THIS IS OPTIMAL
+#         AND createPathTowards() IS GREEDY FOR TIME EFFICIENCY
+#
+##
+def aStarSearchPath(currentState, start, goal):
+    start = GraphNode(coords=start)
+    goal = GraphNode(coords=goal)
+
+    ant = getAntAt(currentState, start.coords)
+
+    antMovement = UNIT_STATS[ant.type][MOVEMENT]
+    antMovement = antMovement + 1
+
+    if start.coords == goal.coords:
+        return []
+
+    start.f = start.g + approxDist(start.coords, goal.coords)
+    open_list = [start, ]
+    closed_list = list()
+    current = start
+
+    while open_list:
+
+        if current == goal:
+            return construct_path(current, antMovement)
+
+        current = open_list.pop(open_list.index(min(open_list, key=lambda x: x.f)))
+
+        for neighbor in neighbors(currentState, current, goal):
+
+            if neighbor == goal:
+                return construct_path(current, antMovement)
+
+            if neighbor in open_list:
+                other = next((x for x in open_list if x.coords == neighbor.coords), None)
+                if next((x for x in open_list if x.coords == neighbor.coords), None) is not None:
+                    if other.f < neighbor.f:
+                        continue
+
+            if neighbor in closed_list:
+                other = next((x for x in open_list if x.coords == neighbor.coords), None)
+                if next((x for x in open_list if x.coords == neighbor.coords), None) is not None:
+                    if other.f < neighbor.f:
+                        continue
+                    else:
+                        open_list.append(neighbor)
+                else:
+                    open_list.append(neighbor)
+            else:
+                open_list.append(neighbor)
+
+        closed_list.append(current)
+
+    return False
+
+
+def neighbors(currentState, node, goal):
+    bors = [GraphNode(coords=y) for y in listReachAdj(currentState, node.coords, goal.coords)]
+    for bor in bors:
+        bor.g = node.g + 1
+        bor.f = bor.g + approxDist(bor.coords, goal.coords)
+        bor.parent = node
+    return bors
+
+
+def construct_path(node, antMovement):
+    path = [node, ]
+    normalPath = list()
+    while node.parent is not None:
+        node = node.parent
+        path.append(node)
+
+    for x in path:
+        normalPath.append(x.coords)
+
+    li = normalPath[::-1]
+
+    return li if len(li) <= antMovement else li[:antMovement]
+
+
+def listReachAdj(state, coords, givenAntCoords):
+    # build a list of all adjacent cells
+    oneStep = listAdjacent(coords)
+
+    # winnow the list based upon cell contents and cost to reach
+    candMoves = []
+    for cell in oneStep:
+        ant = getAntAt(state, cell)
+
+        if ant is None:
+            candMoves.append(cell)
+        elif ant.coords is givenAntCoords:
+            candMoves.append(cell)
+
+    return candMoves
