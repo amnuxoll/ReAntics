@@ -73,14 +73,16 @@ class Game(object):
         # Initializes tournament mode variables
         self.playerScores = []  # [[author,wins,losses], ...]
         # debug mode allows initial setup in human vs. AI to be automated
-        self.randomSetup = False  # overrides human setup only
-        self.verbose = False
+        self.randomSetup     = False  # overrides human setup only
+        self.verbose         = False
         # additional settings
-        self.timeoutOn = False
-        self.playerSwap = False  # additonal settings
+        self.timeoutOn       = False
+        self.playerSwap      = False  # additonal settings
         self.playersReversed = False  # whether the players are currently swapped
-        self.timeoutOn = False
-        self.timeout_limit = 1  
+        self.timeoutOn       = False
+        self.timeout_limit   = 1
+        self.autorestart     = False
+        self.pauseOnStart    = False
         # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
         self.pauseConditions = []
 
@@ -496,6 +498,9 @@ class Game(object):
         self.playersReversed = False
         self.randomSetup = additional['layout_chosen'] == "Random Override"
         self.timeoutOn = additional['timeout']
+        self.autorestart = additional['autorestart']
+        self.pauseOnStart = additional['pause']
+        
         if self.timeoutOn:
             self.timeout_limit = float(additional['timeout_limit'])
 

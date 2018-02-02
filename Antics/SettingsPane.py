@@ -511,9 +511,9 @@ class GameSettingsFrame ( ) :
         # check that all of the additional settings are present
         # timeChanged, layoutChanged, clicked
         more = data['additional_settings']
-        
+
         try:
-            if more.keys() != {'timeout_limit', 'layout_chosen', 'swap', 'verbose', 'timeout'}:
+            if more.keys() != {'timeout_limit', 'layout_chosen', 'swap', 'verbose', 'timeout', 'autorestart', 'pause'}:
                 print ( msg )
                 self.resetSettings()
         except:
@@ -521,7 +521,7 @@ class GameSettingsFrame ( ) :
             self.resetSettings()
 
         for k in list(more.keys()) :
-            if more[k] and k in {'swap', 'verbose', 'timeout'} :
+            if more[k] and k in {'swap', 'verbose', 'timeout', 'autorestart', 'pause'} :
                 self.additionalOptionsFrame.selected[k].set(1)
                 self.additionalOptionsFrame.clicked(k)
             elif more['timeout'] and k == 'timeout_limit' :
@@ -724,6 +724,20 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         self.layoutType.set(LAYOUT_OPTIONS[0])
         self.o_layout = tk.OptionMenu(self.interior, self.layoutType, *LAYOUT_OPTIONS, command = self.layoutChanged )
         self.o_layout.grid ( row = 3, column = 1, sticky=tk.W )
+
+        k = "autorestart"
+        self.autorestart = tk.Checkbutton ( self.interior, text = "auto-restart", command = partial(self.clicked, opt = k), bg = "white" )
+        self.autorestart.grid ( row = 4, sticky=tk.W )
+        self.selected[k] = tk.BooleanVar()
+        self.autorestart.config ( variable = self.selected[k] )
+        self.public_selected[k] = False
+
+        k = "pause"
+        self.pause = tk.Checkbutton ( self.interior, text = "pause on start", command = partial(self.clicked, opt = k), bg = "white" )
+        self.pause.grid ( row = 5, sticky=tk.W )
+        self.selected[k] = tk.BooleanVar()
+        self.pause.config ( variable = self.selected[k] )
+        self.public_selected[k] = False
 
 ##        k = "stats_board"
 ##        self.o_statsboard = tk.Checkbutton ( self.interior, text = "display stats board", command = partial(self.clicked, opt = k), bg = "white"  )
