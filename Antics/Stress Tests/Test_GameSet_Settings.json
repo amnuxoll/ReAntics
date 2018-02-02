@@ -1,1 +1,1 @@
-{"games": [{"type": "Two Player", "num_games": 1000001, "players": ["Random", "Very Complex Food Gatherer"]}], "additional_settings": {"swap": false, "verbose": false, "timeout": false, "timeout_limit": "-1", "layout_chosen": "Player Invoked"}, "pause_conditions": []}
+{"games": [{"type": "Two Player", "num_games": 1000001, "players": ["Random", "Very Complex Food Gatherer"]}], "additional_settings": {"swap": false, "verbose": false, "timeout": false, "timeout_limit": "-1", "layout_chosen": "Player Invoked", "autorestart": false, "pause": false}, "pause_conditions": []}
