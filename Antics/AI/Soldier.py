@@ -86,7 +86,7 @@ class AIPlayer(Player):
 
         ## new ranged soldiers to cut off access to resources
         self.o_foods   = [] # coords of the opponent's food
-        self.occupants = [None, None]
+##        self.occupants = [None, None]
         
     
     ##
@@ -282,24 +282,24 @@ class AIPlayer(Player):
                 myAnts = getAntList(currentState, me, (O_ANT,))
                 myAnts_coords = [ a.coords for a in myAnts ]
                 if len(myAnts) < 2 and not hill_in_range: #len(myAnts) < numAttacking:
-                    successful_placement = False
-                    for i in range(len(self.occupants)):
-                        a = self.occupants[i]
-                        if a is None or a not in myAnts_coords :
-                            self.occupants[i] = self.hill.coords
-                            successful_placement = True
-                            break
-                    if not successful_placement:
-                        for i in range(len(self.occupants)):
-                            a = self.occupants[i]
-                            if self.occupants[0] == self.occupants[1] :
-                                self.occupants = [self.hill.coords, self.occupants[1]]
-                            elif len(myAnts_coords) == 0:
-                                self.occupants = [self.hill.coords, None]
-                            elif len(myAnts_coords) == 1:
-                                [myAnts_coords[0], None]
-                            elif len(myAnts_coords) == 2:
-                                self.occupants = myAnts_coords
+##                    successful_placement = False
+##                    for i in range(len(self.occupants)):
+##                        a = self.occupants[i]
+##                        if a is None or a not in myAnts_coords :
+##                            self.occupants[i] = self.hill.coords
+##                            successful_placement = True
+##                            break
+##                    if not successful_placement:
+##                        for i in range(len(self.occupants)):
+##                            a = self.occupants[i]
+##                            if self.occupants[0] == self.occupants[1] :
+##                                self.occupants = [self.hill.coords, self.occupants[1]]
+##                            elif len(myAnts_coords) == 0:
+##                                self.occupants = [self.hill.coords, None]
+##                            elif len(myAnts_coords) == 1:
+##                                [myAnts_coords[0], None]
+##                            elif len(myAnts_coords) == 2:
+##                                self.occupants = myAnts_coords
                     return Move(BUILD, [self.hill.coords], O_ANT)
 
         ##update drone
@@ -320,8 +320,8 @@ class AIPlayer(Player):
                     if ant.type != WORKER and \
                        stepsToReach(currentState, (ant.coords[0], self.hill.coords[1]), ant.coords) <= 2:
                         enemy_atHome = ant.coords
-                i = self.occupants.index(soldier.coords)
-                target = self.o_food[i] #.coords
+##                i = self.occupants.index(soldier.coords)
+##                target = self.o_food[i] #.coords
                 enemy_workers = getAntList(currentState, enemy, (WORKER,))
                 enemy_queen  = getAntList(currentState, enemy, (QUEEN,))[0].coords
                 x = stepsToReach(currentState, soldier.coords, enemy_queen)
@@ -349,9 +349,10 @@ class AIPlayer(Player):
                     y = stepsToReach(currentState, path[-1], enemy_queen)
                     if y <= UNIT_STATS[QUEEN][RANGE]:
                         temp = list(path)
-                        temp = temp[:len(temp)-1]
+                        if len(temp) > 1:
+                            temp = temp[:len(temp)-1]
                         path = temp
-                    self.occupants[i] = path[-1]
+                    #self.occupants[i] = path[-1]
                     return Move(MOVE_ANT, path, None)
 
         ##make a worker if there aren't enough and anthill is empty
