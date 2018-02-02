@@ -579,6 +579,10 @@ class Game(object):
                 if self.verbose: print(self.tournamentStr(False), "\n")
                 self.setup(game, j)
                 self.UI.setPlayers(self.currentPlayers[0].author, self.currentPlayers[1].author)
+                # pause on start -- only for the first game
+                if self.pauseOnStart:
+                    self.UI.pausePressed()
+                    self.pauseOnStart = False
                 self.runGame()
 
                 if self.goToSettings:
