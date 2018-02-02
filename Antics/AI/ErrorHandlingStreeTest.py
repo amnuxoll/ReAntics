@@ -28,7 +28,7 @@ class AIPlayer(Player):
     #   inputPlayerId - The id to give the new player (int)
     ##
     def __init__(self, inputPlayerId):
-        super(AIPlayer,self).__init__(inputPlayerId, "Random")
+        super(AIPlayer,self).__init__(inputPlayerId, "ErrorHandlingStressTest")
     
     ##
     #getPlacement
@@ -45,8 +45,6 @@ class AIPlayer(Player):
     #Return: The coordinates of where the construction is to be placed
     ##
     def getPlacement(self, currentState):
-        numToPlace = 0
-        #implemented by students to return their next move
         if currentState.phase == SETUP_PHASE_1:    #stuff on my side
             numToPlace = 11
             moves = []
@@ -61,7 +59,7 @@ class AIPlayer(Player):
                     if currentState.board[x][y].constr == None and (x, y) not in moves:
                         move = (x, y)
                         #Just need to make the space non-empty. So I threw whatever I felt like in there.
-                        currentState.board[x][y].constr == True
+                        currentState.board[x][y].constr = True
                 moves.append(move)
             return moves
         elif currentState.phase == SETUP_PHASE_2:   #stuff on foe's side
@@ -71,18 +69,19 @@ class AIPlayer(Player):
                 move = None
                 while move == None:
                     #Choose any x location
-                    x = random.randint(0, 9)
+                    x = random.randint(10, 20)
                     #Choose any y location on enemy side of the board
-                    y = random.randint(6, 9)
+                    y = random.randint(10, 20)
                     #Set the move if this space is empty
-                    if currentState.board[x][y].constr == None and (x, y) not in moves:
-                        move = (x, y)
+                    # if currentState.board[x][y].constr == None and (x, y) not in moves:
+                    move = (x, y)
                         #Just need to make the space non-empty. So I threw whatever I felt like in there.
-                        currentState.board[x][y].constr == True
+                        # currentState.board[x][y].constr = True
                 moves.append(move)
             return moves
         else:
             return [(0, 0)]
+
     
     ##
     #getMove
@@ -95,12 +94,12 @@ class AIPlayer(Player):
     ##
     def getMove(self, currentState):
         moves = listAllLegalMoves(currentState)
-        selectedMove = moves[random.randint(0,len(moves) - 1)];
+        selectedMove = moves[random.randint(0,len(moves) - 1)]
 
         #don't do a build move if there are already 3+ ants
         numAnts = len(currentState.inventories[currentState.whoseTurn].ants)
         while (selectedMove.moveType == BUILD and numAnts >= 3):
-            selectedMove = moves[random.randint(0,len(moves) - 1)];
+            selectedMove = moves[random.randint(0,len(moves) - 1)]
             
         return selectedMove
     
