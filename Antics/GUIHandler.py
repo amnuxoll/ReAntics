@@ -19,15 +19,18 @@ import RedoneWidgets
 # The goal of this class is to keep the UI as separate as
 # possible from the game engine so that the game can be
 # easily configured to run without a GUI if desired.
+#
+# This could be accomplished by replacing all referenced to
+# UI in the main thread with if self.ui is not None: {do thing}.
 #########################################################
 class GUIHandler:
 
     def __init__(self, game):
-        self.game: Game = game
+        self.game = game
 
         # bookKeeping
         self.currentFrame = 0
-        self.currentState: GameState = None
+        self.currentState = None
         self.setup = False
         self.waitingForHuman = False
         self.waitingForAttack = False
@@ -59,7 +62,7 @@ class GUIHandler:
 
         self.settingsHandler = GameSettingsFrame(self, self.settingsFrame)
         self.statsHandler = StatsPane(self, self.statsFrame)
-        self.gameHandler: GamePane = GamePane(self, self.gameFrame)
+        self.gameHandler = GamePane(self, self.gameFrame)
 
         # we want the game to start on the settings screen, so show it first
         self.settingsFrame.pack(fill="both")
@@ -77,8 +80,9 @@ class GUIHandler:
     # to clean up
     #
     def onClose(self):
-        # TODO: This is brute forced, should probably find a different way
-        os._exit(0)
+        self.game.endClient()
+        self.game.gameThread.join()
+        self.root.destroy()
 
 
 

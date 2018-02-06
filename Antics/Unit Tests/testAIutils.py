@@ -123,9 +123,16 @@ class testGetNextState(unittest.TestCase):
         state.inventories[1].ants.append(ant)
         state.board[2][1].ant = ant
 
+        # adjust unit stats
+        old = UNIT_STATS[R_SOLDIER][ATTACK]
+        UNIT_STATS[R_SOLDIER][ATTACK] = UNIT_STATS[DRONE][HEALTH]
+
         move = Move(MOVE_ANT, [(4, 2)], None)
         newState = getNextState(state, move)
         ant = getAntAt(newState, (1, 2))
+
+        # adjust back
+        UNIT_STATS[R_SOLDIER][ATTACK] = old
 
         name = "ranged attack"
         self.assertIsNone(ant, "Failure in %s test. Ant at %s was still alive" % (name, (1, 2)))
@@ -142,6 +149,10 @@ class testGetNextState(unittest.TestCase):
         ant = Ant((3, 2), WORKER, 1)
         state.inventories[1].ants.append(ant)
         state.board[2][3].ant = ant
+
+        move = Move(MOVE_ANT, [(4, 2)], None)
+        newState = getNextState(state, move)
+        ant = getAntAt(newState, (3, 2))
 
         name = "worker attack"
         self.assertIsNotNone(ant, "Failure in %s test. Ant at %s was dead" % (name, (1, 2)))
