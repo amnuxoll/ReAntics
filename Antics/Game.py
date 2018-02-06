@@ -106,6 +106,8 @@ class Game(object):
         self.UI.gameHandler.createFrames()
         self.UI.gameHandler.giveGame(self)
 
+        self.playerNamesCheckList = [ai[0].author for ai in self.players]
+
         self.gameThread = threading.Thread(target=self.start, daemon=True)
         self.gameThread.start()
         self.delayWait = 0
@@ -170,7 +172,10 @@ class Game(object):
             print("Please specify one of the following:")
             for player in self.players[1:]:
                 print('    "' + player[0].author + '"')
-            return
+            # Assume if we got here it was a command line argument because the gui
+            # is populated from the AI list
+            self.UI.onClose()
+            sys.exit(0)
 
         self.gamesToPlayLock.acquire()
         self.gamesToPlay.append(GameData(HumanPlayer.HumanPlayer(-1), self.players[index][0]))
@@ -201,11 +206,19 @@ class Game(object):
                 p2 = player[0]
 
         if p1 is None or p2 is None:
-            print("ERROR:  AI '" + player1 + "' OR AI '" + player2 + "' not found.")
+            if p1 is None and p2 is None:
+                print("ERROR:  AI '" + player1 + "' AND AI '" + player2 + "' not found.")
+            elif p1 is None:
+                print("ERROR:  AI '" + player1 + "' not found.")
+            else:
+                print("ERROR:  AI '" + player2 + "' not found.")
             print("Please specify one of the following:")
             for player in self.players:
                 print('    "' + player[0].author + '"')
-            return
+            # Assume if we got here it was a command line argument because the gui
+            # is populated from the AI list
+            self.UI.onClose()
+            sys.exit(0)
 
         self.gamesToPlayLock.acquire()
         self.gamesToPlay.append(GameData(p1, p2, numGames))
@@ -238,7 +251,10 @@ class Game(object):
                 print("Please specify one of the following:")
                 for thisPlayer in self.players:
                     print('    "' + thisPlayer[0].author + '"')
-                return
+                # Assume if we got here it was a command line argument because the gui
+                # is populated from the AI list
+                self.UI.onClose()
+                sys.exit(0)
 
         # now that we have the AI's make all pairs
         self.gamesToPlayLock.acquire()
@@ -283,6 +299,16 @@ class Game(object):
     #
     ##
     def startAllOther(self, numGames, playerOne):
+        if playerOne not in self.playerNamesCheckList:
+            print("ERROR:  AI '" + playerOne + "' not found.")
+            print("Please specify one of the following:")
+            for thisPlayer in self.players:
+                print('    "' + thisPlayer[0].author + '"')
+            # Assume if we got here it was a command line argument because the gui
+            # is populated from the AI list
+            self.UI.onClose()
+            sys.exit(0)
+
         # get named AI
         ai = None
         for player in self.players:
@@ -309,6 +335,17 @@ class Game(object):
     #
     ##
     def startSelf(self, numGames, playerOne):
+
+        if playerOne not in self.playerNamesCheckList:
+            print("ERROR:  AI '" + playerOne + "' not found.")
+            print("Please specify one of the following:")
+            for thisPlayer in self.players:
+                print('    "' + thisPlayer[0].author + '"')
+            # Assume if we got here it was a command line argument because the gui
+            # is populated from the AI list
+            self.UI.onClose()
+            sys.exit(0)
+
         # get original agent
         p1 = None
         for player in self.players:
@@ -338,7 +375,7 @@ class Game(object):
         elif self.parser_args["RRall"]:
             self.startRRall(self.parser_args["numgames"])
         elif self.parser_args["all"]:
-            self.startAllOther(self.parser_args["numgames"], self.parser_args["players"])
+            self.startAllOther(self.parser_args["numgames"], self.parser_args["players"][0])
         elif self.parser_args["self"]:
             self.startSelf(self.parser_args["numgames"], self.parser_args["players"][0])
         if self.parser_args["RR"] or self.parser_args["RRall"] or self.parser_args["self"] or self.parser_args["all"] or \
@@ -373,7 +410,7 @@ class Game(object):
     #
     ##
     def processCommandLine(self):
-        parser = argparse.ArgumentParser(description='Lets play Antics!', add_help=True)
+        parser = argparse.ArgumentParser(description='Lets play Antics!', add_help=True, allow_abbrev=False)
         group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument('-RR', '--RR', action='store_true', dest='RR', default=False,
                            help='Round robin of given AI\'s(minimum of 3 AI’s required)')
@@ -400,7 +437,7 @@ class Game(object):
         self.parser_args["numgames"] = args.numgames
         self.parser_args["players"] = args.players
         self.parser_args["RR"] = args.RR
-        self.parser_args["RRall"] = args.self
+        self.parser_args["RRall"] = args.RRall
         self.parser_args["all"] = args.all
         self.parser_args["twoP"] = args.twoP
         self.parser_args["self"] = args.self
