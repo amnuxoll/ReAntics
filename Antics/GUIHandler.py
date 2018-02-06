@@ -73,7 +73,7 @@ class GUIHandler:
         menubar = tkinter.Menu(self.root)
 
         filemenu = tkinter.Menu(menubar, tearoff=0)
-        filemenu.add_command(label="Reload Agents", command=self.menuPressed)
+        filemenu.add_command(label="Reload Agents", command=self.reloadAgentPressed)
         menubar.add_cascade(label="File", menu=filemenu)
 
         helpmenu = tkinter.Menu(menubar, tearoff=0)
@@ -100,6 +100,12 @@ class GUIHandler:
 
     def menuPressed(self):
         print("Omg a menu button was pressed!")
+
+    def reloadAgentPressed(self):
+        if self.currentFrame == 0:
+            self.game.loadAIs()
+            self.game.UI.settingsHandler.changePlayers([ai[0].author for ai in self.game.players])
+            self.game.UI.settingsHandler.addGameChanged("QuickStart")
 
     def secretPressed(self, event=None):
         # with open("Textures/secret1.gif", "rb") as image_f:
