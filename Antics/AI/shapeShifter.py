@@ -173,6 +173,13 @@ class AIPlayer(Player):
     # Return: Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]
     ##
     def getMove(self, currentState):
+        STEVE = 1
+        DEFENSIVEASTAR = 2
+        ATTACK = 3
+
+        CurDecision = -1
+
+
         ## Needed Information
         myInv = getCurrPlayerInventory(currentState)
         me = currentState.whoseTurn
@@ -183,31 +190,17 @@ class AIPlayer(Player):
         enemyW = getAntList(currentState, enemy, (WORKER,))
         enemyD = getAntList(currentState, enemy, (DRONE, ))
         enemyR = getAntList(currentState, enemy, (R_SOLDIER, ))
-
-        # Enemy ant coordinates for attack ants
-        dronesCoords = []
-        for drone in enemyD:
-            dCoords = list(drone.coords)
-            dronesCoords.append(dCoords)
-
-        rangerCoords = []
-        for ranger in enemyR:
-            rCoords = list(ranger.coords)
-            rangerCoords.append(rCoords)
+        enemyS = getAntList(currentState, enemy, (SOLDIER, ))
 
         # Number of worker ants
         numWorkers = len(enemyW)
-
-        # TODO: continue creating alternative strategies to use
-        WORKERATTACK = 1
-        SPEEDATTACK  = 2
-        DEFENSIVEFG  = 3
 
         ##setup instance variables if necessary
         if self.hill is None:
             self.hill = getConstrList(currentState, me, (ANTHILL,))[0]
         if self.tunnel is None:
             self.tunnel = getConstrList(currentState, me, (TUNNEL,))[0]
+
 
         ## Pathing for Worker Ants between food and tunnel/anthill
         #TODO: Update pathing below to pick up food while avoiding attacking ants
@@ -250,7 +243,27 @@ class AIPlayer(Player):
         for path in self.paths:
             path.updateState(currentState)
 
-        # TODO: Determine cases for when to use each strategy
+        ######################################################################################################
+        ## Switch  decision section - needs fine tuning
+
+        # if strategy is a food gatherer type use Sara P's Steve Strategy
+        if (numWorkers >= 2 and food.enemyInv > 2 and len(enemyD) == 0 and len(enemyR)==0 and len(enemyS)==0 ):
+            CurDecision = 1
+
+        # if strategy is attack using soldiers, use Christian's Defensive A*
+        elif (enemyS >= 1) or (enemyD >= 1):
+            CurDecision = 2
+
+        # if strategy is attack using rangers, use attack AI - implement kiting
+        elif enemyR >= 1:
+            CurDecision = 3
+
+        # if no strat above has been chosen, continue basic complex food gatherer strategies
+        else:
+            CurDecision = -1
+
+        ######################################################################################################
+
 
 
 
