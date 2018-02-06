@@ -402,7 +402,7 @@ class GamePane:
     def UIbuttonPressed(self):
         self.handler.showFrame(1)
 
-    def endTurnPressed(self):
+    def endTurnPressed(self, event=None):
         # ending turn is only allowed as a substitute for normal moves
         if self.handler.waitingForHuman and self.handler.phase == PLAY_PHASE and not self.handler.waitingForAttack:
             self.handler.submitHumanMove(Move(END, None, None))

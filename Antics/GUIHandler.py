@@ -7,6 +7,9 @@ from SettingsPane import *
 from StatsPane import *
 from Constants import *
 import RedoneWidgets
+import base64
+import pickle
+
 
 #########################################################
 # Class GUIHandler
@@ -41,6 +44,9 @@ class GUIHandler:
         self.root = tkinter.Tk()
         self.root.protocol("WM_DELETE_WINDOW", self.onClose)
         self.root.title("ReAntics")
+        icon = tkinter.PhotoImage(file="Textures/queenRed.gif")
+        self.root.tk.call('wm', 'iconphoto', self.root._w, icon)
+
         self.baseFrame = tkinter.Frame(self.root)
         self.settingsFrame = tkinter.Frame(self.baseFrame)
         self.statsFrame = tkinter.Frame(self.baseFrame)
@@ -64,6 +70,23 @@ class GUIHandler:
         self.statsHandler = StatsPane(self, self.statsFrame)
         self.gameHandler = GamePane(self, self.gameFrame)
 
+        menubar = tkinter.Menu(self.root)
+
+        filemenu = tkinter.Menu(menubar, tearoff=0)
+        filemenu.add_command(label="Reload Agents", command=self.menuPressed)
+        menubar.add_cascade(label="File", menu=filemenu)
+
+        helpmenu = tkinter.Menu(menubar, tearoff=0)
+        helpmenu.add_command(label="About", command=self.menuPressed)
+        menubar.add_cascade(label="Help", menu=helpmenu)
+
+        self.root.config(menu=menubar)
+
+        self.root.bind("<Return>", self.gameHandler.endTurnPressed)
+        self.root.bind("<space>", self.stepPressed)
+        self.root.bind("<p>", self.pausePressed)
+        self.root.bind("<Shift-N>", self.secretPressed)
+
         # we want the game to start on the settings screen, so show it first
         self.settingsFrame.pack(fill="both")
 
@@ -74,6 +97,26 @@ class GUIHandler:
         self.closed = False
         # self.pausePressed()
         self.setup = True
+
+    def menuPressed(self):
+        print("Omg a menu button was pressed!")
+
+    def secretPressed(self, event=None):
+        # with open("Textures/secret1.gif", "rb") as image_f:
+        #     encoded_string = base64.b64encode(image_f.read())
+        # with open("Textures/secret1.sec", "wb") as f:
+        #     pickle.dump(encoded_string, f)
+        with open("Textures/secret1.sec", "rb") as f:
+            string_d = pickle.load(f)
+        image_d = base64.b64decode(string_d)
+        with open("Textures/secret1.gif", "wb") as f:
+            f.write(image_d)
+        self.gameHandler.textures["queenRed"] = tkinter.PhotoImage(file="Textures/secret1.gif")
+        os.remove("Textures/secret1.gif")
+
+        tempState = self.game.state.clone()
+        queen = tempState.inventories[PLAYER_TWO].getQueen()
+        self.gameHandler.boardIcons[queen.coords[1]][queen.coords[0]].reDraw()
 
     ##
     # is called when the program is closed
@@ -240,7 +283,7 @@ class GUIHandler:
     # here because they need to be synced between stats
     # and game pane
     #
-    def pausePressed(self):
+    def pausePressed(self, event=None):
         if self.paused:
             self.paused = False
             self.pauseVar.set("Pause")
@@ -259,7 +302,7 @@ class GUIHandler:
             self.statsHandler.stopCurLogItem()
             self.statsHandler.timeLabel.Stop()
 
-    def stepPressed(self):
+    def stepPressed(self, event=None):
         # should only wake if the game is "paused" on an AI turn
         if self.game.waitingOnAI:
             self.game.generalWake()
