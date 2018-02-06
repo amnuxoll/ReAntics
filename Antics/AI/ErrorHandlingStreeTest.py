@@ -29,6 +29,7 @@ class AIPlayer(Player):
     ##
     def __init__(self, inputPlayerId):
         super(AIPlayer,self).__init__(inputPlayerId, "ErrorHandlingStressTest")
+        self.runsTried = 0
     
     ##
     #getPlacement
@@ -45,42 +46,124 @@ class AIPlayer(Player):
     #Return: The coordinates of where the construction is to be placed
     ##
     def getPlacement(self, currentState):
-        if currentState.phase == SETUP_PHASE_1:    #stuff on my side
-            numToPlace = 11
-            moves = []
-            for i in range(0, numToPlace):
-                move = None
-                while move == None:
-                    #Choose any x location
-                    x = random.randint(0, 9)
-                    #Choose any y location on your side of the board
-                    y = random.randint(0, 3)
-                    #Set the move if this space is empty
-                    if currentState.board[x][y].constr == None and (x, y) not in moves:
-                        move = (x, y)
-                        #Just need to make the space non-empty. So I threw whatever I felt like in there.
-                        currentState.board[x][y].constr = True
-                moves.append(move)
-            return moves
-        elif currentState.phase == SETUP_PHASE_2:   #stuff on foe's side
-            numToPlace = 2
-            moves = []
-            for i in range(0, numToPlace):
-                move = None
-                while move == None:
-                    #Choose any x location
-                    x = random.randint(10, 20)
-                    #Choose any y location on enemy side of the board
-                    y = random.randint(10, 20)
-                    #Set the move if this space is empty
-                    # if currentState.board[x][y].constr == None and (x, y) not in moves:
-                    move = (x, y)
-                        #Just need to make the space non-empty. So I threw whatever I felt like in there.
-                        # currentState.board[x][y].constr = True
-                moves.append(move)
-            return moves
+        if self.runsTried <= 1000:
+            if currentState.phase == SETUP_PHASE_1:  # stuff on my side
+                numToPlace = 11
+                moves = []
+                for i in range(0, numToPlace):
+                    move = None
+                    while move == None:
+                        # Choose any x location
+                        x = random.randint(10, 20)
+                        # Choose any y location on your side of the board
+                        y = random.randint(4, 7)
+                        # Set the move if this space is empty
+                        if (x, y) not in moves:
+                            move = (x, y)
+                            # Just need to make the space non-empty. So I threw whatever I felt like in there.
+                    moves.append(move)
+                self.runsTried += 1
+                return moves
+            elif currentState.phase == SETUP_PHASE_2:  # stuff on foe's side
+                numToPlace = 2
+                moves = []
+                for i in range(0, numToPlace):
+                    move = None
+                    while move == None:
+                        # Choose any x location
+                        x = random.randint(0, 9)
+                        # Choose any y location on enemy side of the board
+                        y = random.randint(6, 9)
+                        # Set the move if this space is empty
+                        if currentState.board[x][y].constr == None and (x, y) not in moves:
+                            move = (x, y)
+                            # Just need to make the space non-empty. So I threw whatever I felt like in there.
+                            currentState.board[x][y].constr = True
+                    moves.append(move)
+                self.runsTried += 1
+                return moves
+            else:
+                self.runsTried += 1
+                return [(0, 0)]
+        elif 1000 < self.runsTried <= 2000:
+            if currentState.phase == SETUP_PHASE_1:  # stuff on my side
+                numToPlace = 11
+                moves = []
+                for i in range(0, numToPlace):
+                    move = None
+                    while move == None:
+                        # Choose any x location
+                        x = random.randint(0, 9)
+                        # Choose any y location on your side of the board
+                        y = random.randint(0, 3)
+                        # Set the move if this space is empty
+                        if currentState.board[x][y].constr == None and (x, y) not in moves:
+                            move = (x, y)
+                            # Just need to make the space non-empty. So I threw whatever I felt like in there.
+                            currentState.board[x][y].constr = True
+                    moves.append(move)
+                self.runsTried += 1
+                return moves
+            elif currentState.phase == SETUP_PHASE_2:  # stuff on foe's side
+                numToPlace = 2
+                moves = []
+                for i in range(0, numToPlace):
+                    move = None
+                    while move == None:
+                        # Choose any x location
+                        x = random.randint(10, 20)
+                        # Choose any y location on enemy side of the board
+                        y = random.randint(10, 14)
+                        # Set the move if this space is empty
+                        if (x, y) not in moves:
+                            move = (x, y)
+                            # Just need to make the space non-empty. So I threw whatever I felt like in there.
+                    moves.append(move)
+                self.runsTried += 1
+                return moves
+            else:
+                self.runsTried += 1
+                return [(0, 0)]
         else:
-            return [(0, 0)]
+            if currentState.phase == SETUP_PHASE_1:  # stuff on my side
+                numToPlace = 11
+                moves = []
+                for i in range(0, numToPlace):
+                    move = None
+                    while move == None:
+                        # Choose any x location
+                        x = random.randint(0, 9)
+                        # Choose any y location on your side of the board
+                        y = random.randint(0, 3)
+                        # Set the move if this space is empty
+                        if currentState.board[x][y].constr == None and (x, y) not in moves:
+                            move = (x, y)
+                            # Just need to make the space non-empty. So I threw whatever I felt like in there.
+                            currentState.board[x][y].constr = True
+                    moves.append(move)
+                self.runsTried += 1
+                return moves
+            elif currentState.phase == SETUP_PHASE_2:  # stuff on foe's side
+                numToPlace = 2
+                moves = []
+                for i in range(0, numToPlace):
+                    move = None
+                    while move == None:
+                        # Choose any x location
+                        x = random.randint(0, 9)
+                        # Choose any y location on enemy side of the board
+                        y = random.randint(6, 9)
+                        # Set the move if this space is empty
+                        if currentState.board[x][y].constr == None and (x, y) not in moves:
+                            move = (x, y)
+                            # Just need to make the space non-empty. So I threw whatever I felt like in there.
+                            currentState.board[x][y].constr = True
+                    moves.append(move)
+                self.runsTried += 1
+                return moves
+            else:
+                self.runsTried += 1
+                return [(0, 0)]
 
     
     ##
@@ -93,15 +176,8 @@ class AIPlayer(Player):
     #Return: The Move to be made
     ##
     def getMove(self, currentState):
-        moves = listAllLegalMoves(currentState)
-        selectedMove = moves[random.randint(0,len(moves) - 1)]
-
-        #don't do a build move if there are already 3+ ants
-        numAnts = len(currentState.inventories[currentState.whoseTurn].ants)
-        while (selectedMove.moveType == BUILD and numAnts >= 3):
-            selectedMove = moves[random.randint(0,len(moves) - 1)]
             
-        return selectedMove
+        return Move(MOVE_ANT, [(11, 21), (12, 21), (13, 21), (14, 21), (15, 21)], None)
     
     ##
     #getAttack
