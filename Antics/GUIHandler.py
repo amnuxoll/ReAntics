@@ -317,9 +317,11 @@ class GUIHandler:
         if self.stats:
             self.stats = False
             self.statsText.set("Print Stats On")
+            self.game.verbose = True
         else:
             self.stats = True
             self.statsText.set("Print Stats Off")
+            self.game.verbose = False
 
     def killPressed(self):
         # only kill if there's something to kill and game is not already killed

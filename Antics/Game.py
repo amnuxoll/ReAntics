@@ -510,6 +510,13 @@ class Game(object):
         self.timeoutOn = additional['timeout']
         self.autorestart = additional['autorestart']
         self.pauseOnStart = additional['pause']
+
+        if self.verbose:
+            self.UI.statsText.set("Print Stats On")
+            self.UI.stats = False
+        else:
+            self.UI.statsText.set("Print Stats Off")
+            self.UI.stats = True
         
         if self.timeoutOn:
             self.timeout_limit = float(additional['timeout_limit'])
