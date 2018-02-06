@@ -12,3 +12,6 @@
 
 # saved files
 Antics/my-settings.json
+
+# pickle files
+Antics/*.pickle
