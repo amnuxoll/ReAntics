@@ -40,7 +40,6 @@ class Game(object):
     #
     ##
     def __init__(self, testing=False):
-        ### new game queue, this is a queue of function calls ( does not sub for the tournament vars )
         self.last_time = time.time()
         self.waitCond = threading.Condition()
 
@@ -53,6 +52,7 @@ class Game(object):
         self.gamesToPlay = []
         self.gamesToPlayLock = threading.Lock()
 
+        self.ended = False
         self.submittedMove = None
         self.submittedAttack = None
         self.submittedSetup = None
@@ -96,15 +96,9 @@ class Game(object):
 
         # Initializes the UI variables
         self.UI = GUIHandler(self)
-        self.gameThread = None
 
         # TODO: figure out how to make this work properly
         # wait for GUI to set up
-        done = False
-        while not done:
-            time.sleep(.1)
-            if self.UI is not None:
-                done = self.UI.setup
         self.UI.showFrame(0)
 
         # fixing the players on the settings menu
@@ -544,7 +538,7 @@ class Game(object):
 
         while True:
             # if we have nothing to do, wait
-            while len(self.gamesToPlay) == 0:
+            while len(self.gamesToPlay) == 0 and not self.ended:
                 self.running = False
                 if self.goToSettings:
                     self.goToSettings = False
@@ -556,6 +550,8 @@ class Game(object):
                     self.condWait()
                 else:
                     self.delayWait = (self.delayWait + 1) % 5
+            if self.ended:
+                break
 
             if self.restartGameList is None:
                 self.restartGameList = list(self.gamesToPlay)
@@ -602,8 +598,8 @@ class Game(object):
 
             self.UI.statsHandler.stopCurLogItem(True)
 
-            if len(self.gamesToPlay) == 0 and self.autorestart :
-                #self.UI.restartPressed()
+            if len(self.gamesToPlay) == 0 and self.autorestart:
+                # self.UI.restartPressed()
                 self.restarted = True
                 self.soft_restart = True
                 
@@ -611,15 +607,16 @@ class Game(object):
                 self.restarted = False
                 self.gamesToPlay = self.restartGameList
                 self.restartGameList = None
-                if not self.soft_restart :
+                if not self.soft_restart:
                     self.UI.statsHandler.clearLog()
                     self.UI.statsHandler.timeLabel.Reset()
-                else :
+                else:
                     self.soft_restart = False
+        self.UI.statsHandler.timeLabel.Stop()
 
             
 
-    def setup(self, game: GameData, count: int):
+    def setup(self, game, count):
         self.state = GameState.getBlankState()
         self.state.phase = SETUP_PHASE_1
 
@@ -646,6 +643,10 @@ class Game(object):
         self.killed = True
         self.safeKilled = False
         self.generalWake()
+
+    def endClient(self):
+        self.ended = True
+        self.kill()
 
     ##
     # restart
