@@ -87,6 +87,7 @@ class Game(object):
         self.pauseConditions = []
 
         self.loadAIs()
+        self.playerNamesCheckList = [ai[0].author for ai in self.players]
         self.processCommandLine()
         # setup GUI
         # this has to be done in the main thread because Tkinter is dumb
@@ -105,8 +106,6 @@ class Game(object):
         self.UI.settingsHandler.giveGame(self)
         self.UI.gameHandler.createFrames()
         self.UI.gameHandler.giveGame(self)
-
-        self.playerNamesCheckList = [ai[0].author for ai in self.players]
 
         self.gameThread = threading.Thread(target=self.start, daemon=True)
         self.gameThread.start()
