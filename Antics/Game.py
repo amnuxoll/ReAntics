@@ -84,7 +84,6 @@ class Game(object):
         self.autorestart     = False
         self.soft_restart    = False  # to restart the games, but not reset the stats
         self.pauseOnStart    = False
-        # !!! TODO - decide on game board or stats pane displaying first, fix that additional setting accordingly
         self.pauseConditions = []
 
         self.loadAIs()
@@ -97,7 +96,6 @@ class Game(object):
         # Initializes the UI variables
         self.UI = GUIHandler(self)
 
-        # TODO: figure out how to make this work properly
         # wait for GUI to set up
         self.UI.showFrame(0)
 
@@ -115,29 +113,11 @@ class Game(object):
         self.postProcessCommandLine()
         self.UI.root.mainloop()
 
-    def tick(self, fps):
-        interval = 1 / fps
-        current_time = time.time()
-
-        delta = current_time - self.last_time
-
-        if delta < interval:
-            time.sleep(interval - delta)
-        self.last_time = time.time()
-
     def gameStartRequested(self):
         while len(self.game_calls) > 0:
             g = self.game_calls.pop(0)
             self.UI.statsHandler.timeLabel.Reset()
             g()
-
-    def closeGUI(self):
-        # Tried to make it close nicely, failed
-        # instead we brute force
-        # TODO: make this work better
-
-        # theoretically sys.exit() should work here. I'm not sure why it doesn't.
-        os._exit(0)
 
     def submitHumanMove(self, move):
         if not self.waitCond.acquire(blocking=False):
@@ -436,7 +416,6 @@ class Game(object):
         if args.twoP:
             if len(args.players) != 2:
                 parser.error('Only two agents allowed')
-            # TODO: This is to change with stretch goals
             if "human" == args.players[0].lower() and "human" == args.players[1].lower():
                 parser.error('Only one player may be human')
             if "human" == args.players[0].lower():
@@ -536,7 +515,7 @@ class Game(object):
     def start(self):
         self.UI.statsHandler.timeLabel.Start()
 
-        while True:
+        while not self.ended:
             # if we have nothing to do, wait
             while len(self.gamesToPlay) == 0 and not self.ended:
                 self.running = False
@@ -583,7 +562,7 @@ class Game(object):
                 self.UI.setPlayers(self.currentPlayers[0].author, self.currentPlayers[1].author)
                 self.runGame()
 
-                if self.goToSettings:
+                if self.goToSettings or self.ended:
                     self.killed = False
                     break
 
@@ -612,6 +591,7 @@ class Game(object):
                     self.UI.statsHandler.timeLabel.Reset()
                 else:
                     self.soft_restart = False
+        self.UI.statsHandler.stopCurLogItem()
         self.UI.statsHandler.timeLabel.Stop()
 
             
@@ -887,10 +867,6 @@ class Game(object):
 
                         # if AI mode, pause to observe move until next or continue is clicked
                         self.pauseGame()
-                        if self.state.phase == MENU_PHASE:
-                            # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
-                            # break# is this possible??? TODO
-                            self.setWinner(1 - self.state.whoseTurn)
 
 
                             # clear all highlights after build
@@ -905,10 +881,6 @@ class Game(object):
                                 if type(
                                         constrUnderAnt) is Building and not constrUnderAnt.player == self.state.whoseTurn:
                                     constrUnderAnt.captureHealth -= 1
-                                    # TODO: This code is for tunnel claiming
-                                    # if constrUnderAnt.captureHealth == 0 and constrUnderAnt.type != ANTHILL:
-                                    #     constrUnderAnt.player = self.state.whoseTurn
-                                    #     constrUnderAnt.captureHealth = CONSTR_STATS[constrUnderAnt.type][CAP_HEALTH]
                                 # have all worker ants on food sources gather food
                                 elif constrUnderAnt.type == FOOD and ant.type == WORKER:
                                     ant.carrying = True
@@ -933,10 +905,6 @@ class Game(object):
 
                         # if AI mode, pause to observe move until next or continue is clicked
                         self.pauseGame()
-                        if self.state.phase == MENU_PHASE: # TODO is this possible?
-                            # if we are in menu phase at this point, a reset was requested so we need to break the game loop.
-                            # break TODO
-                            self.setWinner(1 - self.state.whoseTurn)
                 else:
                     # human can give None move, AI can't
                     if not type(currentPlayer) is HumanPlayer.HumanPlayer:
@@ -969,7 +937,6 @@ class Game(object):
             try:
                 winnerName = self.players[self.winner][0].author
             except:
-                # TODO deal with this
                 pass
 
             # special handling for human currently
@@ -985,7 +952,6 @@ class Game(object):
             try:
                 self.playerScores[self.winner][1] += 1
             except:
-                # TODO: deal with this
                 pass
         if self.loser >= 0:
             try:

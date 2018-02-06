@@ -155,7 +155,7 @@ class StatsPane:
         self.dummyStatLabel.grid(sticky=tkinter.W)
         
         self.logTextFrame.set_scrollregion(vertical_buff=300) #can change amount of white space beneath game log records
-        self.parent.update()
+        self.parent.update_idletasks()
 
         self.log.append(b)
         self.cur_log = b

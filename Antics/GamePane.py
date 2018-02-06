@@ -530,8 +530,6 @@ class GamePane:
             # if the user clicked on a highlighted tile, submit the move
             if self.boardIcons[y][x].highlight:
                 ant: Ant = getAntAt(self.handler.currentState, self.baseLocation)
-                # TODO: CreatePathTowards doesn't always find the right path
-                # Needs to get fixed in AIPlayerUtils update
                 path = createPathToward(self.handler.currentState, ant.coords, (x, y), UNIT_STATS[ant.type][0])
 
                 # flip for player 2

@@ -81,6 +81,10 @@ class GUIHandler:
     #
     def onClose(self):
         self.game.endClient()
+        self.root.after(50, self.continueClose)
+        #self.continueClose()
+
+    def continueClose(self):
         self.game.gameThread.join()
         self.root.destroy()
 
@@ -128,7 +132,7 @@ class GUIHandler:
     # updates the current gameState of the GUI and updates the
     # GUI itself if appropriate to do so
     #
-    def showState(self, state: GameState):
+    def showState(self, state):
         self.currentState = state
 
         if self.currentFrame == 2 and self.currentState is not None:

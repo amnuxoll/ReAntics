@@ -360,7 +360,7 @@ class GameSettingsFrame ( ) :
 
         self.gamesScrollFrame.set_scrollregion(vertical_buff=300)
         self.my_games.append ( new_game )
-        self.parent.update()
+        self.parent.update_idletasks()
 
         return
 
@@ -442,7 +442,7 @@ class GameSettingsFrame ( ) :
 
         self.pcScrollFrame.set_scrollregion(vertical_buff=300)
         self.my_pause_conditions.append (new_pc)
-        self.parent.update()
+        self.parent.update_idletasks()
 
     ###
     # saving game settings
@@ -897,7 +897,7 @@ class QuickStartFrame ( tk.Frame ) :
         for x in self.players :
             if x != "Select All"  :
                 self.selected[x].set(v)
-                self.update()
+                self.update_idletasks()
 
     def get_players ( self ) :
         p = []
@@ -1073,7 +1073,7 @@ class RoundRobinFrame ( tk.Frame ) :
         for x in self.players :
             if x != "Select All"  :
                 self.selected[x].set(v)
-                self.update()
+                self.update_idletasks()
                 
     def get_players ( self ) :
         p = []
