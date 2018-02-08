@@ -1088,6 +1088,7 @@ class Game(object):
     def loadAIs(self):
         # Reset the player list in case some have been loaded already
         self.players = []
+        self.playerScores = []
 
         # self.addPlayer(HumanPlayer.HumanPlayer(0))
 
