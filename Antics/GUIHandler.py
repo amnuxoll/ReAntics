@@ -114,11 +114,7 @@ class GUIHandler:
         #     pickle.dump(encoded_string, f)
         with open("Textures/secret1.sec", "rb") as f:
             string_d = pickle.load(f)
-        image_d = base64.b64decode(string_d)
-        with open("Textures/secret1.gif", "wb") as f:
-            f.write(image_d)
-        self.gameHandler.textures["queenRed"] = tkinter.PhotoImage(file="Textures/secret1.gif")
-        os.remove("Textures/secret1.gif")
+            self.gameHandler.textures["queenRed"] = tkinter.PhotoImage(data=string_d)
 
         tempState = self.game.state.clone()
         queen = tempState.inventories[PLAYER_TWO].getQueen()
