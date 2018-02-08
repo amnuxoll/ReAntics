@@ -82,10 +82,13 @@ class GUIHandler:
 
         self.root.config(menu=menubar)
 
+        # hot keys
         self.root.bind("<Return>", self.gameHandler.endTurnPressed)
         self.root.bind("<space>", self.stepPressed)
         self.root.bind("<p>", self.pausePressed)
         self.root.bind("<Shift-N>", self.secretPressed)
+        self.root.bind("<r>", self.regGPressed)
+        self.root.bind("<Shift-C>", self.secret2Pressed)
 
         # we want the game to start on the settings screen, so show it first
         self.settingsFrame.pack(fill="both")
@@ -120,6 +123,29 @@ class GUIHandler:
         queen = tempState.inventories[PLAYER_TWO].getQueen()
         self.gameHandler.boardIcons[queen.coords[1]][queen.coords[0]].reDraw()
 
+    def regGPressed(self, event = None):
+        
+        self.gameHandler.textures["queenRed"] = tkinter.PhotoImage(file="Textures/queenRed.gif")
+        self.gameHandler.textures["queenBlue"] = tkinter.PhotoImage(file="Textures/queenBlue.gif")
+        self.gameHandler.textures["food"] = tkinter.PhotoImage(file="Textures/food.gif")
+
+    def secret2Pressed(self, event = None):
+        files = ["a","b","c"]
+        for f in files:
+            f1 = "Textures/secret2"+f+".sec"
+            f2 = "Textures/secret2"+f+".gif"
+            with open(f1, "rb") as f:
+                string_d = pickle.load(f)
+            image_d = base64.b64decode(string_d)
+            with open(f2, "wb") as f:
+                f.write(image_d)
+        self.gameHandler.textures["queenRed"] = tkinter.PhotoImage(file="Textures/secret2a.gif")
+        self.gameHandler.textures["queenBlue"] = tkinter.PhotoImage(file="Textures/secret2b.gif")
+        self.gameHandler.textures["food"] = tkinter.PhotoImage(file="Textures/secret2c.gif")
+        for f in files:
+            f1 = "Textures/secret2"+f+".gif"
+            os.remove(f1)
+            
     ##
     # is called when the program is closed
     # to clean up

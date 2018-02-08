@@ -12,8 +12,8 @@ from AIPlayerUtils import *
 class AIPlayer(Player):
 
 
-    def __init__(self, inputPlayerId):
-        super(AIPlayer, self).__init__(inputPlayerId, "rangedSoldierTestAI")
+    def __init__(self, inputPlayerId, cpy = False):
+        super(AIPlayer, self).__init__(inputPlayerId, "rangedSoldierTestAI", cpy)
 
         self.myFood = None
         self.myTunnel = None

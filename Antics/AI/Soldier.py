@@ -75,9 +75,10 @@ class AIPlayer(Player):
     #
     #Parameters:
     #   inputPlayerId - The id to give the new player (int)
+    #   cpy           - whether the player is a copy (when playing itself)
     ##
-    def __init__(self, inputPlayerId):
-        super(AIPlayer, self).__init__(inputPlayerId, "Ralph")
+    def __init__(self, inputPlayerId, cpy = False):
+        super(AIPlayer, self).__init__(inputPlayerId, "Ralph", cpy)
         self.foods = None
         self.distances = [0 for i in range(2)]
         self.hill = None

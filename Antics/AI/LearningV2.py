@@ -55,9 +55,10 @@ class AIPlayer(Player):
     #
     # Parameters:
     #   inputPlayerId - The id to give the new player (int)
+    #   cpy           - whether the player is a copy (when playing itself)
     ##
-    def __init__(self, inputPlayerId):
-        super(AIPlayer, self).__init__(inputPlayerId, "Learning Agent V2 Unrestricted")
+    def __init__(self, inputPlayerId, cpy = False):
+        super(AIPlayer, self).__init__(inputPlayerId, "Learning Agent V2 Unrestricted", cpy)
 
     ##
     # getPlacement

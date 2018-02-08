@@ -15,10 +15,13 @@ class Player(object):
     #
     #Parameters:
     #   inputPlayerId - The id to give the new player (int)
+    #   inputAuthor   - The player's name
+    #   cpy           - whether or not the player is a copy (when plays self)
     ##
-    def __init__(self, inputPlayerId, inputAuthor):
+    def __init__(self, inputPlayerId, inputAuthor, cpy = False):
         self.playerId = inputPlayerId
         self.author = inputAuthor
+        self.cpy = cpy
     
     ##
     #getPlacement

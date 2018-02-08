@@ -1123,7 +1123,7 @@ class Game(object):
                 moduleName = file[:-3]
                 temp = importlib.import_module(moduleName)
                 if temp.AIPlayer(-1).author == player:
-                    lst = temp.AIPlayer(len(self.players))
+                    lst = temp.AIPlayer(len(self.players), cpy = True) # declare copy
                     lst.author += "@@"
                     break
         sys.path.pop(0)

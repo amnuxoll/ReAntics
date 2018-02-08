@@ -28,9 +28,10 @@ class AIPlayer(Player):
     #
     #Parameters:
     #   inputPlayerId - The id to give the new player (int)
+    #   cpy           - whether the player is a copy (when playing itself)
     ##
-    def __init__(self, inputPlayerId):
-        super(AIPlayer, self).__init__(inputPlayerId, "Booger Test Timeout")
+    def __init__(self, inputPlayerId, cpy = False):
+        super(AIPlayer, self).__init__(inputPlayerId, "Booger Test Timeout", cpy)
         #the coordinates of the agent's food and tunnel will be stored in these
         #variables (see getMove() below)
         self.myFood = None
