@@ -76,9 +76,9 @@ class GUIHandler:
         filemenu.add_command(label="Reload Agents", command=self.reloadAgentPressed)
         menubar.add_cascade(label="File", menu=filemenu)
 
-        helpmenu = tkinter.Menu(menubar, tearoff=0)
-        helpmenu.add_command(label="About", command=self.menuPressed)
-        menubar.add_cascade(label="Help", menu=helpmenu)
+        # helpmenu = tkinter.Menu(menubar, tearoff=0)
+        # helpmenu.add_command(label="About", command=self.menuPressed)
+        # menubar.add_cascade(label="Help", menu=helpmenu)
 
         self.root.config(menu=menubar)
 
@@ -101,8 +101,8 @@ class GUIHandler:
         # self.pausePressed()
         self.setup = True
 
-    def menuPressed(self):
-        print("Omg a menu button was pressed!")
+    # def menuPressed(self):
+    #     print("Omg a menu button was pressed!")
 
     def reloadAgentPressed(self):
         if self.currentFrame == 0:
@@ -111,40 +111,31 @@ class GUIHandler:
             self.game.UI.settingsHandler.addGameChanged("QuickStart")
 
     def secretPressed(self, event=None):
-        # with open("Textures/secret1.gif", "rb") as image_f:
-        #     encoded_string = base64.b64encode(image_f.read())
-        # with open("Textures/secret1.sec", "wb") as f:
-        #     pickle.dump(encoded_string, f)
         with open("Textures/secret1.sec", "rb") as f:
             string_d = pickle.load(f)
             self.gameHandler.textures["queenRed"] = tkinter.PhotoImage(data=string_d)
-
-        tempState = self.game.state.clone()
-        queen = tempState.inventories[PLAYER_TWO].getQueen()
-        self.gameHandler.boardIcons[queen.coords[1]][queen.coords[0]].reDraw()
+        self.reDrawBoard()
 
     def regGPressed(self, event = None):
-        
         self.gameHandler.textures["queenRed"] = tkinter.PhotoImage(file="Textures/queenRed.gif")
         self.gameHandler.textures["queenBlue"] = tkinter.PhotoImage(file="Textures/queenBlue.gif")
         self.gameHandler.textures["food"] = tkinter.PhotoImage(file="Textures/food.gif")
+        self.reDrawBoard()
 
     def secret2Pressed(self, event = None):
         files = ["a","b","c"]
         for f in files:
             f1 = "Textures/secret2"+f+".sec"
-            f2 = "Textures/secret2"+f+".gif"
-            with open(f1, "rb") as f:
-                string_d = pickle.load(f)
-            image_d = base64.b64decode(string_d)
-            with open(f2, "wb") as f:
-                f.write(image_d)
-        self.gameHandler.textures["queenRed"] = tkinter.PhotoImage(file="Textures/secret2a.gif")
-        self.gameHandler.textures["queenBlue"] = tkinter.PhotoImage(file="Textures/secret2b.gif")
-        self.gameHandler.textures["food"] = tkinter.PhotoImage(file="Textures/secret2c.gif")
-        for f in files:
-            f1 = "Textures/secret2"+f+".gif"
-            os.remove(f1)
+            with open(f1, "rb") as fi:
+                string_d = pickle.load(fi)
+                if f == "a":
+                    self.gameHandler.textures["queenRed"] = tkinter.PhotoImage(data=string_d)
+                elif f == "b":
+                    self.gameHandler.textures["queenBlue"] = tkinter.PhotoImage(data=string_d)
+                elif f == "c":
+                    self.gameHandler.textures["food"] = tkinter.PhotoImage(data=string_d)
+        self.reDrawBoard()
+
             
     ##
     # is called when the program is closed
@@ -159,6 +150,16 @@ class GUIHandler:
         self.game.gameThread.join()
         self.root.destroy()
 
+    ##
+    # reDrawBoard
+    #
+    # Calls the reDraw() method on all the tiles on the board
+    #
+    ##
+    def reDrawBoard(self):
+        for x in range(10):
+            for y in range(10):
+                self.gameHandler.boardIcons[x][y].reDraw()
 
 
     ##
