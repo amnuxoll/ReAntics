@@ -70,6 +70,10 @@ INVALID_ATTACK = 2
 #Max time (seconds) an AI is allowed to make a move
 AI_MOVE_TIMEOUT = 30
 
+#Player ID values
+COPY = -2
+HUMAN = -1
+
 ##
 # moveTypeToStr
 #

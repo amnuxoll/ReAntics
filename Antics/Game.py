@@ -175,10 +175,10 @@ class Game(object):
             # Assume if we got here it was a command line argument because the gui
             # is populated from the AI list
             self.UI.onClose()
-            sys.exit(0)
+            # sys.exit(0)
 
         self.gamesToPlayLock.acquire()
-        self.gamesToPlay.append(GameData(HumanPlayer.HumanPlayer(-1), self.players[index][0]))
+        self.gamesToPlay.append(GameData(HumanPlayer.HumanPlayer(HUMAN), self.players[index][0]))
         self.gamesToPlayLock.release()
         self.generalWake()
 
@@ -218,7 +218,7 @@ class Game(object):
             # Assume if we got here it was a command line argument because the gui
             # is populated from the AI list
             self.UI.onClose()
-            sys.exit(0)
+            # sys.exit(0)
 
         self.gamesToPlayLock.acquire()
         self.gamesToPlay.append(GameData(p1, p2, numGames))
@@ -254,7 +254,7 @@ class Game(object):
                 # Assume if we got here it was a command line argument because the gui
                 # is populated from the AI list
                 self.UI.onClose()
-                sys.exit(0)
+                # sys.exit(0)
 
         # now that we have the AI's make all pairs
         self.gamesToPlayLock.acquire()
@@ -307,7 +307,7 @@ class Game(object):
             # Assume if we got here it was a command line argument because the gui
             # is populated from the AI list
             self.UI.onClose()
-            sys.exit(0)
+            # sys.exit(0)
 
         # get named AI
         ai = None
@@ -344,7 +344,7 @@ class Game(object):
             # Assume if we got here it was a command line argument because the gui
             # is populated from the AI list
             self.UI.onClose()
-            sys.exit(0)
+            # sys.exit(0)
 
         # get original agent
         p1 = None
@@ -1128,13 +1128,13 @@ class Game(object):
             if re.match(".*\.py$", file):
                 moduleName = file[:-3]
                 temp = importlib.import_module(moduleName)
-                if temp.AIPlayer(-1).author == player:
-                    lst = temp.AIPlayer(len(self.players), cpy = True) # declare copy
-                    lst.author += "@@"
+                copy = temp.AIPlayer(COPY)
+                if copy.author == player:
+                    copy.author += "@@"
                     break
         sys.path.pop(0)
         os.chdir('..')
-        return lst
+        return copy
 
     def addPlayer(self, p: Player):
         self.players.append([p, ACTIVE])

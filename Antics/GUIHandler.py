@@ -147,6 +147,9 @@ class GUIHandler:
         #self.continueClose()
 
     def continueClose(self):
+        if self.game.gameThread.is_alive():
+            self.root.after(50, self.continueClose)
+            return
         self.game.gameThread.join()
         self.root.destroy()
 

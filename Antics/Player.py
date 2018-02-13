@@ -18,10 +18,9 @@ class Player(object):
     #   inputAuthor   - The player's name
     #   cpy           - whether or not the player is a copy (when plays self)
     ##
-    def __init__(self, inputPlayerId, inputAuthor, cpy = False):
+    def __init__(self, inputPlayerId, inputAuthor):
         self.playerId = inputPlayerId
         self.author = inputAuthor
-        self.cpy = cpy
     
     ##
     #getPlacement
