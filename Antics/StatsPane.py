@@ -163,22 +163,30 @@ class StatsPane:
         b.myClock.Reset()
         b.myClock.Start()
 
-    def stopCurLogItem ( self, game_over = False ) :
+    def stopCurLogItem(self, game_over = False):
+        if self.cur_log is None:
+            return
         self.cur_log.myClock.Stop()
-        if game_over :
+        if game_over:
             self.setCurLogItemOver()
             
-    def startCurLogItem ( self ) :
+    def startCurLogItem(self):
+        if self.cur_log is None:
+            return
         self.cur_log.myClock.Start()
 
-    def setCurLogItemOver ( self ) :
+    def setCurLogItemOver(self):
+        if self.cur_log is None:
+            return
         self.cur_log.myClock.PermanentlyStop()
 
-    def updateCurLogItem ( self, s ) :
+    def updateCurLogItem(self, s):
+        if self.cur_log is None:
+            return
         self.cur_log.setTextLines(s)
 
-    def clearLog ( self ) :
-        for b in self.log :
+    def clearLog(self):
+        for b in self.log:
             b.destroy()
 
         self.log = []

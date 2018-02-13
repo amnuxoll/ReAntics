@@ -53,6 +53,7 @@ class Game(object):
         self.gamesToPlayLock = threading.Lock()
 
         self.ended = False
+        self.errored = False
         self.submittedMove = None
         self.submittedAttack = None
         self.submittedSetup = None
@@ -825,8 +826,9 @@ class Game(object):
                 else:
                     if not type(currentPlayer) is HumanPlayer.HumanPlayer:
                         # cause current player to lose game because AIs aren't allowed to make mistakes.
-                        self.error(INVALID_PLACEMENT, targets)
+                        code = self.error(INVALID_PLACEMENT, targets, currentPlayer)
                         self.setWinner(1 - self.state.whoseTurn)
+                        self.UI.gameHandler.setInstructionText(code)
 
             elif self.state.phase == PLAY_PHASE:
                 currentPlayer = self.currentPlayers[self.state.whoseTurn]
@@ -951,8 +953,9 @@ class Game(object):
                 else:
                     # human can give None move, AI can't
                     if not type(currentPlayer) is HumanPlayer.HumanPlayer:
-                        self.error(INVALID_MOVE, self.move)
+                        code = self.error(INVALID_MOVE, self.move, currentPlayer)
                         self.setWinner(1 - self.state.whoseTurn)
+                        self.UI.gameHandler.setInstructionText(code)
                     elif validMove != None:
                         # if validMove is False and not None, clear move
                         currentPlayer.coordList = []
@@ -986,7 +989,10 @@ class Game(object):
             if self.winner == -1:
                 winnerName = "Human"
 
-            self.UI.gameHandler.setInstructionText("%s has won!" % winnerName)
+            if self.errored:
+                self.errored = False
+            else:
+                self.UI.gameHandler.setInstructionText("%s has won!" % winnerName)
 
         # adjust the wins and losses of players
         # because of how human and copies are handled currently, problems
@@ -1676,8 +1682,11 @@ class Game(object):
     #   errorCode - A code indicating the type of error
     #        info - the offending object that caused the error
     ##
-    def error(self, errorCode, info):
+    def error(self, errorCode, info, player = None):
+        self.errored = True
         errorMsg = "AI ERROR: "
+        if player is not None:
+            errorMsg += player.author + ": "
 
         if errorCode == INVALID_PLACEMENT:
             # info is a coord list
@@ -1709,6 +1718,7 @@ class Game(object):
             errorMsg += "(" + str(info[0]) + ", " + str(info[1]) + ")"
 
         print(errorMsg)
+        return errorMsg
 
 
     ###
