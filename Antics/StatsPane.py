@@ -98,7 +98,7 @@ class StatsPane:
 
         font = ("Times New Roman", 24)
 
-        self.UIbutton = wgt.ColoredButton(self.buttonFrame, text="Show UI", command=self.UIbuttonPressed)
+        self.UIbutton = wgt.ColoredButton(self.buttonFrame, text="Show Board", command=self.UIbuttonPressed)
         self.UIbutton.config(bg=self.handler.blue, fg='white', font=font, width=12, pady=3)
         self.UIbutton.grid()
 

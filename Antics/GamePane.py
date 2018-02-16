@@ -126,7 +126,7 @@ class GamePane:
         self.buttonFrame = tkinter.Frame(self.parent)
         self.buttonFrame.grid(column = 2, row = 0, rowspan = 2, sticky = tkinter.N + tkinter.S)
 
-        self.UIbutton = wgt.ColoredButton(self.buttonFrame, text = "Close UI", command = self.UIbuttonPressed, backgroundcolor = self.handler.blue)
+        self.UIbutton = wgt.ColoredButton(self.buttonFrame, text = "Hide Board", command = self.UIbuttonPressed, backgroundcolor = self.handler.blue)
         self.UIbutton.config(bg = self.handler.blue, fg = 'white', font = font, width = 12, pady = 3)
         self.UIbutton.grid()
 

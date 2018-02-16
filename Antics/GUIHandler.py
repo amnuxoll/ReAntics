@@ -109,6 +109,7 @@ class GUIHandler:
             self.game.loadAIs()
             self.game.UI.settingsHandler.changePlayers([ai[0].author for ai in self.game.players])
             self.game.UI.settingsHandler.addGameChanged("QuickStart")
+            self.game.UI.settingsHandler.addGameType.set("QuickStart")
 
     def secretPressed(self, event=None):
         with open("Textures/secret1.sec", "rb") as f:
