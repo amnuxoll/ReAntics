@@ -44,6 +44,7 @@ FOOD = -1
 MOVE_ANT = 0
 BUILD = 1
 END = 2
+UNDO = 3
 
 #Indices into unit stats
 MOVEMENT = 0
