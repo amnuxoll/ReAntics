@@ -537,7 +537,7 @@ class Game(object):
                 else:
                     fx = self.startAIvsAI
                     self.game_calls.append(partial(fx, g.num_games, g.players[0], g.players[1]))
-            elif t == "Single Player":
+            elif t == "Play Self":
                 fx = self.startSelf
                 self.game_calls.append(partial(fx, g.num_games, g.players[0]))
             elif t == "Round Robin":

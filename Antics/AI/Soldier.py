@@ -85,9 +85,7 @@ class AIPlayer(Player):
         self.tunnel = None
         self.paths = None
 
-        ## new ranged soldiers to cut off access to resources
         self.o_foods   = [] # coords of the opponent's food
-##        self.occupants = [None, None]
         
     
     ##
@@ -282,25 +280,7 @@ class AIPlayer(Player):
                         break
                 myAnts = getAntList(currentState, me, (O_ANT,))
                 myAnts_coords = [ a.coords for a in myAnts ]
-                if len(myAnts) < 2 and not hill_in_range: #len(myAnts) < numAttacking:
-##                    successful_placement = False
-##                    for i in range(len(self.occupants)):
-##                        a = self.occupants[i]
-##                        if a is None or a not in myAnts_coords :
-##                            self.occupants[i] = self.hill.coords
-##                            successful_placement = True
-##                            break
-##                    if not successful_placement:
-##                        for i in range(len(self.occupants)):
-##                            a = self.occupants[i]
-##                            if self.occupants[0] == self.occupants[1] :
-##                                self.occupants = [self.hill.coords, self.occupants[1]]
-##                            elif len(myAnts_coords) == 0:
-##                                self.occupants = [self.hill.coords, None]
-##                            elif len(myAnts_coords) == 1:
-##                                [myAnts_coords[0], None]
-##                            elif len(myAnts_coords) == 2:
-##                                self.occupants = myAnts_coords
+                if len(myAnts) < 2 and not hill_in_range: 
                     return Move(BUILD, [self.hill.coords], O_ANT)
 
         ##update drone
@@ -321,8 +301,6 @@ class AIPlayer(Player):
                     if ant.type != WORKER and \
                        stepsToReach(currentState, (ant.coords[0], self.hill.coords[1]), ant.coords) <= 2:
                         enemy_atHome = ant.coords
-##                i = self.occupants.index(soldier.coords)
-##                target = self.o_food[i] #.coords
                 enemy_workers = getAntList(currentState, enemy, (WORKER,))
                 enemy_queen  = getAntList(currentState, enemy, (QUEEN,))[0].coords
                 x = stepsToReach(currentState, soldier.coords, enemy_queen)
@@ -339,9 +317,6 @@ class AIPlayer(Player):
                 # defend at home
                 elif enemy_atHome :
                     target = enemy_atHome
-##                # defend from home
-##                elif len(enemyAnts) - len(enemy_workers) > 1 :
-##                    target = (soldier.coords[0], 3) if soldier.coords[1] != 3 else (random.randint(0,9), 3)
                 else :
                     target = enemy_queen
                 if target is not None:

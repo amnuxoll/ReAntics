@@ -144,7 +144,7 @@ class GUIHandler:
     #
     def onClose(self):
         self.game.endClient()
-        self.root.after(50, self.continueClose)
+        self.root.after(100, self.continueClose)
         #self.continueClose()
 
     def continueClose(self):

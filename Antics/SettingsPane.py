@@ -16,10 +16,10 @@ from os.path import exists
 
 PLAYERS = []
 for i in range(10):
-    PLAYERS.append ( "AI #" + str(i) )
+    PLAYERS.append ( "AI #" + str(i) ) # to be changed later
 PLAYER_COLS = 1 
 
-GAME_TYPES = [ "QuickStart", "Two Player", "Single Player", "Round Robin", "Play All" ]
+GAME_TYPES = [ "QuickStart", "Two Player", "Play Self", "Round Robin", "Play All" ]
 ANT_NAMES = [ "Workers", "Drones", "Soldiers", "Ranged Soldiers" ]
 
 PLAYER_COLORS = [ "red", "blue" ] 
@@ -45,8 +45,13 @@ ERROR_CODE = -1
 
 SETTINGS_FILE = "my-settings.json"
 
+########################################################################
+# GameSettingsFrame
+#
+# tkinter frame for the settings menu
+# includes the quickstart menu, a game queue, and pause conditions list
+########################################################################
 class GameSettingsFrame ( ) :
-    
     def __init__(self, handler, parent = None):
         # initialize UI object
 
@@ -61,7 +66,8 @@ class GameSettingsFrame ( ) :
 
         self.the_game = None
         
-
+    ###
+    # to be called once the AIs are loaded in Game.py
     def changePlayers ( self, plyrs ) :
         global PLAYERS
         PLAYERS = plyrs
@@ -175,7 +181,6 @@ class GameSettingsFrame ( ) :
         self.addPauseConditionPlus.pack ( side=tk.LEFT )
         self.addPauseConditionPlus.command = self.pauseConditionAdded
 
-        #o_swap,o_gameBoard,o_verbose,o_timeout,o_timeoutText,o_layout
         self.dummyPCLabel = None
         self.dummyGameLabel = None
 
@@ -186,8 +191,10 @@ class GameSettingsFrame ( ) :
 
     #####
     # addGameChanged
-    #
     # changes the add game options, to be used when the dropdown is changed
+    #
+    # Parameters:
+    #   option -- the selected game option
     #####
     def addGameChanged ( self, option ) :
         self.addGameOptionsWindow.destroy()
@@ -195,7 +202,7 @@ class GameSettingsFrame ( ) :
         if option == "QuickStart" :
             self.addGameOptionsWindow = QuickStartFrame ( self.addGameFrame )
             self.addGameOptionsWindow.startButton.command = self.changeFrameQS
-        elif option == "Single Player" :
+        elif option == "Play Self" :
             self.addGameOptionsWindow = SinglePlayerFrame ( self.addGameFrame )
         elif option == "Two Player" :
             self.addGameOptionsWindow = TwoPlayerFrame ( self.addGameFrame )
@@ -208,6 +215,10 @@ class GameSettingsFrame ( ) :
             self.addGameOptionsWindow.plusButton.command = self.gameAdded
         self.addGameOptionsWindow.pack ( fill="both", side=tk.BOTTOM )
 
+    ###
+    # connected to the start button
+    # saves all of the current settings to the settings file
+    # and passes them to the game
     def changeFrameStart ( self ) :
         if self.the_game is None: return
         
@@ -243,6 +254,10 @@ class GameSettingsFrame ( ) :
         self.the_game.gameStartRequested ()
         self.handler.showFrame ( 2 )
 
+    ###
+    # connected to the quickstart button
+    # saves all of the current settings to the settings file
+    # and passes them to the game
     def changeFrameQS ( self ) :
         if self.the_game is None: return
         
@@ -276,7 +291,18 @@ class GameSettingsFrame ( ) :
             self.the_game.process_settings ( [ g ], more_settings, pcs )
             self.the_game.gameStartRequested ()
             self.handler.showFrame(2)
-        
+
+    ###
+    # gameAdded
+    # verify that a game is valid
+    # add a game to the game queue
+    #
+    # Parameters:
+    #   t -- game type
+    #   n -- number of games
+    #   p -- player list
+    #   box_needed -- whether or not a blue box needs to be added to the game queue
+    #                 false when quickstart is used
     def gameAdded ( self, t = None, n = None, p = None, box_needed = True ) :
 
         if t is None and n is None and p is None:
@@ -543,8 +569,6 @@ class GameSettingsFrame ( ) :
         self.startButton.enable()
         self.addGameOptionsWindow.startButton.enable()
 
-            
-
     def resetSettings ( self ):
         data = {}
         # games
@@ -591,7 +615,6 @@ class PauseConditionGUIData () :
         self.conditions = conditions
         self.players = players
         if box is not None :
-##            box.setTopText ( "P0: " + self.players[0] + ", P1: " + self.players[1])
             maxlen = 30
             tempP0 = "P0: " + self.players[0]
             if len(tempP0) > maxlen:
@@ -800,7 +823,6 @@ class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
             self.public_selected[item_name] = True
             self.public_values[item_name] = "Any AI"
             
-
             for j in range ( num_trackables ) :
                 o = self.track_options[j]
                 item_name = "P" + str(i) + " " + o # P<1/2> item
@@ -1058,7 +1080,7 @@ class RoundRobinFrame ( tk.Frame ) :
         self.plusButton.pack ( side=tk.RIGHT )
         
         self.numGamesEntry = tk.Entry ( self.numGamesFrame, text="1" )
-        self.numGamesEntry.pack ( fill="both")#tk.X )
+        self.numGamesEntry.pack ( fill="both")
         self.numGamesEntry.delete ( 0,tk.END )
         self.numGamesEntry.insert ( 0, "1" )
 
