@@ -304,6 +304,7 @@ class GUIHandler:
     # sends a given move to the game however it needs to go
     #
     def submitHumanMove(self, move):
+        self.gameHandler.undoButton.disable()
         self.gameHandler.setInstructionText("")
         self.game.submitHumanMove(move)
         self.waitingForHuman = False
