@@ -13,7 +13,6 @@ from AIPlayerUtils import *
 
 ## Base AI taken from Complex Food Gatherer
 
-
 ## ShapeShifter AI
 ## Author : Logan Orndorf
 ## Version: 1/29/2017
@@ -26,6 +25,7 @@ class AntPathCycle():
         self.antList = []
         self.food = foodCoords
         self.deposit = depositCoords
+        self.dist = approxDist(foodCoords, depositCoords)# FOR VCFG
         self.state = None
 
     ## adds a new ant to the list this path interacts with
@@ -87,6 +87,13 @@ class AIPlayer(Player):
         self.hill = None
         self.tunnel = None
         self.paths = None
+        self.decided = False
+
+        ## below is required for Starve AI
+        ## new ranged soldiers to cut off access to resources
+        self.o_food   = []  # coords of the opponent's food
+        self.occupants = [None, None]
+
 
     ##
     # getPlacement
@@ -124,7 +131,7 @@ class AIPlayer(Player):
                     (0, 3), (1, 3), (2, 3), (3, 3), (4, 3), (6, 3), (7, 3), (8, 3), (9, 3)]
         elif currentState.phase == SETUP_PHASE_2:
             numToPlace = 2
-            moves = []
+            self.o_food = []
             ## find enemy tunnel and hill
             enemy = 1 - currentState.whoseTurn
             enemyHill = getConstrList(currentState, enemy, (ANTHILL,))[0]
@@ -145,11 +152,12 @@ class AIPlayer(Player):
                                 move = (j, k)
 
                             if min(dist1, dist2) > maxDist and i == 1:
-                                if not moves[0] == (j, k):
+                                if not self.o_food[0] == (j, k):
                                     maxDist = min(dist1, dist2)
                                     move = (j, k)
-                moves.append(move)
-            return moves
+                self.o_food.append(move)
+
+            return self.o_food
         else:
             return None  # should never happen
 
@@ -174,27 +182,20 @@ class AIPlayer(Player):
     # Return: Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]
     ##
     def getMove(self, currentState):
-        STEVE = 1
-        DEFENSIVEASTAR = 2
-        ATTACK = 3
-
         CurDecision = -1
-
 
         ## Needed Information
         myInv = getCurrPlayerInventory(currentState)
         me = currentState.whoseTurn
         enemy = 1 - currentState.whoseTurn
-        enemyInv = getEnemyInv(currentState)
 
         # Enemy ant lists
         enemyW = getAntList(currentState, enemy, (WORKER,))
+        numWorkers = len(enemyW)
+
         enemyD = getAntList(currentState, enemy, (DRONE, ))
         enemyR = getAntList(currentState, enemy, (R_SOLDIER, ))
         enemyS = getAntList(currentState, enemy, (SOLDIER, ))
-
-        # Number of worker ants
-        numWorkers = len(enemyW)
 
         ##setup instance variables if necessary
         if self.hill is None:
@@ -203,8 +204,9 @@ class AIPlayer(Player):
             self.tunnel = getConstrList(currentState, me, (TUNNEL,))[0]
 
 
+
+
         ## Pathing for Worker Ants between food and tunnel/anthill
-        #TODO: Update pathing below to pick up food while avoiding attacking ants
         if self.paths is None:
             # find shortest paths from tunnel to fruit and anthill to fruit
             self.paths = [0 for i in range(2)]
@@ -244,47 +246,16 @@ class AIPlayer(Player):
         for path in self.paths:
             path.updateState(currentState)
 
-        ######################################################################################################
-        ## Switch  decision section - needs fine tuning
-
-        # if strategy is a food gatherer type use Sara P's Steve Strategy
-        if (numWorkers >= 2 and food.enemyInv > 2 and len(enemyD) == 0 and len(enemyR)==0 and len(enemyS)==0 ):
-            CurDecision = 1
-
-        # if strategy is attack using soldiers, use Christian's Defensive A*
-        elif (enemyS >= 1) or (enemyD >= 1):
-            CurDecision = 2
-
-        # if strategy is attack using rangers, use attack AI - implement kiting
-        elif enemyR >= 1:
-            CurDecision = 3
-
-        # if no strat above has been chosen, continue basic complex food gatherer strategies
-        else:
-            CurDecision = -1
-
-        ######################################################################################################
-
-
-
-
-
-
-        # TODO: Determine if Brendans Queen Movements can be of use
-        # move queen to basic defensive position
         myQueen = myInv.getQueen()
         if not myQueen.hasMoved:
-            path = createPathToward(currentState, myQueen.coords,
-                                    (4, 3), UNIT_STATS[QUEEN][MOVEMENT])
-            return Move(MOVE_ANT, path, None)
-
+            return self.getQueenMove(currentState)
 
         ##make a worker if there aren't enough and anthill is empty
         if myInv.foodCount > 0:
             if getAntAt(currentState, self.hill.coords) is None:
                 for path in self.paths:
-                    # TODO: Determine number of workers needed, most likely will want two so Ill put it in there for now
-                    if (len(path.antList) < 2):
+                    # start with one
+                    if (len(path.antList) < 1):
                         path.addAnt(self.hill.coords)
                         return Move(BUILD, [self.hill.coords], WORKER)
 
@@ -294,7 +265,98 @@ class AIPlayer(Player):
             if result is not None:
                 return result
 
+        decided = False
+        ## Switch  decision section - needs fine tuning
+        if decided == False:
+            # if strategy is a food gatherer type use Sara P's Steve Strategy
+            if (numWorkers > 2):# and len(enemyD) == 0 and len(enemyR) == 0 and len(enemyS) == 0):
+                CurDecision = 1
+                decided = True
+
+                ## DOES THIS WORK: YES
+
+            # if strategy is attack using soldiers, use Christian's Defensive A*
+            # if strategy is defense, use VCFG
+            elif (len(enemyS) >= 1) or (len(enemyD) >= 1) or (len(enemyR) >= 1):
+                enemyHill = getConstrList(currentState, enemy, (ANTHILL,))[0]
+
+                ####### SOLDIERS #######
+                if len(enemyS) >= 1:    # See if ants are moving forward to attack me
+                    for s in enemyS:
+                        if s.coords[1] < (enemyHill.coords[1]):
+                            CurDecision = 2
+                            decided = True
+                        else:
+                            CurDecision = -1
+
+                if len(enemyS) >= 2:    # See if ants are staying back and defending
+                    for s in enemyS:
+                        if s.coords[1] > (enemyHill.coords[1]):
+                            CurDecision = 3
+                            print ("Case 1")
+                            decided = True
+                        else:
+                            CurDecision = -1
+
+
+                ####### DRONES #######
+                if len(enemyD) >= 1:    # See if ants are moving forward to attack me
+                    for d in enemyD:
+                        if d.coords[1] < (enemyHill.coords[1]):
+                            CurDecision = 2
+                            decided = True
+                        else:
+                            CurDecision = -1
+
+                if len(enemyD) >= 2:    # See if ants are staying back and defending
+                    for d in enemyD:
+                        if d.coords[1] > (enemyHill.coords[1]):
+                            CurDecision = 3
+                            print ("Case 2")
+                            decided = True
+                        else:
+                            CurDecision = -1
+
+                ####### RANGERS #######
+                if len(enemyR) >= 1:    # See if ants are moving forward to attack me
+                    for r in enemyR:
+                        if r.coords[1] < (enemyHill.coords[1]):
+                            CurDecision = 2
+                            decided = True
+                        else:
+                            CurDecision = -1
+
+                if len(enemyR) >= 2:
+                    for r in enemyR:
+                        if r.coords[1] > (enemyHill.coords[1]): #or (r.coords[1] >= (enemyHill.coords[1] + 2)):
+                            CurDecision = 3
+                            print (r.coords[1])
+                            print (enemyHill.coords[1])
+                            print ("Case 3")
+                            decided = True
+                        else:
+                            CurDecision = -1
+
+            # if no strat above has been chosen, continue basic complex food gatherer strategies
+            else:
+                CurDecision = -1
+
+
+        if CurDecision == 1:
+            print ("starveMode")
+            return self.starveMode(currentState)
+
+        elif CurDecision == 2:
+            print ("defMode")
+            return self.defenseMode(currentState)
+
+        elif CurDecision == 3:
+            print ("gatherMode")
+            return self.gatherMode(currentState)
+
+
         return Move(END, None, None)
+
 
     ##
     # getAttack
@@ -330,3 +392,486 @@ class AIPlayer(Player):
     def registerWin(self, hasWon):
         # method templaste, not implemented
         pass
+
+
+    ## StarveMode
+    #
+    # Author: Sara Perkins
+    #
+    # Description: the getMove method from Starve.py
+    ##
+    def starveMode(self, currentState):
+        ##helpful Pointers
+        myInv = getCurrPlayerInventory(currentState)
+        me = currentState.whoseTurn
+
+
+        ##setup instance variables if necessary
+        if self.hill is None:
+            self.hill = getConstrList(currentState, me, (ANTHILL,))[0]
+        if self.tunnel is None:
+            self.tunnel = getConstrList(currentState, me, (TUNNEL,))[0]
+        if self.paths is None:
+            # find shortest paths from tunnel to fruit and anthill to fruit
+            self.paths = [0 for i in range(2)]
+
+            temp_foods = getConstrList(currentState, None, (FOOD,))
+            foods = []
+            for f in temp_foods:
+                if isPathOkForQueen([f.coords]):
+                    foods.append(f)
+            self.foods = foods
+            dist = 999
+            bestForTunnel = None
+            for food in foods:
+                testDist = stepsToReach(currentState, self.tunnel.coords, food.coords)
+                if testDist < dist:
+                    dist = testDist
+                    bestForTunnel = food.coords
+
+            dist = 999
+            bestForHill = None
+            for food in foods:
+                testDist = stepsToReach(currentState, self.hill.coords, food.coords)
+                if testDist < dist:
+                    dist = testDist
+                    bestForHill = food.coords
+
+            if bestForTunnel == bestForHill:
+                dist = 999
+                for food in foods:
+                    testDist = stepsToReach(currentState, self.hill.coords, food.coords)
+                    if testDist < dist:
+                        if food.coords != bestForTunnel:
+                            dist = testDist
+                            bestForHill = food.coords
+
+            self.paths[0] = AntPathCycle(bestForHill, self.hill.coords)
+            self.paths[1] = AntPathCycle(bestForTunnel, self.tunnel.coords)
+
+            self.paths[1].addAnt(self.tunnel.coords)
+
+        ## give every path a new gamestate to work with
+        for path in self.paths:
+            path.updateState(currentState)
+
+        # move queen to basic defensive position
+        myQueen = myInv.getQueen()
+        if not myQueen.hasMoved:
+            enemyAnts = getAntList(currentState, 1 - me, (DRONE, SOLDIER, R_SOLDIER))
+            enemy_locs = [a.coords for a in enemyAnts]
+
+            if len(enemy_locs) < 1 or len(getAntList(currentState, me, (WORKER,))) == 0:
+                q_dst = [(4, 3), (5, 3)][random.randint(0, 1)]
+                path = createPathToward(currentState, myQueen.coords,
+                                        q_dst, UNIT_STATS[QUEEN][MOVEMENT])
+                return Move(MOVE_ANT, path, None)
+
+            moves_temp = listAllMovementPaths(currentState, myQueen.coords, UNIT_STATS[QUEEN][MOVEMENT],
+                                              ignoresGrass=False)
+            moves = []
+            for m in moves_temp:
+                if isPathOkForQueen(m) and m[-1] not in [x.coords for x in self.foods]:
+                    moves.append(m)
+
+            dests = [m[-1] for m in moves]
+
+            dest_scores = []
+
+            for d in range(len(dests)):
+                dest_scores.append([])
+                for src in enemy_locs:
+                    dest_scores[d].append(stepsToReach(currentState, src, dests[d]))
+            dest_scores = [min(d) for d in dest_scores]
+
+            path = moves[dest_scores.index(max(dest_scores))] if 1 not in dest_scores else moves[dest_scores.index(1)]
+            return Move(MOVE_ANT, path, None)
+
+        O_ANT = R_SOLDIER
+        O_ANT_COST = UNIT_STATS[O_ANT][COST]
+        ##generate ranged soldiers
+        if myInv.foodCount >= O_ANT_COST:
+            if getAntAt(currentState, self.hill.coords) is None:
+                ##check if we need one
+                enemy = 1 - me
+                enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
+                numAttacking = 0
+                hill_in_range = False
+                for ant in enemyAnts:
+                    if ant.coords[1] < 6:
+                        numAttacking += 1
+                    if stepsToReach(currentState, ant.coords, self.hill.coords) <= UNIT_STATS[ant.type][RANGE] + \
+                            UNIT_STATS[ant.type][MOVEMENT] + 1:
+                        hill_in_range = True
+                        break
+                myAnts = getAntList(currentState, me, (O_ANT,))
+                myAnts_coords = [a.coords for a in myAnts]
+                if len(myAnts) < 2 and not hill_in_range:  # len(myAnts) < numAttacking:
+                    successful_placement = False
+                    for i in range(len(self.occupants)):
+                        a = self.occupants[i]
+                        if a is None or a not in myAnts_coords:
+                            self.occupants[i] = self.hill.coords
+                            successful_placement = True
+                            break
+                    if not successful_placement:
+                        for i in range(len(self.occupants)):
+                            a = self.occupants[i]
+                            if self.occupants[0] == self.occupants[1]:
+                                self.occupants = [self.hill.coords, self.occupants[1]]
+                            elif len(myAnts_coords) == 0:
+                                self.occupants = [self.hill.coords, None]
+                            elif len(myAnts_coords) == 1:
+                                [myAnts_coords[0], None]
+                            elif len(myAnts_coords) == 2:
+                                self.occupants = myAnts_coords
+                    return Move(BUILD, [self.hill.coords], O_ANT)
+
+        ##update drone
+        ##simply send the drone on a mission towards nearest enemy ant
+        r_soldiers = getAntList(currentState, me, (O_ANT,))
+        for r_soldier in r_soldiers:
+            if not r_soldier.hasMoved:
+                enemy = 1 - me
+                enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
+                dist = 999
+                target = None
+                enemy_atHome = None
+                for ant in enemyAnts:
+                    newDist = stepsToReach(currentState, ant.coords, r_soldier.coords)
+                    if newDist < dist:
+                        dist = newDist
+                        target = ant
+                    if ant.type != WORKER and \
+                                    stepsToReach(currentState, (ant.coords[0], self.hill.coords[1]), ant.coords) <= 2:
+                        enemy_atHome = ant.coords
+
+                i = self.occupants.index(r_soldier.coords)
+                i = i % 2                                   ## Shapeshifter modification
+
+                target = self.o_food[i]  # .coords
+                enemy_workers = getAntList(currentState, enemy, (WORKER,))
+                enemy_queen = getAntList(currentState, enemy, (QUEEN,))[0].coords
+                x = stepsToReach(currentState, r_soldier.coords, enemy_queen)
+                # hey look the queen is here
+                if x <= UNIT_STATS[O_ANT][RANGE] + 1:  ### umm why
+                    target = r_soldier.coords
+                # kill the last worker -- head up first, at least into no man's land
+                elif len(enemy_workers) == 1 and not isPathOkForQueen([r_soldier.coords]):
+                    target = enemy_workers[0].coords
+                # kill the queen
+                elif len(enemy_workers) == 0 or \
+                                        len(getAntList(currentState, me, (WORKER,))) == 0 and myInv.foodCount < 1:
+                    target = enemy_queen
+                    # defend at home
+                elif enemy_atHome:
+                    target = enemy_atHome
+                # defend from home
+                elif len(enemyAnts) - len(enemy_workers) > 1:
+                    target = (r_soldier.coords[0], 3) if r_soldier.coords[1] != 3 else (random.randint(0, 9), 3)
+                if target is not None:
+                    path = createPathToward(currentState, r_soldier.coords, target, UNIT_STATS[O_ANT][MOVEMENT])
+
+                    self.occupants[i] = path[-1]
+                    return Move(MOVE_ANT, path, None)
+
+        ##make a worker if there aren't enough and anthill is empty
+        # if myInv.foodCount > 0:
+        #     enemy = 1 - me
+        #     enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
+        #     hill_in_range = False
+        #     for ant in enemyAnts:
+        #         if stepsToReach(currentState, ant.coords, self.hill.coords) <= UNIT_STATS[ant.type][RANGE] + \
+        #                 UNIT_STATS[ant.type][MOVEMENT] + 1:
+        #             hill_in_range = True
+        #             break
+        #     if not hill_in_range and getAntAt(currentState, self.hill.coords) is None:
+        #         for path in self.paths:
+        #             if len(path.antList) == 0:
+        #                 path.addAnt(self.hill.coords)
+        #                 return Move(BUILD, [self.hill.coords], WORKER)
+
+        ##update worker ants
+        for path in self.paths:
+            result = path.updateNextAnt()
+            if result is not None:
+                return result
+
+        return Move(END, None, None)
+
+    ## DefenseMode
+    #
+    # Author: Christian Rodriguez
+    #
+    # Description: the getMove method from DefensiveV1
+    ##
+    def defenseMode(self, currentState):
+        # helpful Pointers
+        myInv = getCurrPlayerInventory(currentState)
+        me = currentState.whoseTurn
+
+        # setup instance variables if necessary
+        if self.hill is None:
+            self.hill = getConstrList(currentState, me, (ANTHILL,))[0]
+        if self.tunnel is None:
+            self.tunnel = getConstrList(currentState, me, (TUNNEL,))[0]
+        if self.paths is None:
+            # find shortest paths from tunnel to fruit and anthill to fruit
+            self.paths = [0 for i in range(2)]
+
+            foods = getConstrList(currentState, None, (FOOD,))
+            dist = 999
+            bestForTunnel = None
+            for food in foods:
+                testDist = stepsToReach(currentState, self.tunnel.coords, food.coords)
+                if testDist < dist:
+                    dist = testDist
+                    bestForTunnel = food.coords
+
+            dist = 999
+            bestForHill = None
+            for food in foods:
+                testDist = stepsToReach(currentState, self.hill.coords, food.coords)
+                if testDist < dist:
+                    dist = testDist
+                    bestForHill = food.coords
+
+            if bestForTunnel == bestForHill:
+                dist = 999
+                for food in foods:
+                    testDist = stepsToReach(currentState, self.hill.coords, food.coords)
+                    if testDist < dist:
+                        if food.coords != bestForTunnel:
+                            dist = testDist
+                            bestForHill = food.coords
+
+            self.paths[0] = AntPathCycle(bestForHill, self.hill.coords)
+            self.paths[1] = AntPathCycle(bestForTunnel, self.tunnel.coords)
+
+            self.paths[1].addAnt(self.tunnel.coords)
+
+        # give every path a new gamestate to work with
+        for path in self.paths:
+            path.updateState(currentState)
+
+        # move queen to basic defensive position
+        myQueen = myInv.getQueen()
+        if not myQueen.hasMoved:
+            return self.getQueenMove(currentState)
+
+        antTodBuild = R_SOLDIER
+
+        # generate range soldier if an attacking ant was created by the opponent
+        # and make one at the beginning to guard
+        if myInv.foodCount > 1:
+            if getAntAt(currentState, self.hill.coords) is None:
+                # check if we need one
+                enemy = 1 - me
+                enemyAnts = getAntList(currentState, enemy, (DRONE, SOLDIER, R_SOLDIER))
+                numAttacking = len(enemyAnts)
+                myAnts = getAntList(currentState, me, (antTodBuild,))
+                if len(myAnts) <= numAttacking:
+                    return Move(BUILD, [self.hill.coords], antTodBuild)
+
+        # move range soldier off of the anthill
+        rangeSoldier = getAntAt(currentState, self.hill.coords)
+        if rangeSoldier is not None and rangeSoldier.player == currentState.whoseTurn:
+            if rangeSoldier.type == antTodBuild:
+                if not rangeSoldier.hasMoved:
+                    path = createPathToward(currentState, rangeSoldier.coords, (5, 3),
+                                            UNIT_STATS[antTodBuild][MOVEMENT])
+                    return Move(MOVE_ANT, path, None)
+
+        # move range soldiers off of the food
+        foods = getConstrList(currentState, None, (FOOD,))
+        rangeSoldier = [getAntAt(currentState, x.coords) for x in foods]
+        for soldier in rangeSoldier:
+            if soldier is not None and soldier.player == currentState.whoseTurn:
+                if soldier.type == antTodBuild:
+                    if not soldier.hasMoved:
+                        path = createPathToward(currentState, soldier.coords, (7, 3), UNIT_STATS[antTodBuild][MOVEMENT])
+                        return Move(MOVE_ANT, path, None)
+
+        # send the range soldier to attack the closest ant
+        rangeSoldier = getAntList(currentState, me, (antTodBuild,))
+        print (len(rangeSoldier))
+        for soldier in rangeSoldier:
+            if not soldier.hasMoved:
+                enemy = 1 - me
+                enemyAnts = getAntList(currentState, enemy, (QUEEN, DRONE, SOLDIER, R_SOLDIER))
+                dist = 999
+                target = None
+                for ant in enemyAnts:
+                    newDist = stepsToReach(currentState, ant.coords, soldier.coords)
+                    if newDist < dist:
+                        dist = newDist
+                        target = ant
+                if target is not None:
+                    aStar = aStarSearchPath(currentState, soldier.coords, target.coords)
+                    if aStar != False:
+                        path = aStar
+                    else:
+                        path = createPathToward(currentState, soldier.coords, target.coords,
+                                                UNIT_STATS[antTodBuild][MOVEMENT])
+
+                    return Move(MOVE_ANT, path, None)
+
+        # make a worker if there aren't enough and anthill is empty
+        if myInv.foodCount > 0:
+            if getAntAt(currentState, self.hill.coords) is None:
+                for path in self.paths:
+                    if len(path.antList) == 0:
+                        path.addAnt(self.hill.coords)
+                        return Move(BUILD, [self.hill.coords], WORKER)
+
+        # update worker ants
+        for path in self.paths:
+            result = path.updateNextAnt()
+            if result is not None:
+                return result
+
+        return Move(END, None, None)
+
+
+    ## GatherMode
+    #
+    # Author: Brendan Thomas
+    #
+    # Description: the getMove method from VCFG
+    ##
+    def gatherMode(self, currentState):
+        ##helpful Pointers
+        myInv = getCurrPlayerInventory(currentState)
+        me = currentState.whoseTurn
+
+        ##setup instance variables if necessary
+        if self.hill is None:
+            self.hill = getConstrList(currentState, me, (ANTHILL,))[0]
+        if self.tunnel is None:
+            self.tunnel = getConstrList(currentState, me, (TUNNEL,))[0]
+        if self.paths is None:
+            # find shortest paths from tunnel to fruit and anthill to fruit
+            self.paths = [0 for i in range(2)]
+
+            foods = getConstrList(currentState, None, (FOOD,))
+
+            # find foods for hill and tunnel
+            # in the case of equal, prioritize tunnel because anthill has to build ants
+            dist = 999
+            bestForTunnel = None
+            for food in foods:
+                testDist = stepsToReach(currentState, self.tunnel.coords, food.coords)
+                if testDist < dist:
+                    dist = testDist
+                    bestForTunnel = food.coords
+
+            dist = 999
+            bestForHill = None
+            for food in foods:
+                testDist = stepsToReach(currentState, self.hill.coords, food.coords)
+                if testDist < dist and food.coords != bestForTunnel:
+                    dist = testDist
+                    bestForHill = food.coords
+
+            self.paths[0] = AntPathCycle(bestForHill, self.hill.coords)
+            self.paths[1] = AntPathCycle(bestForTunnel, self.tunnel.coords)
+
+            self.paths[1].addAnt(self.tunnel.coords)
+
+        ## give every path a new gamestate to work with
+        for path in self.paths:
+            path.updateState(currentState)
+
+        # move queen to basic defensive position
+        myQueen = myInv.getQueen()
+        if not myQueen.hasMoved:
+            return self.getQueenMove(currentState)
+
+        ##generate drones if needed
+        # if myInv.foodCount > 1:
+        #     if getAntAt(currentState, self.hill.coords) is None:
+        #         ##check if we need one
+        #         enemy = 1 - me
+        #         enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
+        #         numAttacking = 0
+        #         for ant in enemyAnts:
+        #             if ant.coords[1] < 6:
+        #                 numAttacking += 1
+        #         myAnts = getAntList(currentState, me, (DRONE,))
+        #         if len(myAnts) < numAttacking:
+        #             return Move(BUILD, [self.hill.coords], DRONE)
+
+
+
+        ##update drone
+        ##simply send the drone on a mission towards nearest enemy ant
+        # drones = getAntList(currentState, me, (DRONE,))
+        # for drone in drones:
+        #     if not drone.hasMoved:
+        #         enemy = 1 - me
+        #         enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
+        #         dist = 999
+        #         target = None
+        #         for ant in enemyAnts:
+        #             newDist = stepsToReach(currentState, ant.coords, drone.coords)
+        #             if newDist < dist:
+        #                 dist = newDist
+        #                 target = ant
+        #         if target is not None:
+        #             path = createPathToward(currentState, drone.coords, target.coords, UNIT_STATS[DRONE][MOVEMENT])
+        #             return Move(MOVE_ANT, path, None)
+
+        # make a worker if there aren't enough and anthill is empty
+        if 11 - len(getAntList(currentState, me, [WORKER])) > myInv.foodCount > 0:
+            if getAntAt(currentState, self.hill.coords) is None:
+                for path in self.paths:
+                    if len(path.antList) == 0 or len(path.antList) < path.dist / 2:
+                        path.addAnt(self.hill.coords)
+                        return Move(BUILD, [self.hill.coords], WORKER)
+
+        ##update worker ants
+        for path in self.paths:
+            result = path.updateNextAnt()
+            if result is not None:
+                return result
+
+        return Move(END, None, None)
+
+    ##
+    # getQueenMove
+    #
+    # Takes a gameState and returns the proper move for the queen. In this case
+    # the queen is to aggressively defend against melee ants and hide from ranged ants.
+    #
+    def getQueenMove(self, state):
+        myInv = getCurrPlayerInventory(state)
+        me = state.whoseTurn
+        queen = myInv.getQueen()
+        enemy = 1 - me
+        attackers = getAntList(state, enemy, [SOLDIER, R_SOLDIER, DRONE])
+
+        # if there are no attackers move to a default location
+        if len(attackers) == 0:
+            return Move(MOVE_ANT, createPathToward(state, queen.coords, (4, 1), UNIT_STATS[QUEEN][MOVEMENT]), None)
+
+        # if health is lower than 6, run away and let defense do it's job
+        queenHealth = queen.health
+        queenCoords = queen.coords
+        dist = 99
+        closest = None
+
+        # find the most worrying attacker
+        for ant in attackers:
+            tmp = (ant.coords[1] - 3) / UNIT_STATS[ant.type][MOVEMENT]
+            if tmp < dist:
+                dist = tmp
+                closest = ant
+
+        if closest.coords[1] <= 4:
+            path = createPathToward(state, queen.coords, (closest.coords[0], min(3, closest.coords[1])), UNIT_STATS[QUEEN][MOVEMENT])
+        elif closest.type == R_SOLDIER:
+            path = createPathToward(state, queen.coords, (closest.coords[0], 0), UNIT_STATS[QUEEN][MOVEMENT])
+        else:
+            path = createPathToward(state, queen.coords, (closest.coords[0], 2), UNIT_STATS[QUEEN][MOVEMENT])
+
+        return Move(MOVE_ANT, path, None)
