@@ -226,6 +226,8 @@ class GUIHandler:
         self.enableAllButtons()
         if p1 == "Human" or p2 == "Human":
             self.disableHumanButtons()
+        else:
+            self.gameHandler.undoButton.disable()
 
     def enableAllButtons(self):
         self.gameHandler.UIbutton.enable()
@@ -253,13 +255,19 @@ class GUIHandler:
             print("Game in wrong phase for human move")
             return
 
-        # print("Asked for human move: %d" % phase)
-
+        # disable undo button at beginning of setup moves
         if phase == SETUP_PHASE_1:
+            self.gameHandler.undoButton.disable()
             self.gameHandler.setInstructionText("Select where to build your anthill.")
         elif phase == SETUP_PHASE_2:
+            self.gameHandler.undoButton.disable()
             self.gameHandler.setInstructionText("Select where to place your enemy's food. 2 remaining.")
         else:
+            # enable undo if there are states to undo to
+            if len(self.game.undoStates) > 0:
+                self.gameHandler.undoButton.enable()
+            else:
+                self.gameHandler.undoButton.disable()
             self.gameHandler.setInstructionText("Submit a move.")
 
         self.waitingForHuman = True
@@ -272,7 +280,8 @@ class GUIHandler:
     # the location passed from the game is already swapped back to P1 at top
     #
     def getHumanAttack(self, location):
-        # print("Asked for human attack, %d, %d" % location)
+        # disable undo during attacks
+        self.gameHandler.undoButton.disable()
         self.gameHandler.setInstructionText("Select an ant to attack.")
         self.waitingForHuman = True
         self.waitingForAttack = True
@@ -295,6 +304,7 @@ class GUIHandler:
     # sends a given move to the game however it needs to go
     #
     def submitHumanMove(self, move):
+        self.gameHandler.undoButton.disable()
         self.gameHandler.setInstructionText("")
         self.game.submitHumanMove(move)
         self.waitingForHuman = False

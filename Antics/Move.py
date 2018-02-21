@@ -20,7 +20,7 @@ class Move(object):
     #   inputCoordList - A list of coordinates representing the path to take (List<(int,int)>)
     #   inputBuildType - The type of unit being built (int)
     ##
-    def __init__(self, inputMoveType, inputCoordList, inputBuildType):
+    def __init__(self, inputMoveType, inputCoordList = None, inputBuildType = None):
         self.moveType = inputMoveType
         self.coordList = inputCoordList
         self.buildType = inputBuildType

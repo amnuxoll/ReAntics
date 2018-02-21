@@ -47,11 +47,13 @@ class Game(object):
         self.players = []
         self.state = None
         self.move = None
+        self.undoStates = []
         self.currentPlayers = []
         self.currentPlayerScores = []
         self.gamesToPlay = []
         self.gamesToPlayLock = threading.Lock()
 
+        self.hasHumanPlayer = False
         self.ended = False
         self.errored = False
         self.submittedMove = None
@@ -587,14 +589,17 @@ class Game(object):
                 self.UI.pausePressed()
             self.running = True
 
-            # pause on start -- only for the first game
-            if self.pauseOnStart:
-                self.UI.pausePressed()
-                self.pauseOnStart = False
-
             self.gamesToPlayLock.acquire()
             game = self.gamesToPlay.pop(0)
             self.gamesToPlayLock.release()
+
+            self.hasHumanPlayer = game.p1.author == "Human" or game.p2.author == "Human"
+
+            # pause on start -- only for the first game
+            # don't pause if a human is playing because that feels awkward
+            if self.pauseOnStart and not self.hasHumanPlayer:
+                self.UI.pausePressed()
+                self.pauseOnStart = False
 
             self.currentPlayerScores = []
             self.currentPlayerScores.append([game.p1.author, 0, 0])
@@ -874,6 +879,9 @@ class Game(object):
                 if validMove:
                     # check move type
                     if self.move.moveType == MOVE_ANT:
+                        # record state in undo before applying move
+                        if self.hasHumanPlayer:
+                            self.undoStates.append(self.state.clone())
                         startCoord = self.move.coordList[0]
                         endCoord = self.move.coordList[-1]
 
@@ -898,6 +906,9 @@ class Game(object):
                             self.resolveAttack(antToMove, currentPlayer)
 
                     elif self.move.moveType == BUILD:
+                        # record state in undo before applying move
+                        if self.hasHumanPlayer:
+                            self.undoStates.append(self.state.clone())
                         coord = self.move.coordList[0]
                         currentPlayerInv = self.state.inventories[self.state.whoseTurn]
 
@@ -923,7 +934,10 @@ class Game(object):
                             # self.ui.coordList = []
 
                     elif self.move.moveType == END:
-                        # take care of end of turn business for ants and contructions
+                        # reset undo moves on each turn change
+                        self.undoStates = []
+
+                        # take care of end of turn business for ants and constructions
                         for ant in self.state.inventories[self.state.whoseTurn].ants:
                             constrUnderAnt = self.state.board[ant.coords[0]][ant.coords[1]].constr
                             if constrUnderAnt != None:
@@ -955,6 +969,8 @@ class Game(object):
 
                         # if AI mode, pause to observe move until next or continue is clicked
                         self.pauseGame()
+                    elif self.move.moveType == UNDO:
+                        self.state = self.undoStates.pop()
                 else:
                     # human can give None move, AI can't
                     if not type(currentPlayer) is HumanPlayer.HumanPlayer:
@@ -1195,8 +1211,8 @@ class Game(object):
             self.errorReport("ERROR: Invalid Move: " + str(move))
             self.errorReport("       Move type must be an integer.")
             return False
-        # for END type moves, lots we don't need to check
-        if move.moveType == END:
+        # for END or UNDO type moves, lots we don't need to check
+        if move.moveType == END or move.moveType == UNDO:
             return True
         if move.coordList == None or type(move.coordList) != list or len(move.coordList) == 0:
             self.errorReport("ERROR: Invalid Move: " + str(move))

@@ -162,8 +162,12 @@ class GamePane:
         self.settingsButton.config(bg = 'red', fg = 'white', font = font, width = 12, pady = 3)
         self.settingsButton.grid(row =7)
 
+        self.undoButton = wgt.ColoredButton(self.buttonFrame, text = "Undo", command = self.undoPressed, backgroundcolor = self.handler.blue)
+        self.undoButton.config(bg = self.handler.blue, fg = 'white', font = font, width = 12, pady = 3)
+        self.undoButton.grid(row =8)
+
         # make buttons space out a bit
-        for i in range(8):
+        for i in range(9):
             self.buttonFrame.rowconfigure(i, weight = 1)
 
     ##
@@ -293,8 +297,6 @@ class GamePane:
                 self.boardIcons[loc[1]][loc[0]].setImage(construct=FOOD)
 
 
-
-
     ##
     # highlightValidMoves
     #
@@ -397,8 +399,39 @@ class GamePane:
 
     #########################################################################
     # button handling functions
-    # some of these should be replaced by references to the GUI handler
     #
+
+    def undoPressed(self):
+        # this should not happen if undo button is disabled properly
+        # but we protect here nonetheless
+        if not self.handler.waitingForHuman:
+            return
+        # if it's currently setup phase, we handle this internally to the UI
+        if self.handler.phase == SETUP_PHASE_1 or self.handler.phase == SETUP_PHASE_2:
+            if self.setupsPlaced is not None and self.setupsPlaced > 0:
+                # clear the most recent setup from board and memory
+                loc = self.setupLocations.pop()
+                self.boardIcons[loc[1]][loc[0]].setImage(construct=None)
+                self.setupsPlaced -= 1
+
+                # change instruction text
+                if self.handler.phase == SETUP_PHASE_1:
+                    if self.setupsPlaced == 0:
+                        self.undoButton.disable()
+                        self.setInstructionText("Select where to place your anthill.")
+                    elif self.setupsPlaced == 1:
+                        self.setInstructionText("Select where to place your tunnel.")
+                    elif self.setupsPlaced == 2:
+                        self.setInstructionText("Select where to place grass on your side. 9 Remaining.")
+                    else:
+                        self.setInstructionText("Select where to place grass on your side. %d Remaining." %
+                                                (11 - self.setupsPlaced))
+                else:
+                    self.undoButton.disable()
+                    self.setInstructionText("Select where to place your enemy's food. 2 remaining.")
+        elif self.handler.phase == PLAY_PHASE:
+            self.handler.submitHumanMove(Move(UNDO))
+
     def UIbuttonPressed(self):
         self.handler.showFrame(1)
 
@@ -426,7 +459,7 @@ class GamePane:
     ##
     # handleSetup2Move
     #
-    # handle board clicks when the game is ins setup phase 2 for human
+    # handle board clicks when the game is in setup phase 2 for human
     # player is placing food for the opponent
     #
     def handleSetup2Move(self, x, y):
@@ -452,7 +485,8 @@ class GamePane:
         if (x, y) in possible:
             self.setupLocations.append((x, y))
             self.setupsPlaced += 1
-
+            # enable the undo button as we've found a valid move
+            self.undoButton.enable()
             self.boardIcons[y][x].setImage(construct=FOOD)
             self.setInstructionText("Select where to place your enemy's food. 1 remaining.")
 
@@ -471,7 +505,7 @@ class GamePane:
     ##
     # handleSetupMove
     #
-    # handles board clicks when the game is in a setup phase 1 for the human
+    # handles board clicks when the game is in setup phase 1 for the human
     # player is placing their own anthill, tunnel, and grass is that order
     #
     def handleSetup1Move(self, x, y):
@@ -493,6 +527,8 @@ class GamePane:
         if (x, y) in possible and (x, y) not in self.setupLocations:
             self.setupLocations.append((x, y))
             self.setupsPlaced += 1
+            # enable the undo buttons as we've found a valid move
+            self.undoButton.enable()
 
             if self.setupsPlaced == 1:
                 self.boardIcons[y][x].setImage(construct=ANTHILL)
