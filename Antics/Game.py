@@ -86,6 +86,7 @@ class Game(object):
         self.soft_restart    = False  # to restart the games, but not reset the stats
         self.pauseOnStart    = False
         self.pauseConditions = []
+        self.pauseOnIllegalMove = False
 
         self.loadAIs()
         self.playerNamesCheckList = [ai[0].author for ai in self.players]
@@ -511,6 +512,7 @@ class Game(object):
         self.timeoutOn = additional['timeout']
         self.autorestart = additional['autorestart']
         self.pauseOnStart = additional['pause']
+        self.pauseOnIllegalMove = additional['pauseIllegal']
 
         if self.verbose:
             self.UI.statsText.set("Print Stats On")
@@ -829,6 +831,9 @@ class Game(object):
                         code = self.error(INVALID_PLACEMENT, targets, currentPlayer)
                         self.setWinner(1 - self.state.whoseTurn)
                         self.UI.gameHandler.setInstructionText(code)
+                        # pause for the illegal move
+                        if self.pauseOnIllegalMove and not self.UI.paused:
+                            self.UI.pausePressed()
 
             elif self.state.phase == PLAY_PHASE:
                 currentPlayer = self.currentPlayers[self.state.whoseTurn]
@@ -956,6 +961,9 @@ class Game(object):
                         code = self.error(INVALID_MOVE, self.move, currentPlayer)
                         self.setWinner(1 - self.state.whoseTurn)
                         self.UI.gameHandler.setInstructionText(code)
+                        # pause for the illegal move
+                        if self.pauseOnIllegalMove and not self.UI.paused:
+                            self.UI.pausePressed()
                     elif validMove != None:
                         # if validMove is False and not None, clear move
                         currentPlayer.coordList = []

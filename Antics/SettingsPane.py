@@ -538,8 +538,12 @@ class GameSettingsFrame ( ) :
         # timeChanged, layoutChanged, clicked
         more = data['additional_settings']
 
+        opts = { o['opt'] for o in self.additionalOptionsFrame.options }
+        
         try:
-            if more.keys() != {'timeout_limit', 'layout_chosen', 'swap', 'verbose', 'timeout', 'autorestart', 'pause'}:
+            # checkboxes | fancy option inputs
+            optsPlus = opts | {'layout_chosen', 'timeout_limit'}
+            if more.keys() != optsPlus :
                 print ( msg )
                 self.resetSettings()
         except:
@@ -547,7 +551,7 @@ class GameSettingsFrame ( ) :
             self.resetSettings()
 
         for k in list(more.keys()) :
-            if more[k] and k in {'swap', 'verbose', 'timeout', 'autorestart', 'pause'} :
+            if more[k] and k in opts :
                 self.additionalOptionsFrame.selected[k].set(1)
                 self.additionalOptionsFrame.clicked(k)
             elif more['timeout'] and k == 'timeout_limit' :
@@ -714,60 +718,35 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         self.public_layout = LAYOUT_OPTIONS[0]
         self.public_timeout = str(ERROR_CODE)
 
-        k = "swap"
-        self.o_swap = tk.Checkbutton ( self.interior, text = "alternate player start", command = partial(self.clicked, opt = k), bg = "white" )
-        self.o_swap.grid ( row = 0, sticky=tk.W )
-        self.selected[k] = tk.BooleanVar()
-        self.o_swap.config ( variable = self.selected[k] )
-        self.public_selected[k] = False
+        # additional option keys and their descriptions to be printed on the menu
+        # { 'opt' : "", 'descrip' : "" }
+        self.options = [
+                         { 'opt' : "swap"            , 'descrip' : "alternate player start" },
+                         { 'opt' : "verbose"         , 'descrip' : "verbose (print W/L)" },
+                         { 'opt' : "timeout"         , 'descrip' : "move timeout" },
+                         { 'opt' : "autorestart"     , 'descrip' : "auto-restart" },
+                         { 'opt' : "pause"           , 'descrip' : "pause on start" },
+                         { 'opt' : "pauseIllegal"    , 'descrip' : "pause on illegal move" }
+                       ]
 
-        k = "verbose"
-        self.o_verbose = tk.Checkbutton ( self.interior, text = "verbose (print W/L)", command = partial(self.clicked, opt = k), bg = "white" )
-        self.o_verbose.grid ( row = 1, sticky=tk.W )
-        self.selected[k] = tk.BooleanVar()
-        self.o_verbose.config ( variable = self.selected[k] )
-        self.public_selected[k] = False
+        for i in range(len(self.options)) :
+            o = self.options[i]
+            self.addCheckOption ( o['opt'], o['descrip'], i )  
 
-        k = "timeout"
-        self.o_timeout = tk.Checkbutton ( self.interior, text = "move timeout", command = partial(self.clicked, opt = k), bg = "white" )
-        self.o_timeout.grid ( row = 2, sticky=tk.W )
-        self.selected[k] = tk.BooleanVar()
-        self.o_timeout.config ( variable = self.selected[k] )
-        self.public_selected[k] = False
-
+        r = [ o['opt'] for o in self.options ].index("timeout")
         sv = tk.StringVar()
         sv.trace("w", lambda name, index, mode, sv=sv: self.timeChanged(sv))
         self.o_timeoutText = tk.Entry ( self.interior, textvar = sv )
-        self.o_timeoutText.grid ( row = 2, column = 1, sticky=tk.W )
+        self.o_timeoutText.grid ( row = r, column = 1, sticky=tk.W )
         self.sv = sv
-        
+
+        r = len(self.options)
         self.layoutText = tk.Label ( self.interior, text = "Layout Option: " , bg="white")
-        self.layoutText.grid ( row = 3, sticky=tk.W )
+        self.layoutText.grid ( row = r, sticky=tk.W )
         self.layoutType = tk.StringVar ( self.interior )
         self.layoutType.set(LAYOUT_OPTIONS[0])
         self.o_layout = tk.OptionMenu(self.interior, self.layoutType, *LAYOUT_OPTIONS, command = self.layoutChanged )
-        self.o_layout.grid ( row = 3, column = 1, sticky=tk.W )
-
-        k = "autorestart"
-        self.autorestart = tk.Checkbutton ( self.interior, text = "auto-restart", command = partial(self.clicked, opt = k), bg = "white" )
-        self.autorestart.grid ( row = 4, sticky=tk.W )
-        self.selected[k] = tk.BooleanVar()
-        self.autorestart.config ( variable = self.selected[k] )
-        self.public_selected[k] = False
-
-        k = "pause"
-        self.pause = tk.Checkbutton ( self.interior, text = "pause on start", command = partial(self.clicked, opt = k), bg = "white" )
-        self.pause.grid ( row = 5, sticky=tk.W )
-        self.selected[k] = tk.BooleanVar()
-        self.pause.config ( variable = self.selected[k] )
-        self.public_selected[k] = False
-
-##        k = "stats_board"
-##        self.o_statsboard = tk.Checkbutton ( self.interior, text = "display stats board", command = partial(self.clicked, opt = k), bg = "white"  )
-##        self.o_statsboard.grid ( row = 4, sticky=tk.W )
-##        self.selected[k] = tk.BooleanVar()
-##        self.o_statsboard.config ( variable = self.selected[k] )
-##        self.public_selected[k] = False
+        self.o_layout.grid ( row = r, column = 1, sticky=tk.W )
             
     def clicked ( self, opt ) :
         self.public_selected[opt] = not self.public_selected[opt]
@@ -777,6 +756,13 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
 
     def layoutChanged ( self, option ) :
         self.public_layout = option
+
+    def addCheckOption ( self, name, text, row ) :
+        cb = tk.Checkbutton ( self.interior, text = text, command = partial(self.clicked, opt = name), bg = "white" )
+        cb.grid ( row = row, sticky=tk.W )
+        self.selected[name] = tk.BooleanVar()
+        cb.config ( variable = self.selected[name] )
+        self.public_selected[name] = False
 
 class AddPauseOptionsFrame ( wgt.ScrollableFrame ) :
     def __init__ ( self, parent = None) :
