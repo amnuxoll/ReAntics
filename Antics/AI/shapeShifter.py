@@ -87,7 +87,7 @@ class AIPlayer(Player):
         self.hill = None
         self.tunnel = None
         self.paths = None
-        self.decided = False
+        self.CurDecision = -1
 
         ## below is required for Starve AI
         ## new ranged soldiers to cut off access to resources
@@ -182,8 +182,6 @@ class AIPlayer(Player):
     # Return: Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]
     ##
     def getMove(self, currentState):
-        CurDecision = -1
-
         ## Needed Information
         myInv = getCurrPlayerInventory(currentState)
         me = currentState.whoseTurn
@@ -193,6 +191,7 @@ class AIPlayer(Player):
         enemyW = getAntList(currentState, enemy, (WORKER,))
         numWorkers = len(enemyW)
 
+        # Enemy attack Ant lists
         enemyD = getAntList(currentState, enemy, (DRONE, ))
         enemyR = getAntList(currentState, enemy, (R_SOLDIER, ))
         enemyS = getAntList(currentState, enemy, (SOLDIER, ))
@@ -202,9 +201,6 @@ class AIPlayer(Player):
             self.hill = getConstrList(currentState, me, (ANTHILL,))[0]
         if self.tunnel is None:
             self.tunnel = getConstrList(currentState, me, (TUNNEL,))[0]
-
-
-
 
         ## Pathing for Worker Ants between food and tunnel/anthill
         if self.paths is None:
@@ -270,7 +266,7 @@ class AIPlayer(Player):
         if decided == False:
             # if strategy is a food gatherer type use Sara P's Steve Strategy
             if (numWorkers > 2):# and len(enemyD) == 0 and len(enemyR) == 0 and len(enemyS) == 0):
-                CurDecision = 1
+                self.CurDecision = 1
                 decided = True
 
                 ## DOES THIS WORK: YES
@@ -284,76 +280,53 @@ class AIPlayer(Player):
                 if len(enemyS) >= 1:    # See if ants are moving forward to attack me
                     for s in enemyS:
                         if s.coords[1] < (enemyHill.coords[1]):
-                            CurDecision = 2
+                            self.CurDecision = 2
                             decided = True
-                        else:
-                            CurDecision = -1
 
                 if len(enemyS) >= 2:    # See if ants are staying back and defending
                     for s in enemyS:
                         if s.coords[1] > (enemyHill.coords[1]):
-                            CurDecision = 3
-                            print ("Case 1")
+                            self.CurDecision = 3
                             decided = True
-                        else:
-                            CurDecision = -1
 
 
                 ####### DRONES #######
                 if len(enemyD) >= 1:    # See if ants are moving forward to attack me
                     for d in enemyD:
                         if d.coords[1] < (enemyHill.coords[1]):
-                            CurDecision = 2
+                            self.CurDecision = 2
                             decided = True
-                        else:
-                            CurDecision = -1
 
                 if len(enemyD) >= 2:    # See if ants are staying back and defending
                     for d in enemyD:
                         if d.coords[1] > (enemyHill.coords[1]):
-                            CurDecision = 3
-                            print ("Case 2")
+                            self.CurDecision = 3
                             decided = True
-                        else:
-                            CurDecision = -1
 
                 ####### RANGERS #######
                 if len(enemyR) >= 1:    # See if ants are moving forward to attack me
                     for r in enemyR:
                         if r.coords[1] < (enemyHill.coords[1]):
-                            CurDecision = 2
+                            self.CurDecision = 2
                             decided = True
-                        else:
-                            CurDecision = -1
 
                 if len(enemyR) >= 2:
                     for r in enemyR:
                         if r.coords[1] > (enemyHill.coords[1]): #or (r.coords[1] >= (enemyHill.coords[1] + 2)):
-                            CurDecision = 3
-                            print (r.coords[1])
-                            print (enemyHill.coords[1])
-                            print ("Case 3")
+                            self.CurDecision = 3
                             decided = True
-                        else:
-                            CurDecision = -1
-
-            # if no strat above has been chosen, continue basic complex food gatherer strategies
-            else:
-                CurDecision = -1
 
 
-        if CurDecision == 1:
-            print ("starveMode")
+
+        ## Decision Switch
+        if self.CurDecision == 1:
             return self.starveMode(currentState)
 
-        elif CurDecision == 2:
-            print ("defMode")
+        elif self.CurDecision == 2:
             return self.defenseMode(currentState)
 
-        elif CurDecision == 3:
-            print ("gatherMode")
+        elif self.CurDecision == 3:
             return self.gatherMode(currentState)
-
 
         return Move(END, None, None)
 
@@ -534,6 +507,8 @@ class AIPlayer(Player):
             if not r_soldier.hasMoved:
                 enemy = 1 - me
                 enemyAnts = getAntList(currentState, enemy, (WORKER, DRONE, SOLDIER, R_SOLDIER))
+
+
                 dist = 999
                 target = None
                 enemy_atHome = None
@@ -554,7 +529,10 @@ class AIPlayer(Player):
                 enemy_queen = getAntList(currentState, enemy, (QUEEN,))[0].coords
                 x = stepsToReach(currentState, r_soldier.coords, enemy_queen)
                 # hey look the queen is here
-                if x <= UNIT_STATS[O_ANT][RANGE] + 1:  ### umm why
+                if x < UNIT_STATS[O_ANT][RANGE]:
+                    target = (r_soldier.coords[0], 4)
+
+                elif x <= UNIT_STATS[O_ANT][RANGE] + 1:  ### umm why
                     target = r_soldier.coords
                 # kill the last worker -- head up first, at least into no man's land
                 elif len(enemy_workers) == 1 and not isPathOkForQueen([r_soldier.coords]):
@@ -678,7 +656,7 @@ class AIPlayer(Player):
         if rangeSoldier is not None and rangeSoldier.player == currentState.whoseTurn:
             if rangeSoldier.type == antTodBuild:
                 if not rangeSoldier.hasMoved:
-                    path = createPathToward(currentState, rangeSoldier.coords, (5, 3),
+                    path = createPathToward(currentState, rangeSoldier.coords, (6, 3),
                                             UNIT_STATS[antTodBuild][MOVEMENT])
                     return Move(MOVE_ANT, path, None)
 
@@ -694,7 +672,6 @@ class AIPlayer(Player):
 
         # send the range soldier to attack the closest ant
         rangeSoldier = getAntList(currentState, me, (antTodBuild,))
-        print (len(rangeSoldier))
         for soldier in rangeSoldier:
             if not soldier.hasMoved:
                 enemy = 1 - me
@@ -722,6 +699,7 @@ class AIPlayer(Player):
                 for path in self.paths:
                     if len(path.antList) == 0:
                         path.addAnt(self.hill.coords)
+
                         return Move(BUILD, [self.hill.coords], WORKER)
 
         # update worker ants
@@ -853,6 +831,14 @@ class AIPlayer(Player):
         # if there are no attackers move to a default location
         if len(attackers) == 0:
             return Move(MOVE_ANT, createPathToward(state, queen.coords, (4, 1), UNIT_STATS[QUEEN][MOVEMENT]), None)
+
+
+        #keep queen from going onto food
+        foods = getConstrList(state, None, (FOOD,))
+        for food in foods:
+            if queen.coords == food.coords:
+                path = createPathToward(state, queen.coords, (7, 3), UNIT_STATS[QUEEN][MOVEMENT])
+                return Move(MOVE_ANT, path, None)
 
         # if health is lower than 6, run away and let defense do it's job
         queenHealth = queen.health
