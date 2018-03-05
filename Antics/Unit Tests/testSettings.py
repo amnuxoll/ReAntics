@@ -33,7 +33,9 @@ class testSettings(unittest.TestCase):
         games = [sp.GameGUIData("Two Player", 2, ["Random", "Booger"]),
                  sp.GameGUIData("Play All", 1, ["Random"])]
         additional = {"verbose": True, "swap": False, "layout_chosen": "Random Override",
-                      "timeout": False, 'timeout_limit': 0.3, 'pause': False, 'autorestart': False}
+                      "timeout": False, 'timeout_limit': 0.3, 'pause': False, 'autorestart': False,
+                      "pause": True, "pauseIllegal": False
+                     }
         pauseConditions = [{"players":["Random", "Booger"], "conditions":{"P0 Food":3}}]
         self.gameTest.process_settings(games, additional, pauseConditions, True)
         self.assertEqual(len(self.gameTest.game_calls), 1 + 1 * (len(self.gameTest.players)-1))
