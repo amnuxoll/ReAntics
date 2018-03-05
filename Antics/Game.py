@@ -116,6 +116,7 @@ class Game(object):
         self.delayWait = 0
 
         self.postProcessCommandLine()
+        self.post_process_settings()
         self.UI.root.mainloop()
 
     def gameStartRequested(self):
@@ -494,6 +495,20 @@ class Game(object):
                 # self.commandLineFinished = True
 
     ##
+    # post_process_settings
+    #
+    # Description: UI variables that need to be changed according to settings after UI initialization
+    #
+    ##
+    def post_process_settings(self):
+        if self.verbose:
+            self.UI.statsText.set("Print Stats On")
+            self.UI.stats = False
+        else:
+            self.UI.statsText.set("Print Stats Off")
+            self.UI.stats = True
+
+    ##
     # process_settings
     #
     # Description: process the current settings and assign values within the game class accordingly
@@ -515,13 +530,6 @@ class Game(object):
         self.autorestart = additional['autorestart']
         self.pauseOnStart = additional['pause']
         self.pauseOnIllegalMove = additional['pauseIllegal']
-
-        if self.verbose:
-            self.UI.statsText.set("Print Stats On")
-            self.UI.stats = False
-        else:
-            self.UI.statsText.set("Print Stats Off")
-            self.UI.stats = True
         
         if self.timeoutOn:
             self.timeout_limit = float(additional['timeout_limit'])
