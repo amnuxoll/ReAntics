@@ -51,7 +51,6 @@ class GamePane:
             if s2 == "gif":
                 self.textures[s1] = tkinter.PhotoImage(file = "Textures/" + f)
 
-
         # game board is based on a 10*10 grid of tiles
         # access by self.boardIcons[y][x]
         for y in range(10):
@@ -271,7 +270,8 @@ class GamePane:
                     carrying = False
                     aType = None
 
-                self.boardIcons[row][col].setImage(cType, aType, antTeam, constTeam, moved, health, False, carrying, healthConst)
+                # sets highlights to false
+                self.boardIcons[row][col].setImage(cType, aType, antTeam, constTeam, moved, health, False, False, carrying, healthConst)
 
     ##
     # showSetupConstructions
@@ -351,7 +351,7 @@ class GamePane:
     def clearHighlights(self):
         for y in range(10):
             for x in range(10):
-                self.boardIcons[y][x].setImage(highlight=False)
+                self.boardIcons[y][x].setImage(highlight=False, attackHighlight=False)
 
     ##
     # highlightValidAttacks
@@ -387,7 +387,7 @@ class GamePane:
             return
 
         for loc in locations:
-            self.boardIcons[loc[1]][loc[0]].setImage(highlight=True)
+            self.boardIcons[loc[1]][loc[0]].setImage(attackHighlight=True)
 
     ##
     # setInstructionText
@@ -661,7 +661,7 @@ class GamePane:
     #
     def handleAttackMove(self, x, y):
         # player must submit an attack to continue the game
-        if self.boardIcons[y][x].highlight:
+        if self.boardIcons[y][x].attackHighlight:
             # must flip the coordinate for p2
             self.handler.submitHumanAttack(self.handler.currentState.coordLookup((x, y),
                                                                                  self.handler.currentState.whoseTurn))
@@ -701,6 +701,7 @@ class BoardButton:
         self.health = None
         self.healthConst = None
         self.highlight = False
+        self.attackHighlight = False
         self.carrying = False
 
         # draw initial tile
@@ -726,7 +727,7 @@ class BoardButton:
     #
     # all parameters may be set to None to remove that element from the draw list or replace it with a default
     #
-    def setImage(self, construct = -9, ant = -9, antTeam = -9, constTeam = -9, moved = -9, health = -9, highlight = -9, carrying = -9, healthConst = -9):
+    def setImage(self, construct = -9, ant = -9, antTeam = -9, constTeam = -9, moved = -9, health = -9, highlight = -9, attackHighlight = -9, carrying = -9, healthConst = -9):
         changed = False
 
         if construct != -9 and construct != self.construct:
@@ -750,6 +751,9 @@ class BoardButton:
         if highlight != -9 and highlight != self.highlight:
             self.highlight = highlight
             changed = True
+        if attackHighlight != -9 and attackHighlight != self.attackHighlight:
+            self.attackHighlight = attackHighlight
+            changed = True
         if carrying != -9 and carrying != self.carrying:
             self.carrying = carrying
             changed = True
@@ -772,55 +776,52 @@ class BoardButton:
         # clear canvas
         self.label.delete("all")
         
+        # important vals/refs
+        NW = tkinter.N + tkinter.W
+        my_textures = self.handler.textures
+        
         # draw base
-        self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["terrain"])
+        if self.highlight:
+            self.label.create_image(loc, anchor=NW, image=my_textures["terrain_green"])
+        elif self.attackHighlight:
+            self.label.create_image(loc, anchor=NW, image=my_textures["terrain_red"])
+        elif self.moved:
+            self.label.create_image(loc, anchor=NW, image=my_textures["terrain_grey"])
+        else:
+            self.label.create_image(loc, anchor=NW, image=my_textures["terrain"])
 
         # team color
-        if self.constTeam == PLAYER_ONE:
-            team = "Blue"
-        else:
-            team = "Red"
+        team = "Blue" if self.constTeam == PLAYER_ONE else "Red"
 
         # draw construct
         if self.construct == GRASS:
-            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["grass"])
+            self.label.create_image(loc, anchor=NW, image=my_textures["grass"])
         elif self.construct == FOOD:
-            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["food"])
+            self.label.create_image(loc, anchor=NW, image=my_textures["food"])
         elif self.construct == ANTHILL:
-            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["anthill" + team])
+            self.label.create_image(loc, anchor=NW, image=my_textures["anthill" + team])
         elif self.construct == TUNNEL:
-            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["tunnel" + team])
+            self.label.create_image(loc, anchor=NW, image=my_textures["tunnel" + team])
 
         # team color
-        if self.antTeam == PLAYER_ONE:
-            team = "Blue"
-        else:
-            team = "Red"
+        team = "Blue" if self.antTeam == PLAYER_ONE else "Red"
 
         # draw ant
         if self.ant == WORKER:
-            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["worker" + team])
+            self.label.create_image(loc, anchor=NW, image=my_textures["worker" + team])
         elif self.ant == SOLDIER:
-            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["soldier" + team])
+            self.label.create_image(loc, anchor=NW, image=my_textures["soldier" + team])
         elif self.ant == QUEEN:
-            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["queen" + team])
+            self.label.create_image(loc, anchor=NW, image=my_textures["queen" + team])
         elif self.ant == R_SOLDIER:
-            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["rsoldier" + team])
+            self.label.create_image(loc, anchor=NW, image=my_textures["rsoldier" + team])
         elif self.ant == DRONE:
-            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["drone" + team])
+            self.label.create_image(loc, anchor=NW, image=my_textures["drone" + team])
 
         # carrying mark
         if self.carrying:
-            self.label.create_image((loc[0] + 48, loc[1] + 48), anchor=tkinter.N + tkinter.W,
-                                    image=self.handler.textures["carrying"])
+            self.label.create_image((loc[0] + 48, loc[1] + 48), anchor=NW, image=my_textures["carrying"])
 
-        # hasMoved marker
-        if self.moved:
-            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["moved"])
-
-        # highlighted marker
-        elif self.highlight:
-            self.label.create_image(loc, anchor=tkinter.N + tkinter.W, image=self.handler.textures["highlighted"])
 
         # draw health
         if self.health:
@@ -835,25 +836,25 @@ class BoardButton:
 
             count = 0
             for j in range(blue):
-                self.label.create_image((loc[0] + 3, loc[1] + count * 8), anchor=tkinter.N + tkinter.W,
-                                        image=self.handler.textures["healthDouble"])
+                self.label.create_image((loc[0] + 3, loc[1] + count * 8), 
+                                         anchor=NW, image=my_textures["healthDouble"])
                 count += 1
             for j in range(green):
-                self.label.create_image((loc[0] + 3, loc[1] + count * 8), anchor=tkinter.N + tkinter.W,
-                                        image=self.handler.textures["healthFull"])
+                self.label.create_image((loc[0] + 3, loc[1] + count * 8), 
+                                         anchor=NW, image=my_textures["healthFull"])
                 count += 1
             for j in range(red):
-                self.label.create_image((loc[0] + 3, loc[1] + count * 8), anchor=tkinter.N + tkinter.W,
-                                        image=self.handler.textures["healthEmpty"])
+                self.label.create_image((loc[0] + 3, loc[1] + count * 8), 
+                                         anchor=NW, image=my_textures["healthEmpty"])
                 count += 1
 
         if self.healthConst:
             for k in range(self.healthConst[0]):
                 if k < self.healthConst[1]:
-                    self.label.create_image((loc[0] + 55, loc[1] + k * 8), anchor=tkinter.N + tkinter.W,
-                                            image=self.handler.textures["healthFull"])
+                    self.label.create_image((loc[0] + 55, loc[1] + k * 8), 
+                                             anchor=NW, image=my_textures["healthFull"])
                 else:
-                    self.label.create_image((loc[0] + 55, loc[1] + k * 8), anchor=tkinter.N + tkinter.W,
-                                            image=self.handler.textures["healthEmpty"])
+                    self.label.create_image((loc[0] + 55, loc[1] + k * 8), 
+                                             anchor=NW, image=my_textures["healthEmpty"])
 
 

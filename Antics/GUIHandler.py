@@ -9,6 +9,7 @@ from Constants import *
 import RedoneWidgets
 import base64
 import pickle
+import datetime
 
 
 #########################################################
@@ -89,6 +90,7 @@ class GUIHandler:
         self.root.bind("<Shift-N>", self.secretPressed)
         self.root.bind("<r>", self.regGPressed)
         self.root.bind("<Shift-C>", self.secret2Pressed)
+        self.root.bind("<s>", self.setSeasonalGraphics)
 
         # we want the game to start on the settings screen, so show it first
         self.settingsFrame.pack(fill="both")
@@ -118,9 +120,9 @@ class GUIHandler:
         self.reDrawBoard()
 
     def regGPressed(self, event = None):
-        self.gameHandler.textures["queenRed"] = tkinter.PhotoImage(file="Textures/queenRed.gif")
-        self.gameHandler.textures["queenBlue"] = tkinter.PhotoImage(file="Textures/queenBlue.gif")
-        self.gameHandler.textures["food"] = tkinter.PhotoImage(file="Textures/food.gif")
+        resets = ["queenRed", "queenBlue", "food", "grass", "carrying"]
+        for r in resets:
+            self.gameHandler.textures[r] = tkinter.PhotoImage(file="Textures/"+r+".gif")
         self.reDrawBoard()
 
     def secret2Pressed(self, event = None):
@@ -136,6 +138,27 @@ class GUIHandler:
                 elif f == "c":
                     self.gameHandler.textures["food"] = tkinter.PhotoImage(data=string_d)
         self.reDrawBoard()
+
+    def setSeasonalGraphics(self, event = None) :
+        now = datetime.datetime.now()
+        if now.month == 3:
+            self.secret3enabled()
+
+    def secret3enabled(self):
+        files = ["a","b","c","d_x24_y6"] # still need to do the last part
+        for f in files:
+            f1 = "Textures/secret3"+f+".sec"
+            with open(f1, "rb") as fi:
+                string_d = pickle.load(fi)
+                if f == "a":
+                    self.gameHandler.textures["grass"] = tkinter.PhotoImage(data=string_d)
+                elif f == "b":
+                    self.gameHandler.textures["food"] = tkinter.PhotoImage(data=string_d)
+                elif f == "c":
+                    self.gameHandler.textures["carrying"] = tkinter.PhotoImage(data=string_d)
+        self.reDrawBoard()
+
+        
 
             
     ##

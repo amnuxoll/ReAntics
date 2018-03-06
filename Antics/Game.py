@@ -90,6 +90,9 @@ class Game(object):
         self.pauseConditions = []
         self.pauseOnIllegalMove = False
 
+        # other
+        self.ee_seasonal = False
+
         self.loadAIs()
         self.playerNamesCheckList = [ai[0].author for ai in self.players]
         self.processCommandLine()
@@ -366,6 +369,10 @@ class Game(object):
         self.generalWake()
 
     def postProcessCommandLine(self):
+        # graphics
+        if self.ee_seasonal:
+            self.UI.setSeasonalGraphics()
+        # games
         if self.parser_args["twoP"]:
             if "human" == self.parser_args["players"][0].lower():
                 self.startHumanVsAI(self.parser_args["players"][1])
@@ -436,6 +443,8 @@ class Game(object):
         parser.add_argument('-p', '--Players', metavar='PLAYER', type=str, nargs='*', dest='players',
                             help='player, can either be the name of an agent or "human"'
                                  'which will be reserved for human')
+        parser.add_argument('-s', '--seasonal', action='store_true', dest='seasonal_graphics', default=False,
+                            help='February, March, October, December')
 
         args = parser.parse_args()
         self.parser_args["numgames"] = args.numgames
@@ -445,13 +454,15 @@ class Game(object):
         self.parser_args["all"] = args.all
         self.parser_args["twoP"] = args.twoP
         self.parser_args["self"] = args.self
-
+        
         numCheck = re.compile("[0-9]*[1-9][0-9]*")
         # Error and bounds checking for command line parameters
         if not numCheck.match(str(args.numgames)):
             parser.error('NumGames must be a positive number')
         if args.verbose:
             self.verbose = True
+        if args.seasonal_graphics:
+            self.ee_seasonal = True
         if (args.RR or args.RRall or args.self or args.all or args.twoP) and args.numgames is None:
             parser.error('Flags not valid without number of games (-n)')
         if args.twoP:
