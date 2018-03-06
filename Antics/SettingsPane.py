@@ -93,7 +93,7 @@ class GameSettingsFrame ( ) :
 
         # game queue
         self.gameQFrame = tk.Frame ( self.parent, highlightthickness = FRAME_BDR, highlightbackground="black" )
-        self.gameQFrame.grid ( row = 1, column = 0, rowspan = 10, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S )
+        self.gameQFrame.grid ( row = 1, column = 0, rowspan = 8, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S )
 
         self.gameQLabel = tk.Label ( self.gameQFrame, text = "Game Queue", \
                                      fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT )
@@ -112,7 +112,7 @@ class GameSettingsFrame ( ) :
 
         # pause condition log
         self.pauseConditionsFrame = tk.Frame ( self.parent, highlightthickness = FRAME_BDR, highlightbackground="black" ) 
-        self.pauseConditionsFrame.grid ( row = 12, column = 0, rowspan = 9, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S )
+        self.pauseConditionsFrame.grid ( row = 10, column = 0, rowspan = 8, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S )
 
         self.pauseConditionsLabel = tk.Label ( self.pauseConditionsFrame, text = "Pause Conditions", \
                                                fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT )
@@ -132,7 +132,7 @@ class GameSettingsFrame ( ) :
 
         # start button
         self.startButtonFrame = tk.Frame ( self.parent, bg="white" )
-        self.startButtonFrame.grid ( row = 21, column = 0, rowspan = 1, columnspan = 1, sticky = tk.E+tk.W )
+        self.startButtonFrame.grid ( row = 18, column = 0, rowspan = 1, columnspan = 1, sticky = tk.E+tk.W )
 
         self.startButton = wgt.ColoredButton ( self.startButtonFrame, "START", wgt.GREEN, "black", self.changeFrameStart, True  )
         self.startButton.config ( font = BUTTON1_FONT )
@@ -156,7 +156,7 @@ class GameSettingsFrame ( ) :
         
         # additional settings
         self.additionalSettingsFrame = tk.Frame(self.parent, padx = FRAME_BDR, pady=FRAME_BDR ) 
-        self.additionalSettingsFrame.grid(row = 9, column = 1, rowspan = 6, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S)
+        self.additionalSettingsFrame.grid(row = 8, column = 1, rowspan = 5, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S)
 
         self.additionalSettingsLabel = tk.Label(self.additionalSettingsFrame, text = "Additional Settings", \
                                                 fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT )
@@ -167,19 +167,22 @@ class GameSettingsFrame ( ) :
 
         # add pause condition
         self.addPauseConditionsFrame = tk.Frame(self.parent, padx = FRAME_BDR, pady=FRAME_BDR )
-        self.addPauseConditionsFrame.grid(row = 16, column = 1, rowspan = 6, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S)
+        self.addPauseConditionsFrame.grid(row = 13, column = 1, rowspan = 6, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S)
 
-        self.addPauseConditionsLabel = tk.Label(self.addPauseConditionsFrame, text = "Add Pause Conditions", \
+        self.pcLabelFrame = tk.Frame(self.addPauseConditionsFrame)
+        self.pcLabelFrame.pack(fill=tk.X)
+
+        self.addPauseConditionPlus = wgt.ColoredButton ( self.pcLabelFrame, " "*1 + "+" + " "*1, "black", "white", flash=True )
+        self.addPauseConditionPlus.config ( font = BUTTON1_FONT )
+        self.addPauseConditionPlus.pack ( side=tk.LEFT )
+        self.addPauseConditionPlus.command = self.pauseConditionAdded
+
+        self.addPauseConditionsLabel = tk.Label(self.pcLabelFrame, text = "Add Pause Conditions", \
                                                 fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT )
         self.addPauseConditionsLabel.pack ( fill=tk.X )
 
         self.addPauseOptionsFrame = AddPauseOptionsFrame ( self.addPauseConditionsFrame )
         self.addPauseOptionsFrame.pack (side=tk.BOTTOM, fill="both")
-
-        self.addPauseConditionPlus = wgt.ColoredButton ( self.addPauseConditionsFrame, " "*2 + "+" + " "*2, "black", "white", flash=True )
-        self.addPauseConditionPlus.config ( font = BUTTON1_FONT , height=2)
-        self.addPauseConditionPlus.pack ( side=tk.LEFT )
-        self.addPauseConditionPlus.command = self.pauseConditionAdded
 
         self.dummyPCLabel = None
         self.dummyGameLabel = None
