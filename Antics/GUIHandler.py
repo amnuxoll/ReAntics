@@ -90,7 +90,6 @@ class GUIHandler:
         for x in self.game.antUnitStatsInfo.split("\n") :
             fm_dummy.add_command(label=x)
         filemenu_info.add_cascade(label="Ant Unit Stats", menu=fm_dummy)
-        menubar.add_cascade(label="Help", menu=filemenu_info)
 
         # helpmenu = tkinter.Menu(menubar, tearoff=0)
         # helpmenu.add_command(label="About", command=self.menuPressed)
