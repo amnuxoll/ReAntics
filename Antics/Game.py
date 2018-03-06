@@ -20,6 +20,7 @@ import functools
 
 from functools import partial
 import copy
+import InfoScraper as Is
 
 
 class GameData:
@@ -92,7 +93,8 @@ class Game(object):
 
         # other
         self.ee_seasonal = False
-
+        self.hotKeyInfo = Is.getHotKeyInfo()
+        self.antUnitStatsInfo = Is.getAntStats()
         self.loadAIs()
         self.playerNamesCheckList = [ai[0].author for ai in self.players]
         self.processCommandLine()
@@ -445,6 +447,8 @@ class Game(object):
                                  'which will be reserved for human')
         parser.add_argument('-s', '--seasonal', action='store_true', dest='seasonal_graphics', default=False,
                             help='February, March, October, December')
+        parser.add_argument('-r', '--rules', action='store_true', dest='rules_request', default=False,
+                            help='print the rules for the game (includes unit stats, hot keys...)')
 
         args = parser.parse_args()
         self.parser_args["numgames"] = args.numgames
@@ -454,6 +458,14 @@ class Game(object):
         self.parser_args["all"] = args.all
         self.parser_args["twoP"] = args.twoP
         self.parser_args["self"] = args.self
+
+        # check for rules request
+        if args.rules_request:
+            print("="*80+"\nUNIT STATS\n"+"-"*80)
+            print(self.antUnitStatsInfo)
+            print("="*80+"\nHOT KEYS\n"+"-"*80)
+            print(self.hotKeyInfo)
+            exit(0)
         
         numCheck = re.compile("[0-9]*[1-9][0-9]*")
         # Error and bounds checking for command line parameters

@@ -77,6 +77,21 @@ class GUIHandler:
         filemenu.add_command(label="Reload Agents", command=self.reloadAgentPressed)
         menubar.add_cascade(label="File", menu=filemenu)
 
+        ###
+        # help menu - hot keys, soon ant stats
+        filemenu_info = tkinter.Menu(menubar,tearoff=0)
+        fm_dummy = tkinter.Menu(filemenu_info,tearoff=0,font=('Courier', 14))
+        for x in self.game.hotKeyInfo.split("\n") :
+            fm_dummy.add_command(label=x)
+        filemenu_info.add_cascade(label="Hot Key Info", menu=fm_dummy)
+        menubar.add_cascade(label="Help", menu=filemenu_info)
+        
+        fm_dummy = tkinter.Menu(filemenu_info,tearoff=0,font=('Courier', 14))
+        for x in self.game.antUnitStatsInfo.split("\n") :
+            fm_dummy.add_command(label=x)
+        filemenu_info.add_cascade(label="Ant Unit Stats", menu=fm_dummy)
+        menubar.add_cascade(label="Help", menu=filemenu_info)
+
         # helpmenu = tkinter.Menu(menubar, tearoff=0)
         # helpmenu.add_command(label="About", command=self.menuPressed)
         # menubar.add_cascade(label="Help", menu=helpmenu)
@@ -84,9 +99,10 @@ class GUIHandler:
         self.root.config(menu=menubar)
 
         # hot keys
-        self.root.bind("<Return>", self.gameHandler.endTurnPressed)
-        self.root.bind("<space>", self.stepPressed)
-        self.root.bind("<p>", self.pausePressed)
+        self.root.bind("<Return>", self.gameHandler.endTurnPressed)#end turn
+        self.root.bind("<space>", self.stepPressed)#step
+        self.root.bind("<p>", self.pausePressed)#pause
+        self.root.bind("<u>", self.hotKeyUndo)#undo
         self.root.bind("<Shift-N>", self.secretPressed)
         self.root.bind("<r>", self.regGPressed)
         self.root.bind("<Shift-C>", self.secret2Pressed)
@@ -157,6 +173,9 @@ class GUIHandler:
                 elif f == "c":
                     self.gameHandler.textures["carrying"] = tkinter.PhotoImage(data=string_d)
         self.reDrawBoard()
+
+    def hotKeyUndo(self, event=None):
+        self.gameHandler.undoPressed()
 
         
 

@@ -9,13 +9,6 @@ UNIT_STATS.append([3, 4, 2, 1, 2, True]) #Drone
 UNIT_STATS.append([2, 8, 4, 1, 2, False]) #Soldier
 UNIT_STATS.append([1, 2, 3, 3, 2, True]) #Ranged soldier
 
-#### adapted
-##UNIT_STATS.append((2, 8, 4, 1, None, False)) #Queen
-##UNIT_STATS.append((2, 2, 0, 1, 1, False)) #Worker
-##UNIT_STATS.append((3, 4, 2, 1, 2, True)) #Drone
-##UNIT_STATS.append((2, 8, 4, 1, 3, False)) #Soldier
-##UNIT_STATS.append((1, 2, 3, 3, 2, True)) #Ranged soldier
-
 ##
 #Ant
 #Description: This class represents an ant on the board. All information

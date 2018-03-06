@@ -143,7 +143,7 @@ class GameSettingsFrame ( ) :
         
         # add a game
         self.addGameFrame = tk.Frame(self.parent, bg = "black", padx = FRAME_BDR, pady=FRAME_BDR )
-        self.addGameFrame.grid(row = 1, column = 1, rowspan = 7, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S)
+        self.addGameFrame.grid(row = 1, column = 1, rowspan = 6, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S)
 
         self.addGameType = tk.StringVar ( self.addGameFrame )
         self.addGameType.set(GAME_TYPES[0])
@@ -156,7 +156,7 @@ class GameSettingsFrame ( ) :
         
         # additional settings
         self.additionalSettingsFrame = tk.Frame(self.parent, padx = FRAME_BDR, pady=FRAME_BDR ) 
-        self.additionalSettingsFrame.grid(row = 8, column = 1, rowspan = 5, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S)
+        self.additionalSettingsFrame.grid(row = 7, column = 1, rowspan = 5, columnspan = 1, sticky = tk.W+tk.E+tk.N+tk.S)
 
         self.additionalSettingsLabel = tk.Label(self.additionalSettingsFrame, text = "Additional Settings", \
                                                 fg = FL_TEXT_COLOR, bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT )
@@ -712,7 +712,7 @@ class AdditionalSettingsOptionsFrame ( wgt.ScrollableFrame ) :
         wgt.ScrollableFrame.__init__(self, parent)
         self.parent = parent
 
-        self.canvas.config(height=100)
+        self.canvas.config(height=120)
 
         self.selected = {}
 
