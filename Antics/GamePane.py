@@ -32,6 +32,13 @@ class GamePane:
         self.setupsPlaced = None
         self.setupLocations = None
         self.hillCoords = None
+        
+        # create image assets
+        self.textures = {}
+        for f in os.listdir("Textures/"):
+            s1, s2 = f.split('.')
+            if s2 == "gif":
+                self.textures[s1] = tkinter.PhotoImage(file = "Textures/" + f)
 
 
     def giveGame(self, the_game):
@@ -44,13 +51,7 @@ class GamePane:
         self.boardFrame.config(bd = 1, bg = 'black')
         self.boardIcons = []
 
-        # create image assets
-        self.textures = {}
-        for f in os.listdir("Textures/"):
-            s1, s2 = f.split('.')
-            if s2 == "gif":
-                self.textures[s1] = tkinter.PhotoImage(file = "Textures/" + f)
-
+        
         # game board is based on a 10*10 grid of tiles
         # access by self.boardIcons[y][x]
         for y in range(10):

@@ -10,6 +10,7 @@ import RedoneWidgets
 import base64
 import pickle
 import datetime
+import re
 
 
 #########################################################
@@ -78,18 +79,34 @@ class GUIHandler:
         menubar.add_cascade(label="File", menu=filemenu)
 
         ###
-        # help menu - hot keys, soon ant stats
-        filemenu_info = tkinter.Menu(menubar,tearoff=0)
-        fm_dummy = tkinter.Menu(filemenu_info,tearoff=0,font=('Courier', 14))
+        # help menu - hot keys, ant stats
+        helpmenu = tkinter.Menu(menubar,tearoff=0)
+        fm_dummy = tkinter.Menu(helpmenu,tearoff=0,font=('Courier', 14))
         for x in self.game.hotKeyInfo.split("\n") :
             fm_dummy.add_command(label=x)
-        filemenu_info.add_cascade(label="Hot Key Info", menu=fm_dummy)
-        menubar.add_cascade(label="Help", menu=filemenu_info)
+        helpmenu.add_cascade(label="Hot Key Info", menu=fm_dummy)
+        menubar.add_cascade(label="Help", menu=helpmenu)
         
-        fm_dummy = tkinter.Menu(filemenu_info,tearoff=0,font=('Courier', 14))
+        fm_dummy = tkinter.Menu(helpmenu,tearoff=0,font=('Courier', 12))
         for x in self.game.antUnitStatsInfo.split("\n") :
-            fm_dummy.add_command(label=x)
-        filemenu_info.add_cascade(label="Ant Unit Stats", menu=fm_dummy)
+            xl = x.lower()
+            rgx_ants = { "queen" : r"queen",
+                         "worker": r"worker",
+                         "rsoldier": r"r.*soldier",
+                         "soldier": r"soldier",
+                         "drone": r"drone" }
+            ant = None
+            for k in sorted(list(rgx_ants.keys())):
+                if re.match(rgx_ants[k], xl):
+                    ant = k+"Blue"
+                    break
+            if ant is None:
+                fm_dummy.add_command(label=x)
+                continue
+            ant_img = tkinter.Menu(fm_dummy,tearoff=0)
+            ant_img.add_command(image=self.gameHandler.textures[ant])
+            fm_dummy.add_cascade(label=x, menu=ant_img)
+        helpmenu.add_cascade(label="Ant Unit Stats", menu=fm_dummy)
 
         # helpmenu = tkinter.Menu(menubar, tearoff=0)
         # helpmenu.add_command(label="About", command=self.menuPressed)
