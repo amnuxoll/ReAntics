@@ -34,7 +34,7 @@ def getAntStats():
                 continue
             m = re.match(rs_assign, l)
             if m :
-                locs[m.group("lhs")] = int(m.group("rhs"))
+                locs[m.group("lhs")+" "] = int(m.group("rhs"))
 
     # grab unit stats data -- actually not really necessary
     #stats = []

@@ -81,13 +81,13 @@ class GUIHandler:
         ###
         # help menu - hot keys, ant stats
         helpmenu = tkinter.Menu(menubar,tearoff=0)
-        fm_dummy = tkinter.Menu(helpmenu,tearoff=0,font=('Courier', 14))
+        fm_dummy = tkinter.Menu(helpmenu,tearoff=0,font=('Monaco', 12))
         for x in self.game.hotKeyInfo.split("\n") :
             fm_dummy.add_command(label=x)
         helpmenu.add_cascade(label="Hot Key Info", menu=fm_dummy)
         menubar.add_cascade(label="Help", menu=helpmenu)
         
-        fm_dummy = tkinter.Menu(helpmenu,tearoff=0,font=('Courier', 12))
+        fm_dummy = tkinter.Menu(helpmenu,tearoff=0,font=('Monaco', 10))
         for x in self.game.antUnitStatsInfo.split("\n") :
             xl = x.lower()
             rgx_ants = { "queen" : r"queen",
