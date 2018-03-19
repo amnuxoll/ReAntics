@@ -82,7 +82,7 @@ class GUIHandler:
         ###
         # help menu - hot keys, ant stats
         s_font = 'Courier' if platform in ["linux", "linux2"] else 'Monaco'
-        saved_textures = [] # saved from windows/linux garbage collection/memory re-allocation
+        self.saved_textures = [] # saved from windows/linux garbage collection/memory re-allocation
         helpmenu = tkinter.Menu(menubar,tearoff=0)
         fm_dummy = tkinter.Menu(helpmenu,tearoff=0,font=(s_font, 12))
         for x in self.game.hotKeyInfo.split("\n") :
@@ -107,8 +107,8 @@ class GUIHandler:
                 fm_dummy.add_command(label=x)
                 continue
             ant_img = tkinter.Menu(fm_dummy,tearoff=0)
-            saved_textures.append(tkinter.PhotoImage(file="Textures/"+ant+".gif"))
-            ant_img.add_command(image=saved_textures[-1])
+            self.saved_textures.append(tkinter.PhotoImage(file="Textures/"+ant+".gif"))
+            ant_img.add_command(image=self.saved_textures[-1])
             fm_dummy.add_cascade(label=x, menu=ant_img)
         helpmenu.add_cascade(label="Ant Unit Stats", menu=fm_dummy)
 
