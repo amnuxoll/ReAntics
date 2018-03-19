@@ -1,5 +1,6 @@
 import tkinter
 import os
+from sys import platform
 from Game import *
 from GameState import *
 from GamePane import *
@@ -80,14 +81,16 @@ class GUIHandler:
 
         ###
         # help menu - hot keys, ant stats
+        s_font = 'Courier' if platform in ["linux", "linux2"] else 'Monaco'
+        saved_textures = [] # saved from windows/linux garbage collection/memory re-allocation
         helpmenu = tkinter.Menu(menubar,tearoff=0)
-        fm_dummy = tkinter.Menu(helpmenu,tearoff=0,font=('Monaco', 12))
+        fm_dummy = tkinter.Menu(helpmenu,tearoff=0,font=(s_font, 12))
         for x in self.game.hotKeyInfo.split("\n") :
             fm_dummy.add_command(label=x)
         helpmenu.add_cascade(label="Hot Key Info", menu=fm_dummy)
         menubar.add_cascade(label="Help", menu=helpmenu)
         
-        fm_dummy = tkinter.Menu(helpmenu,tearoff=0,font=('Monaco', 10))
+        fm_dummy = tkinter.Menu(helpmenu,tearoff=0,font=(s_font, 10))
         for x in self.game.antUnitStatsInfo.split("\n") :
             xl = x.lower()
             rgx_ants = { "queen" : r"queen",
@@ -104,7 +107,8 @@ class GUIHandler:
                 fm_dummy.add_command(label=x)
                 continue
             ant_img = tkinter.Menu(fm_dummy,tearoff=0)
-            ant_img.add_command(image=self.gameHandler.textures[ant])
+            saved_textures.append(tkinter.PhotoImage(file="Textures/"+ant+".gif"))
+            ant_img.add_command(image=saved_textures[-1])
             fm_dummy.add_cascade(label=x, menu=ant_img)
         helpmenu.add_cascade(label="Ant Unit Stats", menu=fm_dummy)
 
@@ -174,7 +178,9 @@ class GUIHandler:
     def setSeasonalGraphics(self, event = None) :
         now = datetime.datetime.now()
         if now.month == 3:
-            self.secret3enabled()
+            #self.secret3enabled()
+        #elif now.month == 10:
+            self.secret4enabled()
 
     def secret3enabled(self):
         files = ["a","b","c","d_x24_y6"] # still need to do the last part
@@ -188,6 +194,10 @@ class GUIHandler:
                     self.gameHandler.textures["food"] = tkinter.PhotoImage(data=string_d)
                 elif f == "c":
                     self.gameHandler.textures["carrying"] = tkinter.PhotoImage(data=string_d)
+        self.reDrawBoard()
+
+    def secret4enabled(self):
+        self.gameHandler.textures["terrain"] = self.gameHandler.textures["terrain_purple"]
         self.reDrawBoard()
 
     def hotKeyUndo(self, event=None):

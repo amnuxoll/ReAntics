@@ -1,4 +1,5 @@
 import re
+from string import printable
 from Ant import *
 
 def getAntStats():
@@ -69,7 +70,7 @@ def getAntStats():
     lens = [max(map(len, col)) for col in zip(*s)]
     fmt = '\t'.join('{{:{}}}'.format(x) for x in lens)
     table = [fmt.format(*row) for row in s]
-    return '\n'.join(table)
+    return re.sub("[^{}]+".format(printable), "", '\n'.join(table)) 
 
 def getHotKeyInfo():
     # GUIHandler.py -- self.root.bind("",stuff)
@@ -83,6 +84,5 @@ def getHotKeyInfo():
             key = match.group ( "key" )
             descrip = match.group ( "descrip" )
             k.append ( "%-13s: %s" % ( key, descrip if descrip is not None else "???" ) )
-        k = "\n".join(k)
-    return k
+    return re.sub("[^{}]+".format(printable), "", '\n'.join(k))
 
