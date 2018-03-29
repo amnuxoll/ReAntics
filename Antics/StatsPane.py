@@ -22,7 +22,7 @@ FL_STYLE = "ridge"
 FL_FONT = ( "Harrington", 16, "bold")
 
 # height and width for the totals score card
-HEIGHT = 20
+HEIGHT = 27#20
 WIDTH = 35
 
 class StatsPane:
@@ -47,32 +47,40 @@ class StatsPane:
         self.gLFrame.columnconfigure(0, weight=1)
 
         self.logTextFrame = wgt.ScrollableFrame ( self.gLFrame )
-        self.logTextFrame.config( padx = 2, pady=2 )
         self.logTextFrame.canvas.config(height=450)
 
         self.gLFrame.columnconfigure(0, weight=1)
         self.logTextFrame.pack ( fill="both" )
 
         ## make totals display frame
-        self.tFrame = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
-        self.tFrame.grid(column=3, row=0, columnspan=3, sticky=tkinter.E + tkinter.W + tkinter.S + tkinter.N, padx = 5)
+        t_width = 475
+        t_height = 450
+        self.tFrame_outer = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
+        self.tFrame_outer.config(bg="white")
+        self.tFrame = wgt.ScrollableFrame(self.tFrame_outer)
+        self.tFrame.canvas.config(bg="white",width=t_width,height=t_height)
+        self.tFrame.set_scrollregion(vertical_buff=1000)
+        #self.tFrame = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
+        self.tFrame_outer.grid(column=3, row=0, columnspan=3, sticky=tkinter.E + tkinter.W + tkinter.S + tkinter.N)
+
         self.totals = tkinter.StringVar()
         self.totals.set("Totals")
-        self.totalsLabel = tkinter.Label(self.tFrame, textvar=self.totals, fg = FL_TEXT_COLOR, \
+        self.totalsLabel = tkinter.Label(self.tFrame_outer, textvar=self.totals, fg = FL_TEXT_COLOR, \
                                          bg=FL_COLOR, borderwidth=FL_BD, relief=FL_STYLE, font=FL_FONT, width=WIDTH)
         self.totalsLabel.pack(side=tkinter.TOP, fill=tkinter.X)
         self.tFrame.columnconfigure(3, weight=1)
 
         self.totalsStrVar =  tkinter.StringVar()
-        self.setScoreRecord ( "Totals stuff here" )
-        self.totalsTextLabel = tkinter.Label(self.tFrame, textvar=self.totalsStrVar, fg="black", \
-                                             bg="white", borderwidth=FL_BD, font=("Courier", 20),\
-                                             height=HEIGHT,anchor=tkinter.W)
-        self.totalsTextLabel.pack(side=tkinter.BOTTOM, fill=tkinter.X, padx=2)
+        self.totalsTextLabel = tkinter.Label(self.tFrame.interior, textvar=self.totalsStrVar, fg="black", \
+                                             bg="white",  font=("Courier", 15),\
+                                             height=HEIGHT,width=50,anchor=tkinter.W)
+        self.totalsTextLabel.pack(side=tkinter.TOP, fill=tkinter.X)
         self.tFrame.columnconfigure(0, weight=1)
 
         self.totalsLabel.pack(side=tkinter.TOP, fill=tkinter.X)
-
+        
+        self.tFrame.pack()
+        self.setScoreRecord ( "Totals stuff here" )
         ## make time display frame
         self.timeHeaderFrame = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
         self.timeHeaderFrame.grid(columnspan=6, column=0, row=1, sticky=tkinter.W+tkinter.E+tkinter.N, \
@@ -141,7 +149,11 @@ class StatsPane:
         self.handler.showFrame(2)
 
     def setScoreRecord ( self, s ) :
+        #self.tFrame.canvas.config(height=2000)
+        v_buf = (int(len(self.handler.game.players)/24)+1 if len(self.handler.game.players)%24>0 else 0)
+        self.totalsTextLabel.config(height=HEIGHT*v_buf,anchor=tkinter.N)
         self.totalsStrVar.set ( s )
+        self.tFrame.set_scrollregion(vertical_buff=HEIGHT*v_buf)#1000*        
 
     def addGameToLog ( self ) :
         return
