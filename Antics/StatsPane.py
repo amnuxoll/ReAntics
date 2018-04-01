@@ -31,7 +31,6 @@ class StatsPane:
         self.parent = parent
         self.handler = handler
 
-
         ## make GameLog display frame
         self.log = []
         self.cur_log = None
@@ -73,14 +72,23 @@ class StatsPane:
         self.totalsStrVar =  tkinter.StringVar()
         self.totalsTextLabel = tkinter.Label(self.tFrame.interior, textvar=self.totalsStrVar, fg="black", \
                                              bg="white",  font=("Courier", 15),\
-                                             height=HEIGHT,width=50,anchor=tkinter.W)
+                                             height=HEIGHT,anchor=tkinter.W)
         self.totalsTextLabel.pack(side=tkinter.TOP, fill=tkinter.X)
         self.tFrame.columnconfigure(0, weight=1)
 
         self.totalsLabel.pack(side=tkinter.TOP, fill=tkinter.X)
         
         self.tFrame.pack()
+
+        # update the totals areanow that the widgets are set
         self.setScoreRecord ( "Totals stuff here" )
+        v_buf = (int(len(self.handler.game.players)/24)+1 if len(self.handler.game.players)%24>0 else 0)
+        self.totalsTextLabel.config(height=HEIGHT*v_buf,anchor=tkinter.N)
+        self.tFrame.set_scrollregion(vertical_buff=HEIGHT*v_buf)#1000* 
+        totalsTextWidth = self.totalsTextLabel.winfo_width()
+        self.tFrame.config(width=totalsTextWidth)
+        self.totalsLabel.config(width=totalsTextWidth)
+     
         ## make time display frame
         self.timeHeaderFrame = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
         self.timeHeaderFrame.grid(columnspan=6, column=0, row=1, sticky=tkinter.W+tkinter.E+tkinter.N, \
@@ -150,10 +158,7 @@ class StatsPane:
 
     def setScoreRecord ( self, s ) :
         #self.tFrame.canvas.config(height=2000)
-        v_buf = (int(len(self.handler.game.players)/24)+1 if len(self.handler.game.players)%24>0 else 0)
-        self.totalsTextLabel.config(height=HEIGHT*v_buf,anchor=tkinter.N)
         self.totalsStrVar.set ( s )
-        self.tFrame.set_scrollregion(vertical_buff=HEIGHT*v_buf)#1000*        
 
     def addGameToLog ( self ) :
         return
