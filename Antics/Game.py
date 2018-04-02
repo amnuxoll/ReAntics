@@ -639,7 +639,7 @@ class Game(object):
             for j in range(game.n):
                 self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
                 self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
-                if self.verbose: print(self.tournamentStr(False), "\n")
+                if self.verbose: print(self.tournamentStr(True), "\n")
                 self.setup(game, j)
                 self.UI.setPlayers(self.currentPlayers[0].author, self.currentPlayers[1].author)
                 self.runGame()
@@ -655,7 +655,7 @@ class Game(object):
 
             self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
             self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
-            if self.verbose: print(self.tournamentStr(False), "\n")
+            if self.verbose: print(self.tournamentStr(True), "\n")
 
             self.UI.statsHandler.stopCurLogItem(True)
 
@@ -1706,9 +1706,23 @@ class Game(object):
     ##
     def tournamentStr(self, current=True):
         if current:
-            scores = self.currentPlayerScores
+            temp_scores = self.currentPlayerScores
         else:
-            scores = self.playerScores
+            temp_scores = self.playerScores
+
+        # shorten the names for printing
+        scores = []
+        max_size = 30
+        cur = 0
+        for s in temp_scores:
+            name = s[0]
+            if len(name) > max_size:
+                name = name[:max_size-3]+"..."
+            else:
+                name = name[:]
+            scores.append([name, s[1], s[2]])
+        #scores = temp_scores  
+
         transposedList = list(map(list, zip(*scores)))
         strTransList = [[str(n) for n in i] for i in transposedList]
 

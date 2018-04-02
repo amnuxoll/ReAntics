@@ -53,7 +53,7 @@ class StatsPane:
         self.logTextFrame.pack ( fill="both" )
 
         ## make totals display frame
-        t_width = 475 if platform != "win32" else 575
+        t_width = 475 if platform != "win32" else 600
         t_height = 450
         self.tFrame_outer = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
         self.tFrame_outer.config(bg="white")
