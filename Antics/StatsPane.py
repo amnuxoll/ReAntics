@@ -4,6 +4,7 @@ from Constants import *
 import random
 import os
 import time
+from sys import platform
 
 #
 # class StatsPane
@@ -52,7 +53,7 @@ class StatsPane:
         self.logTextFrame.pack ( fill="both" )
 
         ## make totals display frame
-        t_width = 475
+        t_width = 475 if platform != "win32" else 575
         t_height = 450
         self.tFrame_outer = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
         self.tFrame_outer.config(bg="white")
@@ -81,13 +82,10 @@ class StatsPane:
         self.tFrame.pack()
 
         # update the totals areanow that the widgets are set
-        self.setScoreRecord ( "Totals stuff here" )
+        #self.setScoreRecord ( "Totals stuff here" )
         v_buf = (int(len(self.handler.game.players)/24)+1 if len(self.handler.game.players)%24>0 else 0)
         self.totalsTextLabel.config(height=HEIGHT*v_buf,anchor=tkinter.N)
         self.tFrame.set_scrollregion(vertical_buff=HEIGHT*v_buf)#1000* 
-        totalsTextWidth = self.totalsTextLabel.winfo_width()
-        self.tFrame.config(width=totalsTextWidth)
-        self.totalsLabel.config(width=totalsTextWidth)
      
         ## make time display frame
         self.timeHeaderFrame = tkinter.Frame(self.parent, highlightthickness = F_BORDER, highlightbackground="black")
