@@ -1706,22 +1706,9 @@ class Game(object):
     ##
     def tournamentStr(self, current=True):
         if current:
-            temp_scores = self.currentPlayerScores
+            scores = self.currentPlayerScores
         else:
-            temp_scores = self.playerScores
-
-        # shorten the names for printing
-        scores = []
-        max_size = 30
-        cur = 0
-        for s in temp_scores:
-            name = s[0]
-            if len(name) > max_size:
-                name = name[:max_size-3]+"..."
-            else:
-                name = name[:]
-            scores.append([name, s[1], s[2]])
-        #scores = temp_scores  
+            scores = self.playerScores
 
         transposedList = list(map(list, zip(*scores)))
         strTransList = [[str(n) for n in i] for i in transposedList]
