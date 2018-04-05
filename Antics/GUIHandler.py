@@ -443,6 +443,8 @@ class GUIHandler:
                                                      "Note that ending running games may damage AIs.", self.root)
 
         if res == "yes":
+            self.gameHandler.setupsPlaced = None
+            self.gameHandler.setupLocations = None
             self.gameHandler.killButton.disable()
             self.statsHandler.killButton.disable()
 

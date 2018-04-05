@@ -612,6 +612,8 @@ class Game(object):
                 break
 
             if self.restartGameList is None:
+                # why this has to be here, I do not know, but it does or else auto-restart breaks :(
+                time.sleep(.01)
                 self.restartGameList = list(self.gamesToPlay)
 
             self.UI.statsHandler.timeLabel.Start()
