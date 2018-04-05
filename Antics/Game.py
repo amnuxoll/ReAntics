@@ -86,7 +86,6 @@ class Game(object):
         self.timeoutOn       = False
         self.timeout_limit   = 1
         self.autorestart     = False
-        self.soft_restart    = False  # to restart the games, but not reset the stats
         self.pauseOnStart    = False
         self.pauseConditions = []
         self.pauseOnIllegalMove = False
@@ -664,17 +663,13 @@ class Game(object):
             if len(self.gamesToPlay) == 0 and self.autorestart:
                 # self.UI.restartPressed()
                 self.restarted = True
-                self.soft_restart = True
                 
             if self.restarted:
                 self.restarted = False
                 self.gamesToPlay = self.restartGameList
                 self.restartGameList = None
-                if not self.soft_restart:
-                    self.UI.statsHandler.clearLog()
-                    self.UI.statsHandler.timeLabel.Reset()
-                else:
-                    self.soft_restart = False
+                self.UI.statsHandler.clearLog()
+                self.UI.statsHandler.timeLabel.Reset()
         self.UI.statsHandler.stopCurLogItem()
         self.UI.statsHandler.timeLabel.Stop()
 

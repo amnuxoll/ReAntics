@@ -163,10 +163,10 @@ def getWinner(currentState):
     enemyFoodCount = enemyInv.foodCount
 
     if enemyAntHill.captureHealth <= 0 or myFoodCount >= FOOD_GOAL or enemyQueen is None:
-        return 1.0
+        return 1
 
     if myAntHill.captureHealth <= 0 or enemyFoodCount >= FOOD_GOAL or myQueen is None:
-        return 0.0
+        return 0
 
     return None
     
