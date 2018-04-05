@@ -130,10 +130,14 @@ AI vs. AI mode is used to test out how two AI players compare in strategy and wh
 ### Hotkeys:
 
 Hotkey information is now built into the help menu in the top menu-bar on the screen.
-<Return>     : end turn
-<space>      : step
-<p>          : pause/play
-<u>          : undo
+
+**Return** : end turn
+
+**space**  : step
+
+**p**      : pause/play
+
+**u**      : undo
 
  
 ## Developer’s Guide:
@@ -143,7 +147,8 @@ Hotkey information is now built into the help menu in the top menu-bar on the sc
 **Note:** Every AI player plays as if it is player 1, i.e. will always appear to be on the side from (0, 0) to (3, 9).
  
 The only class that students will need to edit is the AIPlayer.py class which is located within the “AI” subdirectory of the main aNTiCS folder. They will need to fill out the getPlacement, getMove, getAttack, and registerWin methods in this class. These will be called by Game.py to get the actions from the AI.
- 
+
+----
 **getPlacement(currentState):**
 
 **Parameters:**
@@ -194,6 +199,7 @@ The getAttack method is called on the player whenever an ant completes a move an
 **Description:**
 The last method, registerWin, is called when the game ends and simply indicates to the AI whether it has won or lost the game. This is to help with learning algorithms to develop more successful strategies.
 
+----
 #### Class Descriptions:
 
 Students should not be allowed to edit the classes listed below. However, they will be receiving instances of these classes during gameplay so they should understand how each class works and what each is used for.
