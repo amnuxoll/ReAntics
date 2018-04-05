@@ -1,13 +1,13 @@
 # ReAntics
 2017-18 University of Portland Capstone Project to develop a game to educate students on various methods of artificial intelligence methods
 
-# ReAntics Student Manual
+## ReAntics Student Manual
 
-How to play ReAntics
+### How to play ReAntics
 
-Rules of the game
+#### Rules of the game
  
-ReAntics is a turn-based tactics game which revolves around two players competing via two colonies of ants. Each player has his own anthill, queen ant and any other ants or tunnels he has built. The anthills can be used for “building” new ants and both anthills and tunnels can store food collected by ants. Each player begins the game with a single queen ant and loses the game if the queen is killed.  The other ants must be bought with food that is gathered by worker ants.
+**ReAntics is a turn-based tactics game which revolves around two players competing via two colonies of ants. Each player has his own anthill, queen ant and any other ants or tunnels he has built. The anthills can be used for “building” new ants and both anthills and tunnels can store food collected by ants. Each player begins the game with a single queen ant and loses the game if the queen is killed.  The other ants must be bought with food that is gathered by worker ants.**
  
 Victory can be achieved either through military or economic dominance of the map. Specifically, a player will win if his opponent’s queen is killed, his opponent’s anthill is captured, or if the player collects 11 units of food.
  
@@ -25,11 +25,11 @@ To create an ant the player selects his empty anthill. A popup menu will appear 
  
 Each ant type performs slightly differently in the game according to performance attributes for Movement, Health, Attack, Range, and Build Cost.  The performance attributes for the five ant types are summarized in Table 1. 
  
-Table. The Ant Performance Attributes
-Attribute	Worker	Drone	Soldier	Ranged Soldier	Queen
-Special Characteristics	Can carry food	Ignores grass movement cost		Ignores grass movement cost	Results in loss if killed
+**Table. The Ant Performance Attributes**
+| Attribute | Worker | Drone | Soldier | Ranged | Soldier | Queen |
+| --- | --- | --- | --- | --- | --- | --- |
+| Special Characteristics | Can carry food | Ignores grass\r movement cost | | Ignores grass\r movement cost | Results in loss if killed\r Cannot leave home zone |
 
-Cannot leave home zone
 Movement: The number of tiles and ant can move in one turn.	2	3	2	1	2
 Health: The amount of damage an 	4	4	8	2	10
 Attack: The amount of damage the ant does when it attacks	0	2	4	3	4
