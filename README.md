@@ -155,18 +155,20 @@ The only class that students will need to edit is the AIPlayer.py class which is
 
 **Description:**
 The getPlacement method corresponds to the action taken on setup phase 1 and setup phase 2 of the game. In setup phase 1, the AI player will be passed a copy of the state as currentState which contains the board, accessed via currentState.board. The player will then return a list of 11 tuple coordinates (from their side of the board) that represent Locations to place the anthill, tunnel, and 9 grass pieces. In setup phase 2, the player will again be passed the state and needs to return a list of 2 tuple coordinates (on their opponent’s side of the board) which represent Locations to place the food sources.
- 
+
+----
 **getMove(currentState):**
 
 **Parameters:**
 	**currentState [GameState]** – The current state of the game at the time the Game is requesting a move from the player.
 
 **Expected Return:**
-            	**Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]**
+            	Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]
 
 **Description:**
-The getMove method corresponds to the play phase of the game and requests from the player a Move object. All types are symbolic constants which can be referred to in Constants.py. The move object has a field for type (moveType) as well as field for relevant coordinate information (coordList). If for instance the player wishes to move an ant, they simply return a Move object where the type field is the MOVE_ANT constant and the coordList contains a listing of valid locations starting with an ant and containing only unoccupied spaces thereafter. A build is similar to a move except the type is set as BUILD, a buildType is given, and a single coordinate is in the list representing the build location. For an end turn, no coordinates are necessary, just set the type as END and return.
- 
+The getMove method corresponds to the play phase of the game and requests from the player a Move object. All types are symbolic constants which can be referred to in Constants.py. The move object has a field for type (moveType) as well as field for relevant coordinate information (coordList). If for instance the player wishes to move an ant, they simply return a Move object where the type field is the MOVE_ANT constant and the coordList contains a listing of valid locations starting with an ant and containing only unoccupied spaces thereafter. A build is similar to a move except the type is set as BUILD, a buildType is given, and a single coordinate is in the list representing the build location. For an end turn, no coordinates are necessary, just set the type as END and return. 
+
+----
 **getAttack(currentState, attackingAnt, enemyLocations):**
 
 **Parameters:**
@@ -175,11 +177,12 @@ The getMove method corresponds to the play phase of the game and requests from t
 	**enemyLocations [list of 2-tuples of ints]** – A list of coordinate locations for valid attacks (i.e. enemies within range)
 
 **Expected Return:**
-            	**(x1, y1) – A coordinate that matches one of the entries of enemyLocations.**
+            	(x1, y1) – A coordinate that matches one of the entries of enemyLocations.
 
 **Description:**
 The getAttack method is called on the player whenever an ant completes a move and has a valid attack. It is assumed that an attack will always be made because there is no strategic advantage from withholding an attack. The AIPlayer is passed a copy of the state which again contains the board and also a clone of the attacking ant. The player is also passed a list of coordinate tuples which represent valid locations for attack. Hint: a random AI can simply return one of these coordinates for a valid attack.
- 
+
+----
 **registerWin(hasWon):**
 
 **Parameters:**
@@ -190,7 +193,7 @@ The getAttack method is called on the player whenever an ant completes a move an
 
 **Description:**
 The last method, registerWin, is called when the game ends and simply indicates to the AI whether it has won or lost the game. This is to help with learning algorithms to develop more successful strategies.
- 
+
 #### Class Descriptions:
 
 Students should not be allowed to edit the classes listed below. However, they will be receiving instances of these classes during gameplay so they should understand how each class works and what each is used for.
