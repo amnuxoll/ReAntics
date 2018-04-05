@@ -30,8 +30,7 @@ Each ant type performs slightly differently in the game according to performance
 | Attribute | Worker | Drone | Soldier | Ranged Soldier | Queen |
 | --- | :---: | :---: | :---: | :---: | :---: |
 | **Special Characteristics** | Can carry food | Ignores grass, movement cost | i | Ignores grass, movement cost | Results in loss if killed, Cannot leave home zone |
-
-| **Movement:** The number of tiles and ant can move in one turn. | 2 |	3| 2| 1 | 2 |
+| **Movement:** The number of tiles and ant can move in one turn. | 2 |	3 | 2 | 1 | 2 |
 | **Health:** The amount of damage an ant can sustain | 4 | 4 |	8 | 2 | 10 |
 | **Attack:** The amount of damage the ant does when it attacks | 0 | 2 | 4 | 3 | 4 |
 | **Range:** The distance from which this ant can attack | N/A | 1 | 1 | 3 | 1 |
