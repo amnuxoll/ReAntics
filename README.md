@@ -1,11 +1,11 @@
 # ReAntics
 2017-18 University of Portland Capstone Project to develop a game to educate students on various methods of artificial intelligence methods
 
-## ReAntics Student Manual
+# ReAntics Student Manual
 
-### How to play ReAntics
+## How to Play ReAntics:
 
-#### Rules of the game
+### Rules of the Game:
  
 **ReAntics is a turn-based tactics game which revolves around two players competing via two colonies of ants. Each player has his own anthill, queen ant and any other ants or tunnels he has built. The anthills can be used for “building” new ants and both anthills and tunnels can store food collected by ants. Each player begins the game with a single queen ant and loses the game if the queen is killed.  The other ants must be bought with food that is gathered by worker ants.**
  
@@ -45,8 +45,10 @@ The statistics for the four different construction types are show below. Constru
 | **Movement Cost:** The number of movement points it takes to move an ant onto this tile. | 1 | 1 | 2 | 1 |
 | **Capture Health:** The number of turns an ant must be on this construction to capture it. | 3 | N/A | N/A | N/A |
 
-#### How to start a game
-##### QuickStart 
+### How to start a game:
+
+#### QuickStart:
+
 Select 1+ Agents:
 1: Human v. AI
 2: AI v. AI single set
@@ -76,7 +78,7 @@ Continue to add games util you are satisfied with your queue.
 Click the Green Start Button (bottom left).
 ( ** Note: Anything selected in **Additional Settings** and **Pause Conditions** will also be applied ** )
 
-##### Additional Settings 
+#### Additional Settings:
 (applied to **both** QuickStart and Start)
 
 **Alternate Player Start:** eliminate player 1 advantage by alternating which agent is player one each game
@@ -87,13 +89,13 @@ Click the Green Start Button (bottom left).
 **Pause on Illegal Move:** pause whenever there has been an illegal move submitted
 Layout Option: Select either Player Invoked or Random Override (overrides the human player)
 
-##### Pause Conditions
+#### Pause Conditions:
 (only applied to the Start Button)
 
 Select a the two players and the joint conditions to pause under. Then add them to the list on the left.
 
  
-#### Human vs AI mode:
+### Human vs AI mode:
 
 **Move ant:** Select the ant by clicking it, valid possible moves will be highlighted in green. Clicking on a highlighted square will move the ant to that location.
  
@@ -107,17 +109,17 @@ Select a the two players and the joint conditions to pause under. Then add them 
  
 **Undo:** Click the undo button to undo moves. The undo button can revert the state up through the beginning of the player’s turn.
 
-#### AI vs. AI mode:
+### AI vs. AI mode:
  
 AI vs. AI mode is used to test out how two AI players compare in strategy and which one is ultimately more successful.
  
-#### Actions available
+### Actions available:
  
 **Step:** Click the button to see the next action from the AI whose turn it is
 **Play:** This button is only visible when the game is paused. This causes the AIs to play the game at highest possible speed.
 **Pause:** This button is only visible when the game is not paused. This causes the AIs to stop automatically playing.
 
-#### Hotkeys
+### Hotkeys:
 
 Hotkey information is now built into the help menu in the top menu-bar on the screen.
 <Return>     : end turn
@@ -126,9 +128,9 @@ Hotkey information is now built into the help menu in the top menu-bar on the sc
 <u>          : undo
 
  
-### Developer’s Guide
+## Developer’s Guide:
 
-#### Creating an AI player
+### Creating an AI player:
  
 **Note:** Every AI player plays as if it is player 1, i.e. will always appear to be on the side from (0, 0) to (3, 9).
  
@@ -169,7 +171,7 @@ The getAttack method is called on the player whenever an ant completes a move an
 **Description:**
 The last method, registerWin, is called when the game ends and simply indicates to the AI whether it has won or lost the game. This is to help with learning algorithms to develop more successful strategies.
  
-##### Class descriptions
+#### Class Descriptions:
 
 Students should not be allowed to edit the classes listed below. However, they will be receiving instances of these classes during gameplay so they should understand how each class works and what each is used for.
  
@@ -227,7 +229,7 @@ Additional widgets, expanded from tkinter options. Custom button that is colored
 **InfoScraper.py:**
 Scrapes files for hotkey data and unit stats and any other game rule information.
 
-#### Glossary
+### Glossary
  
 List – a built-in data structure for Python. Lists may be accessed like an array via listVar[0] or using the library methods. Lists may be passed freely and assigned to variables. Unlike tuples, the contents of lists may be modified.
  
