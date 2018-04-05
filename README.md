@@ -82,12 +82,18 @@ Click the Green Start Button (bottom left).
 (applied to **both** QuickStart and Start)
 
 **Alternate Player Start:** eliminate player 1 advantage by alternating which agent is player one each game
-**Verbose:** print the win/loss record to the terminal 
+
+**Verbose:** print the win/loss record to the terminal
+
 **Move Timeout:** Enter a move timeout in seconds (decimals allowed) **AND** check the option to apply
+
 **Auto-Restart:** automatically restart the games queue on finish
+
 **Pause on Start:** start the game in a paused state (to step through moves or get an accurate non-gameboard updating time)
+
 **Pause on Illegal Move:** pause whenever there has been an illegal move submitted
-Layout Option: Select either Player Invoked or Random Override (overrides the human player)
+
+**Layout Option:** Select either Player Invoked or Random Override (overrides the human player)
 
 #### Pause Conditions:
 (only applied to the Start Button)
@@ -115,8 +121,10 @@ AI vs. AI mode is used to test out how two AI players compare in strategy and wh
  
 ### Actions available:
  
-**Step:** Click the button to see the next action from the AI whose turn it is
+**Step:** Click the button to see the next action from the AI whose turn it is.
+
 **Play:** This button is only visible when the game is paused. This causes the AIs to play the game at highest possible speed.
+
 **Pause:** This button is only visible when the game is not paused. This causes the AIs to stop automatically playing.
 
 ### Hotkeys:
@@ -137,37 +145,49 @@ Hotkey information is now built into the help menu in the top menu-bar on the sc
 The only class that students will need to edit is the AIPlayer.py class which is located within the “AI” subdirectory of the main aNTiCS folder. They will need to fill out the getPlacement, getMove, getAttack, and registerWin methods in this class. These will be called by Game.py to get the actions from the AI.
  
 **getPlacement(currentState):**
+
 **Parameters:**
 	**currentState [GameState]** – The current state of the game at the time the Game is requesting a placement from the player.
+
 **Expected Return:**
             	If setup phase 1: list of 11 2-tuples of ints -> [(x1,y1), (x2,y2),…,(x11,y11)]
             	If setup phase 2: list of two 2-tuples of ints -> [(x1,y1), (x2,y2)]
+
 **Description:**
 The getPlacement method corresponds to the action taken on setup phase 1 and setup phase 2 of the game. In setup phase 1, the AI player will be passed a copy of the state as currentState which contains the board, accessed via currentState.board. The player will then return a list of 11 tuple coordinates (from their side of the board) that represent Locations to place the anthill, tunnel, and 9 grass pieces. In setup phase 2, the player will again be passed the state and needs to return a list of 2 tuple coordinates (on their opponent’s side of the board) which represent Locations to place the food sources.
  
 **getMove(currentState):**
+
 **Parameters:**
 	**currentState [GameState]** – The current state of the game at the time the Game is requesting a move from the player.
+
 **Expected Return:**
             	**Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]**
+
 **Description:**
 The getMove method corresponds to the play phase of the game and requests from the player a Move object. All types are symbolic constants which can be referred to in Constants.py. The move object has a field for type (moveType) as well as field for relevant coordinate information (coordList). If for instance the player wishes to move an ant, they simply return a Move object where the type field is the MOVE_ANT constant and the coordList contains a listing of valid locations starting with an ant and containing only unoccupied spaces thereafter. A build is similar to a move except the type is set as BUILD, a buildType is given, and a single coordinate is in the list representing the build location. For an end turn, no coordinates are necessary, just set the type as END and return.
  
 **getAttack(currentState, attackingAnt, enemyLocations):**
+
 **Parameters:**
 	**currentState [GameState]** – The current state of the game at the time the Game is requesting a move from the player.
 	**attackingAnt [Ant]** – A clone of the ant currently making the attack.
 	**enemyLocations [list of 2-tuples of ints]** – A list of coordinate locations for valid attacks (i.e. enemies within range)
+
 **Expected Return:**
             	**(x1, y1) – A coordinate that matches one of the entries of enemyLocations.**
+
 **Description:**
 The getAttack method is called on the player whenever an ant completes a move and has a valid attack. It is assumed that an attack will always be made because there is no strategic advantage from withholding an attack. The AIPlayer is passed a copy of the state which again contains the board and also a clone of the attacking ant. The player is also passed a list of coordinate tuples which represent valid locations for attack. Hint: a random AI can simply return one of these coordinates for a valid attack.
  
 **registerWin(hasWon):**
+
 **Parameters:**
 	**hasWon [boolean]** – True if the player has won the game, False if the player lost.
+
 **Expected Return:**
             	The game expects no return from registerWin().
+
 **Description:**
 The last method, registerWin, is called when the game ends and simply indicates to the AI whether it has won or lost the game. This is to help with learning algorithms to develop more successful strategies.
  
@@ -231,12 +251,12 @@ Scrapes files for hotkey data and unit stats and any other game rule information
 
 ### Glossary
  
-List – a built-in data structure for Python. Lists may be accessed like an array via listVar[0] or using the library methods. Lists may be passed freely and assigned to variables. Unlike tuples, the contents of lists may be modified.
+**List** – a built-in data structure for Python. Lists may be accessed like an array via listVar[0] or using the library methods. Lists may be passed freely and assigned to variables. Unlike tuples, the contents of lists may be modified.
  
-self – by convention, this is included as the first parameter of every function when using Python as an object-oriented language. Unlike languages like Java, the methods and instance variables of the class need to be accessed through self as in self.varName or self.methName(param) instead of just the variable or method name. When calling methods, no argument is provided for the self parameter so every function effectively has one less parameter than it appears.
+**self** – by convention, this is included as the first parameter of every function when using Python as an object-oriented language. Unlike languages like Java, the methods and instance variables of the class need to be accessed through self as in self.varName or self.methName(param) instead of just the variable or method name. When calling methods, no argument is provided for the self parameter so every function effectively has one less parameter than it appears.
 E.g. The function defined by def someFunction(self,x) would be called by someFunction(2)
  
-Tuple – a built-in data structure for Python. A programmer may simply parenthesize expressions to create tuples. Elements in a tuple do not need to contain the same type, e.g. (1, b, True, None). Tuples may be passed freely and may assigned to variables. Tuples are immutable and cannot be modified once created.
+**Tuple** – a built-in data structure for Python. A programmer may simply parenthesize expressions to create tuples. Elements in a tuple do not need to contain the same type, e.g. (1, b, True, None). Tuples may be passed freely and may assigned to variables. Tuples are immutable and cannot be modified once created.
  
-Tuple coordinates – a coordinate represented by a 2-tuple of integers, e.g. (0, 0), (2, 5), (1, 4), etc. These are used frequently by the Game and AIPlayer to represent locations on the board.
+**Tuple coordinates** – a coordinate represented by a 2-tuple of integers, e.g. (0, 0), (2, 5), (1, 4), etc. These are used frequently by the Game and AIPlayer to represent locations on the board.
 
