@@ -26,9 +26,10 @@ To create an ant the player selects his empty anthill. A popup menu will appear 
 Each ant type performs slightly differently in the game according to performance attributes for Movement, Health, Attack, Range, and Build Cost.  The performance attributes for the five ant types are summarized in Table 1. 
  
 **Table. The Ant Performance Attributes**
-| Attribute | Worker | Drone | Soldier | Ranged | Soldier | Queen |
-| --- | --- | --- | --- | --- | --- | --- |
-| Special Characteristics | Can carry food | Ignores grass\r movement cost | | Ignores grass\r movement cost | Results in loss if killed\r Cannot leave home zone |
+
+| Attribute | Worker | Drone | Soldier | Ranged Soldier | Queen |
+| --- | --- | --- | --- | --- | --- |
+| Special Characteristics | Can carry food | Ignores grass, movement cost | i | Ignores grass, movement cost | Results in loss if killed, Cannot leave home zone |
 
 Movement: The number of tiles and ant can move in one turn.	2	3	2	1	2
 Health: The amount of damage an 	4	4	8	2	10
