@@ -54,6 +54,7 @@ class GamePane:
         
         # game board is based on a 10*10 grid of tiles
         # access by self.boardIcons[y][x]
+        # custom order to make things render nice
         for y in range(10):
             tmp = []
             for x in range(10):
@@ -677,18 +678,28 @@ class BoardButton:
     def __init__(self, parent, handler, x, y):
         self.x = x
         self.y = y
-        self.handler: GamePane = handler
-        self.parent: tkinter.Frame = parent
+        self.handler = handler
+        self.parent = parent
 
         # borderwidth has to be 0 to make seamless grid
         self.label = tkinter.Canvas(self.parent)
-        self.label.config(bd = 1, bg = "black", width = 66, height = 66, highlightthickness = 0)
+        self.label.config(bd = 0, bg = "black", width = 68, height = 68, closeenough=0, highlightthickness = 0)
         if self.y < 4:
             self.label.config(bg = "blue")
         if self.y > 5:
             self.label.config(bg = "red")
 
         self.label.grid(column = self.x, row = self.y)
+
+        # create border for queen areas so there's not an awkward mix of borders
+        if self.y == 4:
+            self.bluBorder = tkinter.Canvas(self.parent)
+            self.bluBorder.config(bd = 0, bg = "blue", width = 68, height = 2, closeenough = 0, highlightthickness = 0)
+            self.bluBorder.grid(column = self.x, row = self.y, sticky = tkinter.N)
+        if self.y == 5:
+            self.bluBorder = tkinter.Canvas(self.parent)
+            self.bluBorder.config(bd = 0, bg = "red", width = 68, height = 2, closeenough = 0, highlightthickness = 0)
+            self.bluBorder.grid(column = self.x, row = self.y, sticky = tkinter.S)
 
         # bind click listener
         self.label.bind("<Button-1>", self.pressed)
@@ -772,7 +783,7 @@ class BoardButton:
     #
     def reDraw(self):
         # general offset
-        loc = (1, 1)
+        loc = (2, 2)
 
         # clear canvas
         self.label.delete("all")
