@@ -156,7 +156,7 @@ class GUIHandler:
         self.reDrawBoard()
 
     def regGPressed(self, event = None):
-        resets = ["queenRed", "queenBlue", "food", "grass", "carrying"]
+        resets = ["queenRed", "queenBlue", "food", "grass", "carrying", "terrain"]
         for r in resets:
             self.gameHandler.textures[r] = tkinter.PhotoImage(file="Textures/"+r+".gif")
         self.reDrawBoard()
@@ -178,8 +178,8 @@ class GUIHandler:
     def setSeasonalGraphics(self, event = None) :
         now = datetime.datetime.now()
         if now.month == 3:
-            #self.secret3enabled()
-        #elif now.month == 10:
+            self.secret3enabled()
+        elif now.month == 10:
             self.secret4enabled()
 
     def secret3enabled(self):
