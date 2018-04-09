@@ -179,7 +179,7 @@ class GUIHandler:
         now = datetime.datetime.now()
         if now.month == 3:
             self.secret3enabled()
-        elif now.month == 10:
+        elif now.month == 4:
             self.secret4enabled()
 
     def secret3enabled(self):
@@ -197,7 +197,14 @@ class GUIHandler:
         self.reDrawBoard()
 
     def secret4enabled(self):
-        self.gameHandler.textures["terrain"] = self.gameHandler.textures["terrain_purple"]
+        self.gameHandler.textures["terrain"] = self.gameHandler.textures["terrain_purpleDark"]
+        with open("Textures/secret4a.sec","rb") as f:
+            string_d = pickle.load(f)
+            self.gameHandler.textures["food"] = tkinter.PhotoImage(data=string_d)
+        with open("Textures/secret4b.sec","rb") as f:
+            string_d = pickle.load(f)
+            self.gameHandler.textures["grass"] = tkinter.PhotoImage(data=string_d)
+        
         self.reDrawBoard()
 
     def hotKeyUndo(self, event=None):
