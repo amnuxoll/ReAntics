@@ -159,6 +159,7 @@ class GUIHandler:
         resets = ["queenRed", "queenBlue", "food", "grass", "carrying", "terrain"]
         for r in resets:
             self.gameHandler.textures[r] = tkinter.PhotoImage(file="Textures/"+r+".gif")
+        self.gameHandler.textures["hat"] = None
         self.reDrawBoard()
 
     def secret2Pressed(self, event = None):
@@ -181,6 +182,11 @@ class GUIHandler:
             self.secret3enabled()
         elif now.month == 10:
             self.secret4enabled()
+        elif now.month == 12:
+            self.secret5enabled()
+
+        # test
+        self.secret6enabled()
 
     def secret3enabled(self):
         files = ["a","b","c","d_x24_y6"] # still need to do the last part
@@ -194,11 +200,26 @@ class GUIHandler:
                     self.gameHandler.textures["food"] = tkinter.PhotoImage(data=string_d)
                 elif f == "c":
                     self.gameHandler.textures["carrying"] = tkinter.PhotoImage(data=string_d)
+                elif f == "d_x24_y6":
+                    self.gameHandler.textures["hat"] = tkinter.PhotoImage(data=string_d)
         self.reDrawBoard()
 
     def secret4enabled(self):
         self.gameHandler.textures["terrain"] = self.gameHandler.textures["terrain_purple"]
         self.reDrawBoard()
+
+    def secret5enabled(self):
+        self.gameHandler.textures["grass"] = self.gameHandler.textures["tree"]
+        self.gameHandler.textures["hat"] = self.gameHandler.textures["santa"]
+        self.gameHandler.textures["food"] = self.gameHandler.textures["gingerbread"]
+        self.reDrawBoard()
+
+    def secret6enabled(self):
+        self.gameHandler.textures["grass"] = self.gameHandler.textures["rose"]
+        self.gameHandler.textures["food"] = self.gameHandler.textures["heart"]
+
+        self.reDrawBoard()
+
 
     def hotKeyUndo(self, event=None):
         self.gameHandler.undoPressed()

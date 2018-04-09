@@ -24,7 +24,7 @@ class GamePane:
 
     def __init__(self, handler, parent):
         self.parent = parent
-        self.handler: GUIHandler = handler
+        self.handler = handler
         # bookkeeping
         self.movesHighlighted = False
         self.attacksHighlighted = False
@@ -39,6 +39,8 @@ class GamePane:
             s1, s2 = f.split('.')
             if s2 == "gif":
                 self.textures[s1] = tkinter.PhotoImage(file = "Textures/" + f)
+        # don't worry about this
+        self.textures["hat"] = None
 
 
     def giveGame(self, the_game):
@@ -821,14 +823,24 @@ class BoardButton:
         # draw ant
         if self.ant == WORKER:
             self.label.create_image(loc, anchor=NW, image=my_textures["worker" + team])
+            if my_textures["hat"] is not None:
+                self.label.create_image((24, 9), anchor=NW, image=my_textures["hat"])
         elif self.ant == SOLDIER:
             self.label.create_image(loc, anchor=NW, image=my_textures["soldier" + team])
+            if my_textures["hat"] is not None:
+                self.label.create_image((23, 9), anchor=NW, image=my_textures["hat"])
         elif self.ant == QUEEN:
             self.label.create_image(loc, anchor=NW, image=my_textures["queen" + team])
+            if my_textures["hat"] is not None:
+                self.label.create_image((25, 7), anchor=NW, image=my_textures["hat"])
         elif self.ant == R_SOLDIER:
             self.label.create_image(loc, anchor=NW, image=my_textures["rsoldier" + team])
+            if my_textures["hat"] is not None:
+                self.label.create_image((23, 5), anchor=NW, image=my_textures["hat"])
         elif self.ant == DRONE:
             self.label.create_image(loc, anchor=NW, image=my_textures["drone" + team])
+            if my_textures["hat"] is not None:
+                self.label.create_image((23, 7), anchor=NW, image=my_textures["hat"])
 
         # carrying mark
         if self.carrying:
