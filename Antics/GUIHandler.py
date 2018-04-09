@@ -180,7 +180,7 @@ class GUIHandler:
         now = datetime.datetime.now()
         if now.month == 3:
             self.secret3enabled()
-        elif now.month == 4:
+        elif now.month == 10:
             self.secret4enabled()
         elif now.month == 12:
             self.secret5enabled()
@@ -219,12 +219,13 @@ class GUIHandler:
         self.gameHandler.textures["grass"] = self.gameHandler.textures["tree"]
         self.gameHandler.textures["hat"] = self.gameHandler.textures["santa"]
         self.gameHandler.textures["food"] = self.gameHandler.textures["gingerbread"]
+        self.gameHandler.textures["terrain"] = self.gameHandler.textures["terrain_white"]
         self.reDrawBoard()
 
     def secret6enabled(self):
         self.gameHandler.textures["grass"] = self.gameHandler.textures["rose"]
         self.gameHandler.textures["food"] = self.gameHandler.textures["heart"]
-
+        self.gameHandler.textures["terrain"] = self.gameHandler.textures["terrain_rosy"]
         self.reDrawBoard()
 
 
