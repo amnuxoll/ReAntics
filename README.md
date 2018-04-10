@@ -1,5 +1,9 @@
 # ReAntics
-2017-18 University of Portland Capstone Project to develop a game to educate students on various methods of artificial intelligence methods
+2017-18 University of Portland Capstone Project to develop a tool allowing students to create/debug agents using a variety of artificial intelligence techniques
+
+## Caveats
+- Agents with the same name: undefined behavior
+- Max length of agent name: 30 characters (not checked) 
 
 # ReAntics Student Manual
 

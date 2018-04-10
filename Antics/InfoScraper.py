@@ -83,6 +83,8 @@ def getHotKeyInfo():
                 continue
             key = match.group ( "key" )
             descrip = match.group ( "descrip" )
-            k.append ( "%-13s: %s" % ( key, descrip if descrip is not None else "???" ) )
+            if descrip is not None:
+                k.append ( "%-13s: %s" % ( key, descrip ) )
+                
     return re.sub("[^{}]+".format(printable), "", '\n'.join(k))
 

@@ -124,7 +124,7 @@ class GUIHandler:
         self.root.bind("<p>", self.pausePressed)#pause
         self.root.bind("<u>", self.hotKeyUndo)#undo
         self.root.bind("<Shift-N>", self.secretPressed)
-        self.root.bind("<r>", self.regGPressed)
+        self.root.bind("<r>", self.regGPressed)#regular graphics
         self.root.bind("<Shift-C>", self.secret2Pressed)
         self.root.bind("<s>", self.setSeasonalGraphics)
 
@@ -186,7 +186,7 @@ class GUIHandler:
             self.secret5enabled()
 
         # test
-        self.secret6enabled()
+        #self.secret6enabled()
 
     def secret3enabled(self):
         files = ["a","b","c","d_x24_y6"] # still need to do the last part
