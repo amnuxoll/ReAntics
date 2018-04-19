@@ -11,7 +11,7 @@
 .coverage
 
 # saved files
-Antics/my-settings.json
+src/my-settings.json
 
 # pickle files
-Antics/*.pickle
+src/*.pickle
