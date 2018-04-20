@@ -997,7 +997,7 @@ class Game(object):
 
                         # if AI mode, pause to observe move until next or continue is clicked
                         self.pauseGame()
-                    elif self.move.moveType == UNDO:
+                    elif self.move.moveType == UNDO and len(self.undoStates) > 0:
                         self.state = self.undoStates.pop()
                 else:
                     # human can give None move, AI can't
