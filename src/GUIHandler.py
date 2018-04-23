@@ -135,8 +135,7 @@ class GUIHandler:
         self.baseFrame.pack(fill="both")
 
         self.count = 0
-        self.closed = False
-        # self.pausePressed()
+        #self.setSeasonalGraphics()
         self.setup = True
 
     # def menuPressed(self):
@@ -149,12 +148,6 @@ class GUIHandler:
             self.game.UI.settingsHandler.addGameChanged("QuickStart")
             self.game.UI.settingsHandler.addGameType.set("QuickStart")
 
-    def secretPressed(self, event=None):
-        with open("Textures/secret1.sec", "rb") as f:
-            string_d = pickle.load(f)
-            self.gameHandler.textures["queenRed"] = tkinter.PhotoImage(data=string_d)
-        self.reDrawBoard()
-
     def regGPressed(self, event = None):
         resets = ["queenRed", "queenBlue", "food", "grass", "carrying", "terrain"]
         for r in resets:
@@ -162,71 +155,30 @@ class GUIHandler:
         self.gameHandler.textures["hat"] = None
         self.reDrawBoard()
 
-    def secret2Pressed(self, event = None):
-        files = ["a","b","c"]
-        for f in files:
-            f1 = "Textures/secret2"+f+".sec"
-            with open(f1, "rb") as fi:
-                string_d = pickle.load(fi)
-                if f == "a":
-                    self.gameHandler.textures["queenRed"] = tkinter.PhotoImage(data=string_d)
-                elif f == "b":
-                    self.gameHandler.textures["queenBlue"] = tkinter.PhotoImage(data=string_d)
-                elif f == "c":
-                    self.gameHandler.textures["food"] = tkinter.PhotoImage(data=string_d)
+    def loadSecret(self, secret):
+        with open("Textures/FrameHelper.py", "rb") as f:
+            info = pickle.load(f)[secret - 1]
+            for key in info.keys():
+                self.gameHandler.textures[key] = tkinter.PhotoImage(data=info[key])
+
         self.reDrawBoard()
 
-    def setSeasonalGraphics(self, event = None) :
+    def secretPressed(self, event = None):
+        self.loadSecret(1)
+
+    def secret2Pressed(self, event = None):
+        self.loadSecret(2)
+
+    def setSeasonalGraphics(self, event = None):
         now = datetime.datetime.now()
         if now.month == 3:
-            self.secret3enabled()
+            self.loadSecret(3)
         elif now.month == 10:
-            self.secret4enabled()
+            self.loadSecret(4)
         elif now.month == 12:
-            self.secret5enabled()
-
-        # test
-        #self.secret6enabled()
-
-    def secret3enabled(self):
-        files = ["a","b","c","d_x24_y6"] # still need to do the last part
-        for f in files:
-            f1 = "Textures/secret3"+f+".sec"
-            with open(f1, "rb") as fi:
-                string_d = pickle.load(fi)
-                if f == "a":
-                    self.gameHandler.textures["grass"] = tkinter.PhotoImage(data=string_d)
-                elif f == "b":
-                    self.gameHandler.textures["food"] = tkinter.PhotoImage(data=string_d)
-                elif f == "c":
-                    self.gameHandler.textures["carrying"] = tkinter.PhotoImage(data=string_d)
-                elif f == "d_x24_y6":
-                    self.gameHandler.textures["hat"] = tkinter.PhotoImage(data=string_d)
-        self.reDrawBoard()
-
-    def secret4enabled(self):
-        self.gameHandler.textures["terrain"] = self.gameHandler.textures["terrain_purpleDark"]
-        with open("Textures/secret4a.sec","rb") as f:
-            string_d = pickle.load(f)
-            self.gameHandler.textures["food"] = tkinter.PhotoImage(data=string_d)
-        with open("Textures/secret4b.sec","rb") as f:
-            string_d = pickle.load(f)
-            self.gameHandler.textures["grass"] = tkinter.PhotoImage(data=string_d)
-        
-        self.reDrawBoard()
-
-    def secret5enabled(self):
-        self.gameHandler.textures["grass"] = self.gameHandler.textures["tree"]
-        self.gameHandler.textures["hat"] = self.gameHandler.textures["santa"]
-        self.gameHandler.textures["food"] = self.gameHandler.textures["gingerbread"]
-        self.gameHandler.textures["terrain"] = self.gameHandler.textures["terrain_white"]
-        self.reDrawBoard()
-
-    def secret6enabled(self):
-        self.gameHandler.textures["grass"] = self.gameHandler.textures["rose"]
-        self.gameHandler.textures["food"] = self.gameHandler.textures["heart"]
-        self.gameHandler.textures["terrain"] = self.gameHandler.textures["terrain_rosy"]
-        self.reDrawBoard()
+            self.loadSecret(5)
+        elif now.month == 2:
+            self.loadSecret(6)
 
 
     def hotKeyUndo(self, event=None):

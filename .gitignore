@@ -12,6 +12,10 @@
 
 # saved files
 src/my-settings.json
+src/*.pickle
+en.py
+en2.py
+en3.py
 
 # pickle files
 src/*.pickle
