@@ -137,7 +137,7 @@ class StopWatch(tk.Frame):
         minutes = int(elap/60 - hours*60)                                #int(elap/60)
         seconds = int(elap - hours*3600 - minutes*60.0)                  #int(elap - minutes*60.0)
         hseconds = int((elap - hours*3600 - minutes*60.0 - seconds)*100) #int((elap - minutes*60.0 - seconds)*100)
-        string_obj.set('%02d:%02d:%02d:%02d' % (hours, minutes, seconds, hseconds))
+        string_obj.set('%02d:%02d:%02d.%02d' % (hours, minutes, seconds, hseconds))
 
     def Start(self):
         """ Start the stopwatch, ignore if running, or the game/event is over. """
