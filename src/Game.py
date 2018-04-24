@@ -1188,7 +1188,7 @@ class Game(object):
 
     def addPlayer(self, p: Player):
         self.players.append([p, ACTIVE])
-        self.playerScores.append([self.truncateName(p.author, 24), 0, 0])
+        self.playerScores.append([self.truncateName(p.author, 30), 0, 0])
 
     #########################################
     #   # ##### #     ##### ##### ####  #####
