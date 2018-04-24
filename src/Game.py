@@ -1160,8 +1160,8 @@ class Game(object):
         # Make player instances from all AIs in folder.
         i = 0
         for file in filesInAIFolder:
-            if re.match(".*\.py$", file):
-                moduleName = file[:-3]
+            if re.match(".*\.py$", file) or re.match(".*\.pyc$", file):
+                moduleName, ext = os.path.splitext(file)
                 # Check to see if the file is already loaded.
                 # temp = __import__(moduleName, globals(), locals(), [], -1)
                 temp = importlib.import_module(moduleName)
@@ -1177,8 +1177,8 @@ class Game(object):
         os.chdir('AI')
         sys.path.insert(0, os.getcwd())
         for file in filesInAIFolder:
-            if re.match(".*\.py$", file):
-                moduleName = file[:-3]
+            if re.match(".*\.py$", file) or re.match(".*\.pyc$", file):
+                moduleName, ext = os.path.splitext(file)
                 temp = importlib.import_module(moduleName)
                 copy = temp.AIPlayer(COPY)
                 if copy.author == player:
@@ -1840,14 +1840,6 @@ class Game(object):
             return False
         return curPlayerNames == players
 
-
-# Import all the python files in the AI folder so they can be serialized
-sys.path.insert(0, "AI")
-for mod in os.listdir("AI"):
-    if mod[-3:] != '.py':
-        continue
-    __import__(mod[:-3], locals(), globals())
-del mod
 
 if __name__ == '__main__':
     # Create the game
