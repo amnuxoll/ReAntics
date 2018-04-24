@@ -634,15 +634,16 @@ class Game(object):
                 self.pauseOnStart = False
 
             self.currentPlayerScores = []
-            self.currentPlayerScores.append([game.p1.author, 0, 0])
-            self.currentPlayerScores.append([game.p2.author, 0, 0])
+            self.currentPlayerScores.append([self.truncateName(game.p1.author, 24), 0, 0])
+            self.currentPlayerScores.append([self.truncateName(game.p2.author, 24), 0, 0])
 
             for j in range(game.n):
                 self.UI.statsHandler.updateCurLogItem(self.tournamentStr(True))
                 self.UI.statsHandler.setScoreRecord(self.tournamentStr(False))
                 if self.verbose: print(self.tournamentStr(True), "\n")
                 self.setup(game, j)
-                self.UI.setPlayers(self.currentPlayers[0].author, self.currentPlayers[1].author)
+                self.UI.setPlayers(self.truncateName(self.currentPlayers[0].author),
+                                   self.truncateName(self.currentPlayers[1].author))
                 self.runGame()
 
                 if self.goToSettings or self.ended:
@@ -1187,7 +1188,7 @@ class Game(object):
 
     def addPlayer(self, p: Player):
         self.players.append([p, ACTIVE])
-        self.playerScores.append([p.author, 0, 0])
+        self.playerScores.append([self.truncateName(p.author, 24), 0, 0])
 
     #########################################
     #   # ##### #     ##### ##### ####  #####
@@ -1692,6 +1693,13 @@ class Game(object):
     def printTournament(self):
         print(self.tournamentStr(False))
         print('')
+
+    ##
+    # truncateName
+    #
+    # returns a shortened version of a player name if needed
+    def truncateName(self, name, size = 11):
+        return name[0:size-5] + '..' + name[-3:] if len(name) > size else name
 
     ##
     # tournamentStr

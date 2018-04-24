@@ -3,7 +3,6 @@
 
 ## Caveats
 - Agents with the same name: undefined behavior
-- Max length of agent name: 30 characters (not checked) 
 
 # ReAntics Student Manual
 

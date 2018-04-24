@@ -276,8 +276,8 @@ class GUIHandler:
     # sets the name of the current players
     #
     def setPlayers(self, p1, p2):
-        self.gameHandler.p1Name.set(p1[0:6] + '..' + p1[-3:] if len(p1) > 11 else p1)
-        self.gameHandler.p2Name.set(p2[0:6] + '..' + p2[-3:] if len(p2) > 11 else p2)
+        self.gameHandler.p1Name.set(p1)
+        self.gameHandler.p2Name.set(p2)
 
         self.enableAllButtons()
         if p1 == "Human" or p2 == "Human":
