@@ -110,6 +110,13 @@ class GUIHandler:
             self.saved_textures.append(tkinter.PhotoImage(file="Textures/"+ant+".gif"))
             ant_img.add_command(image=self.saved_textures[-1])
             fm_dummy.add_cascade(label=x, menu=ant_img)
+        # king
+        x = "KING      11       11       11       11        11       True"
+        ant_img = tkinter.Menu(fm_dummy,tearoff=0)
+        self.saved_textures.append(tkinter.PhotoImage(file="Textures/king.gif"))
+        ant_img.add_command(image=self.saved_textures[-1])
+        fm_dummy.add_cascade(label=x, menu=ant_img)
+        # populate the help menu
         helpmenu.add_cascade(label="Ant Unit Stats", menu=fm_dummy)
 
         # helpmenu = tkinter.Menu(menubar, tearoff=0)
