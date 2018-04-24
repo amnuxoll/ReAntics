@@ -734,7 +734,6 @@ class Game(object):
     #
     ##
     def runGame(self):
-        self.pauseGame()
         # build a list of things to place for player 1 in setup phase 1
         # 1 anthill/queen, 1 tunnel/worker, 9 obstacles
         constrsToPlace = []
