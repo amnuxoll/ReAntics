@@ -1031,10 +1031,8 @@ class Game(object):
             self.UI.showState(self.state)
             # notify the user of the winner
             winnerName = "Copy"
-            try:
+            if self.winner > -1:
                 winnerName = self.players[self.winner][0].author
-            except:
-                pass
 
             # special handling for human currently
             if self.winner == -1:
