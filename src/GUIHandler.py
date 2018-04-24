@@ -48,8 +48,8 @@ class GUIHandler:
         self.root.protocol("WM_DELETE_WINDOW", self.onClose)
         self.root.title("ReAntics")
         self.root.iconbitmap('Textures/queenRed.ico')
-        # icon = tkinter.PhotoImage(file="Textures/queenRed.ico")
-        # self.root.tk.call('wm', 'iconphoto', self.root._w, icon)
+        icon = tkinter.PhotoImage(file="Textures/queenRed.gif")
+        self.root.tk.call('wm', 'iconphoto', self.root._w, icon)
 
         self.baseFrame = tkinter.Frame(self.root)
         self.settingsFrame = tkinter.Frame(self.baseFrame)
