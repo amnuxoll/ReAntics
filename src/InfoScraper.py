@@ -65,12 +65,12 @@ def getAntStats():
     #print(data)
 
     # fix later
-    #https://stackoverflow.com/questions/13214809/pretty-print-2d-python-list 
-    s = [[str(e) for e in row] for row in data]
+    #https://stackoverflow.com/questions/13214809/pretty-print-2d-python-list
+    s = [[str(e) + "  " for e in row] for row in data]
     lens = [max(map(len, col)) for col in zip(*s)]
-    fmt = '\t'.join('{{:{}}}'.format(x) for x in lens)
+    fmt = ''.join('{{:{}}}'.format(x) for x in lens)
     table = [fmt.format(*row) for row in s]
-    return re.sub("[^{}]+".format(printable), "", '\n'.join(table)) 
+    return '\n'.join(table)
 
 def getHotKeyInfo():
     # GUIHandler.py -- self.root.bind("",stuff)

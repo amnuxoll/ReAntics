@@ -17,5 +17,8 @@ en.py
 en2.py
 en3.py
 
+# Generated Distributable
+src/ReAnticsDistributable
+
 # pickle files
 src/*.pickle

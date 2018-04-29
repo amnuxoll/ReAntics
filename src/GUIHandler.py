@@ -91,7 +91,7 @@ class GUIHandler:
         menubar.add_cascade(label="Help", menu=helpmenu)
         
         fm_dummy = tkinter.Menu(helpmenu,tearoff=0,font=(s_font, 10))
-        for x in self.game.antUnitStatsInfo.split("\n") :
+        for x in self.game.antUnitStatsInfo.split("\n"):
             xl = x.lower()
             rgx_ants = { "queen" : r"queen",
                          "worker": r"worker",
@@ -111,7 +111,9 @@ class GUIHandler:
             ant_img.add_command(image=self.saved_textures[-1])
             fm_dummy.add_cascade(label=x, menu=ant_img)
         # king
-        x = "KING      11       11       11       11        11       True"
+        # if format of UNIT_STATS is changed this will also have to change to keep correct spacing.
+        # If needed, look at "lens" in infoScraper.GetAntStats(), this is a modified copy of what that produces
+        x = "{:<11}{:<11}{:<9}{:<9}{:<8}{:<7}{:<16}".format("King", 11, 11, 11, 11, 11, "True")
         ant_img = tkinter.Menu(fm_dummy,tearoff=0)
         self.saved_textures.append(tkinter.PhotoImage(file="Textures/king.gif"))
         ant_img.add_command(image=self.saved_textures[-1])
