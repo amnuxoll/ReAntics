@@ -8,12 +8,12 @@ def makeDistrib():
     cwd = os.getcwd()
 
     # get paths for needed folders
-    distribPath = cwd + "\\ReAnticsDistributable"
-    distribTexturesPath = distribPath + "\\Textures"
-    distribAIPath = distribPath + "\\AI"
-    texturesPath = cwd + "\\Textures"
-    aiPath = cwd + "\\AI"
-    hiddenAIPath = aiPath + "\\__pycache__"
+    distribPath = os.path.join(cwd, "ReAnticsDistributable")
+    distribTexturesPath = os.path.join(distribPath, "Textures")
+    distribAIPath = os.path.join(distribPath, "AI")
+    texturesPath = os.path.join(cwd, "Textures")
+    aiPath = os.path.join(cwd, "AI")
+    hiddenAIPath = os.path.join(aiPath, "__pycache__")
 
     # remove old distrib if present to prevent conflicts
     if os.path.isdir(distribPath):
@@ -27,13 +27,13 @@ def makeDistrib():
     files = os.listdir(cwd)
     for file in files:
         if (file[-3:] == ".py" or file[-4:] == ".bat" or file[-3:] == ".sh") and file not in ignored:
-            shutil.copyfile(cwd + "\\" + file, distribPath + "\\" + file)
+            shutil.copyfile(os.path.join(cwd, file), os.path.join(distribPath, file))
 
     # copy texture files
     os.mkdir(distribTexturesPath)
     files = os.listdir(texturesPath)
     for file in files:
-        shutil.copyfile(texturesPath + "\\" + file, distribTexturesPath + "\\" + file)
+        shutil.copyfile(os.path.join(texturesPath, file), os.path.join(distribTexturesPath, file))
 
     # AIs that should be copied in obfuscated form
     hiddenAIs = ["anthillAttackAI.py", "Complex Food Gatherer.py", "DefensiveV1.py", "Nibble.py", "shapeShifter.py",
@@ -46,7 +46,7 @@ def makeDistrib():
     # copy "open" AIs
     for file in files:
         if file[-3:] == ".py" and file not in ignored:
-            shutil.copyfile(aiPath + "\\" + file, distribAIPath + "\\" + file)
+            shutil.copyfile(os.path.join(aiPath, file), os.path.join(distribAIPath, file))
 
     files = os.listdir(hiddenAIPath)
     # copy "hidden" AIs
@@ -54,7 +54,7 @@ def makeDistrib():
         # note these are .pyc files, the .py inclusion is to prevent the copy of the unobfuscated files
         cleaned = file.split(".")[0] + ".py"
         if cleaned in hiddenAIs:
-            shutil.copyfile(hiddenAIPath + "\\" + file, distribAIPath + "\\" + cleaned + "c")
+            shutil.copyfile(os.path.join(hiddenAIPath, file), os.path.join(distribAIPath, cleaned + "c"))
 
 
 # causes python to compile all of the AIs to make sure the compiled code is up to date with any changes
