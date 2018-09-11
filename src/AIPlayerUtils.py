@@ -68,7 +68,7 @@ def getAntList(currentState,
             result.append(ant)
 
     return result
-        
+
 
 ##
 # getConstrList()
@@ -101,7 +101,7 @@ def getConstrList(currentState,
             result.append(constr)
 
     return result
-        
+
 
 ##
 # getConstrAt
@@ -180,7 +180,7 @@ def getWinner(currentState):
         return 0
 
     return None
-    
+
 
 ##
 # listAdjacent
@@ -244,11 +244,11 @@ def listAttackable(coord, dist = 1):
 # calculates all the adjacent cells that can be reached from a given coord.
 #
 # Parameters:
-#    state        - a GameState object 
+#    state        - a GameState object
 #    coords       - where the ant is
 #    movement     - movement points the ant has
 #
-# Return:  a list of coords (tuples)   
+# Return:  a list of coords (tuples)
 def listReachableAdjacent(state, coords, movement, ignoresGrass = False):
     #build a list of all adjacent cells
     oneStep = listAdjacent(coords)
@@ -497,7 +497,7 @@ def isPathOkForQueen(path):
         or (coord[1] == BOARD_LENGTH / 2):
             return False
     return True
-    
+
 ##
 # listAllMovementMoves
 #
@@ -566,9 +566,9 @@ def getCurrPlayerInventory(currentState):
         if inv.player == currentState.whoseTurn:
             resultInv = inv
             break
-        
+
     return resultInv
-    
+
 ##
 # Return: a reference to the QUEEN of the player whose turn it is
 def getCurrPlayerQueen(currentState):
@@ -594,7 +594,7 @@ def getCurrPlayerFood(self, currentState):
         myFood.append(food[1])
     return myFood
 
- 
+
 
 ##
 # Return: a reference to my enemy's inventory
@@ -603,7 +603,7 @@ def getEnemyInv(self, currentState):
         return currentState.inventories[1]
     else:
         return currentState.inventories[0]
-        
+
 ##
 # getNextState
 #
@@ -725,7 +725,7 @@ def getNextStateAdversarial(currentState, move):
         nextState.whoseTurn = 1 - currentState.whoseTurn
     return nextState
 
-    
+
 ##
 # returns a character representation of a given ant
 # (helper for asciiPrintState)
@@ -844,9 +844,12 @@ class GraphNode:
 # aStarSearchPath
 #
 # Create a path towards from start to goal
-# CAVEAT: THIS DOES NOT TAKE INTO ACCOUNT GRASS RIGHT NOW
 # CAVEAT: A-STAR SEARCH IS SLOWER THAN createPathToward() BECAUSE THIS IS OPTIMAL
 #         AND createPathTowards() IS GREEDY FOR TIME EFFICIENCY
+#
+#   @param currentState - a gameState
+#   @param start - the Ant's Coordinates aka ant.coords
+#   @param goal - the target coordinates
 #
 ##
 def aStarSearchPath(currentState, start, goal):
@@ -857,6 +860,7 @@ def aStarSearchPath(currentState, start, goal):
 
     antMovement = UNIT_STATS[ant.type][MOVEMENT]
     antMovement = antMovement + 1
+    ign_grass = UNIT_STATS[ant.type][IGNORES_GRASS]
 
     if start.coords == goal.coords:
         return []
@@ -875,7 +879,7 @@ def aStarSearchPath(currentState, start, goal):
         if current in closed_list:
             continue
 
-        for neighbor in neighbors(currentState, current, goal):
+        for neighbor in neighbors(currentState, current, goal, ign_grass, antMovement):
             if neighbor == goal:
                 return construct_path(current, antMovement)
             if neighbor in open_list:
@@ -900,8 +904,8 @@ def aStarSearchPath(currentState, start, goal):
     return False
 
 
-def neighbors(currentState, node, goal):
-    bors = [GraphNode(coords=y) for y in listReachAdj(currentState, node.coords, goal.coords)]
+def neighbors(currentState, node, goal, ign_grass, antMovement):
+    bors = [GraphNode(coords=y) for y in listReachableAdjacent(currentState, node.coords, antMovement, ign_grass)]
     for bor in bors:
         bor.g = node.g + 1
         bor.f = bor.g + approxDist(bor.coords, goal.coords)
@@ -922,20 +926,3 @@ def construct_path(node, antMovement):
     li = normalPath[::-1]
 
     return li if len(li) <= antMovement else li[:antMovement]
-
-
-def listReachAdj(state, coords, givenAntCoords):
-    # build a list of all adjacent cells
-    oneStep = listAdjacent(coords)
-
-    # winnow the list based upon cell contents and cost to reach
-    candMoves = []
-    for cell in oneStep:
-        ant = getAntAt(state, cell)
-
-        if ant is None:
-            candMoves.append(cell)
-        elif ant.coords is givenAntCoords:
-            candMoves.append(cell)
-
-    return candMoves

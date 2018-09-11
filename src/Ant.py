@@ -27,7 +27,7 @@ UNIT_STATS.append([1, 2, 3, 3, 2, True]) #Ranged soldier
 #   player - The id of the player that owns the Ant
 ##
 class Ant(object):
-    
+
     ##
     #__init__
     #Description: Creates a new Ant
@@ -44,10 +44,12 @@ class Ant(object):
         self.carrying = False
         self.player = inputPlayer
         self.health = UNIT_STATS[self.type][HEALTH]
+        self.UniqueID = id(self)
 
     def clone(self):
         rtnAnt = Ant(self.coords, self.type, self.player)
         rtnAnt.hasMoved = self.hasMoved
         rtnAnt.carrying = self.carrying
         rtnAnt.health = self.health
+        rtnAnt.UniqueID = self.UniqueID
         return rtnAnt
