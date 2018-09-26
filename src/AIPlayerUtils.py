@@ -646,12 +646,7 @@ def getNextState(currentState, move):
             ant = Ant(myInv.getAnthill().coords, move.buildType, me)
             myInv.ants.append(ant)
             # Update food count depending on ant built
-            if move.buildType == WORKER:
-                myInv.foodCount -= 1
-            elif move.buildType == DRONE or move.buildType == R_SOLDIER:
-                myInv.foodCount -= 2
-            elif move.buildType == SOLDIER:
-                myInv.foodCount -= 3
+            myInv.foodCount -= UNIT_STATS[move.buildType][COST]
         # ants are no longer allowed to build tunnels, so this is an error
         elif move.buildType == TUNNEL:
             print("Attempted tunnel build in getNextState()")

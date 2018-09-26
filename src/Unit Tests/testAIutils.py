@@ -110,6 +110,17 @@ class testGetNextState(unittest.TestCase):
         ant = getAntAt(newState, (4, 2))
         self.assertIsNotNone(ant, "Failure in %s test. Ant at %s was none." % (name, (4, 2)))
 
+        name = "build ant"
+        #move the queen off her hill
+        path = createPathToward(state, (0, 0), (1, 1), 2)
+        newState = getNextState(newState, Move(MOVE_ANT, path, None))
+        #build a new worker on the hill
+        newState = getNextState(newState, Move(BUILD, (0,0), WORKER))
+        ant = getAntAt(newState, (0, 0))
+        self.assertIsNotNone(ant, "Failure in %s test. Ant at %s was none." % (name, (0, 0)))
+
+        
+        
     def testRangeAttack(self):
         state = GameState.getBasicState()
 
