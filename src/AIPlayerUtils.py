@@ -710,7 +710,7 @@ def getNextStateAdversarial(currentState, move):
 
     # If an ant is moved update their coordinates and has moved
     if move.moveType == MOVE_ANT:
-        startingCoord = move.coordList[0]
+        startingCoord = move.coordList[-1]
         for ant in myAnts:
             if ant.coords == startingCoord:
                 ant.hasMoved = True
