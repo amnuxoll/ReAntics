@@ -124,7 +124,7 @@ class AIPlayer(Player):
             return Move(MOVE_ANT, [myQueen.coords], None)
 
 
-        #if I have the foos and the anthill is unoccupied then
+        #if I have the food to spend and the anthill is unoccupied then
         #make a drone
         if (myInv.foodCount > 2):
             if (getAntAt(currentState, myInv.getAnthill().coords) is None):
@@ -160,8 +160,6 @@ class AIPlayer(Player):
     
     ##
     #getAttack
-    #
-    # This agent never attacks
     #
     def getAttack(self, currentState, attackingAnt, enemyLocations):
         return enemyLocations[0]  #don't care
