@@ -1152,9 +1152,11 @@ class Game(object):
         filesInAIFolder = os.listdir("AI")
         # Change directory to AI subfolder so modules can be loaded (they won't load as filenames).
         os.chdir('AI')
-
         # Add current directory in python's import search order.
         sys.path.insert(0, os.getcwd())
+        # Revert working directory to parent.
+        os.chdir('..')
+        
         # Make player instances from all AIs in folder.
         i = 0
         for file in filesInAIFolder:
@@ -1165,10 +1167,9 @@ class Game(object):
                 temp = importlib.import_module(moduleName)
                 self.addPlayer(temp.AIPlayer(i))
                 i += 1
-        # Remove current directory from python's import search order.
+                
+        # Remove AI directory from python's import search order.
         sys.path.pop(0)
-        # Revert working directory to parent.
-        os.chdir('..')
 
     def createAICopy(self, player):
         filesInAIFolder = os.listdir("AI")
