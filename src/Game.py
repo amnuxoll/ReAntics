@@ -1152,31 +1152,30 @@ class Game(object):
         filesInAIFolder = os.listdir("AI")
         # Change directory to AI subfolder so modules can be loaded (they won't load as filenames).
         os.chdir('AI')
+
         # Add current directory in python's import search order.
         sys.path.insert(0, os.getcwd())
-        # Revert working directory to parent.
-        os.chdir('..')
-        
         # Make player instances from all AIs in folder.
         i = 0
         for file in filesInAIFolder:
-            if re.match(".*\.py$", file) or re.match(".*\.pyc$", file):
+            if re.match(r".*\.py$", file) or re.match(r".*\.pyc$", file):
                 moduleName, ext = os.path.splitext(file)
                 # Check to see if the file is already loaded.
                 # temp = __import__(moduleName, globals(), locals(), [], -1)
                 temp = importlib.import_module(moduleName)
                 self.addPlayer(temp.AIPlayer(i))
                 i += 1
-                
-        # Remove AI directory from python's import search order.
+        # Remove current directory from python's import search order.
         sys.path.pop(0)
+        # Revert working directory to parent.
+        os.chdir('..')
 
     def createAICopy(self, player):
         filesInAIFolder = os.listdir("AI")
         os.chdir('AI')
         sys.path.insert(0, os.getcwd())
         for file in filesInAIFolder:
-            if re.match(".*\.py$", file) or re.match(".*\.pyc$", file):
+            if re.match(r".*\.py$", file) or re.match(r".*\.pyc$", file):
                 moduleName, ext = os.path.splitext(file)
                 temp = importlib.import_module(moduleName)
                 copy = temp.AIPlayer(COPY)
